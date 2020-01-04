@@ -1,0 +1,7 @@
+node_modules
+.vscode-test
+**/node_modules
+**/lib
+**/build
+**/static
+**/out

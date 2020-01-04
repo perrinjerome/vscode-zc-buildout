@@ -1,0 +1,1 @@
+# this file is not a .cfg so it's not suggested in filenames completions

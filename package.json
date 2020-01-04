@@ -1,0 +1,100 @@
+{
+  "name": "vscode-zc-buildout",
+  "description": "A vscode extension and language server for zc.buildout",
+  "author": "Jérome Perrin",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/perrinjerome/vscode-zc-buildout"
+  },
+  "publisher": "perrinjerome",
+  "categories": [],
+  "keywords": [
+    "multi-root ready"
+  ],
+  "engines": {
+    "vscode": "^1.33.0"
+  },
+  "activationEvents": [
+    "onLanguage:zc.buildout"
+  ],
+  "main": "./client/out/extension",
+  "contributes": {
+    "languages": [
+      {
+        "id": "zc.buildout",
+        "extensions": [
+          ".in",
+          ".cfg"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "scopeName": "source.zc.buildout",
+        "path": "./syntaxes/zc.buildout.tmGrammar.json"
+      },
+      {
+        "language": "zc.buildout",
+        "scopeName": "source.zc.buildout.jinja",
+        "path": "./syntaxes/jinja+zc.buildout.tmGrammar.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "vscode-zc-buildout extension configuration",
+      "properties": {
+        "zc-buildout.python.executable": {
+          "scope": "application",
+          "type": "string",
+          "default": "python3",
+          "description": "Path of python installation to use language server. This needs to be python >= 3.6"
+        },
+        "zc-buildout.language.server.arguments": {
+          "scope": "application",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "--logfile",
+              "buildoutls.log"
+            ]
+          ],
+          "description": "Command line arguments when lauching language server."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
+    "compile": "tsc -b",
+    "build": "vsce",
+    "watch": "tsc -b -w",
+    "postinstall": "cd client && npm install && cd ..",
+    "test": "bash -c 'CODE_TESTS_PATH=\"$(pwd)/client/out/test\" CODE_TESTS_WORKSPACE=\"$(pwd)/profiles/\" node \"$(pwd)/client/node_modules/vscode/bin/test\"'",
+    "lint": "eslint . --ext .js,.ts",
+    "lint-fix": "eslint . --ext .js,.ts --fix"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/preset-typescript": "^7.6.0",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^8.0.0",
+    "@types/sinon": "^7.5.1",
+    "@typescript-eslint/eslint-plugin": "^2.3.3",
+    "@typescript-eslint/parser": "^2.3.3",
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.4.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "prettier": "^1.18.2",
+    "sinon": "^7.5.0",
+    "tslint": "^5.16.0",
+    "typescript": "^3.5.1",
+    "vsce": "^1.71.0"
+  }
+}

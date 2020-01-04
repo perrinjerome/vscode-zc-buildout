@@ -1,0 +1,7 @@
+This is a template in ${buildout:directory}.
+
+It can values, like ${section5:command} or ${section5:option}.
+
+Missing sections, like ${missing:option} are errors.
+
+Missing options, like ${section5:missing_option} are also errors.

@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "indent": [true, "spaces"],
+    "semicolon": [true, "always"]
+  },
+  "linterOptions": {
+    "exclude": ["node_modules/**", ".*/**", "./client/node_modules/**"]
+  }
+}

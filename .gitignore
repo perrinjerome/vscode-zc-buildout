@@ -1,0 +1,14 @@
+.DS_Store
+npm-debug.log
+Thumbs.db
+**/node_modules/
+node_modules/
+*/out/
+*/.vs/
+**/.env/
+.vscode-test/
+server/.pytype/
+**/__pycache__/
+**/*.egg-info
+**/.env/
+**/.*cache/
