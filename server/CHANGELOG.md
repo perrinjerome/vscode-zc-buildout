@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning][semver].
 ### Added
 
 - completions: fix insertText with `-`.
+- diagnostics: detect missing non existant sections listed in `${buildout:parts}`.
+- diagnostics: detect sections without recipe listed in `${buildout:parts}`.
 
 ## 0.1.0
 

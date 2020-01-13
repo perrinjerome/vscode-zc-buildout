@@ -170,6 +170,47 @@ async def parseAndSendDiagnostics(
                     source='buildout',
                     severity=DiagnosticSeverity.Error,
                 ),)
+    parts = resolved_buildout['buildout'].get('parts')
+    if parts is not None:
+      doc = ls.workspace.get_document(uri)
+      assert doc is not None
+      start = parts.locations[-1].range.start.line
+      lines = doc.lines[start:parts.locations[-1].range.end.line + 1]
+      for part in lines:
+        character = 0
+        if part.startswith('parts'):
+          option, part = part.split('=', 1)
+          character += len(option) + 1
+        if part and part[0] not in '#;':
+          character += len(part) - len(part.lstrip())
+          part = part.strip()
+          if part:
+            if part.startswith('${'):
+              continue  # assume OK
+            if part not in resolved_buildout:
+              diagnostics.append(
+                  Diagnostic(
+                      message=f'Section `{part}` does not exist.',
+                      range=Range(
+                          start=Position(start, character),
+                          end=Position(start, character + len(part)),
+                      ),
+                      source='buildout',
+                      severity=DiagnosticSeverity.Error,
+                  ),)
+            elif 'recipe' not in resolved_buildout[part]:
+              diagnostics.append(
+                  Diagnostic(
+                      message=f'Section `{part}` has no recipe.',
+                      range=Range(
+                          start=Position(start, character),
+                          end=Position(start, character + len(part)),
+                      ),
+                      source='buildout',
+                      severity=DiagnosticSeverity.Error,
+                  ),)
+        start += 1
+
   ls.publish_diagnostics(
       uri,
       diagnostics,

@@ -188,6 +188,22 @@ async def test_diagnostics_template(server) -> None:
 
 
 @pytest.mark.asyncio
+async def test_diagnostics_buildout_parts(server) -> None:
+  await parseAndSendDiagnostics(server, 'file:///broken/buildout_parts.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///broken/buildout_parts.cfg',
+      [mock.ANY, mock.ANY],
+  )
+  diagnostic1, diagnostic2 = sorted(
+      server.publish_diagnostics.call_args[0][1], key=lambda d: d.range.start)
+  assert diagnostic1.message == "Section `b` has no recipe."
+  assert diagnostic1.range == Range(start=Position(3, 4), end=Position(3, 5))
+
+  assert diagnostic2.message == "Section `c` does not exist."
+  assert diagnostic2.range == Range(start=Position(4, 4), end=Position(4, 5))
+
+
+@pytest.mark.asyncio
 async def test_diagnostics_ok(server) -> None:
   # no false positives
   await parseAndSendDiagnostics(server, 'file:///ok.cfg')
