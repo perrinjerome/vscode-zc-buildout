@@ -492,6 +492,36 @@ async def test_complete_macro_option_value(server: LanguageServer):
 
 
 @pytest.mark.asyncio
+async def test_complete_insert_text(server: LanguageServer):
+  # Only insert the last "word". This is made to accomodate vscode, the spec
+  # does not seem to document how editor should behave for this.
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked,)
+  # Only insert the text after the latest -
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///completions/partial_completions.cfg"),
+      position=Position(1, 24),
+      context=context,
+  )
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert [c.insertText for c in completions if c.label == 'sec-tion-one'
+         ] == ['tion-one']
+
+  # Only insert the text after the latest .
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///completions/partial_completions.cfg"),
+      position=Position(1, 24),
+      context=context,
+  )
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert [c.insertText for c in completions if c.label == 'sect.ion.three'
+         ] == ['.ion.three']
+
+
+@pytest.mark.asyncio
 async def test_goto_definition(server: LanguageServer):
   params = TextDocumentPositionParams(
       TextDocumentIdentifier(uri='file:///extended/with_references.cfg'),

@@ -288,10 +288,12 @@ async def lsp_completion(
 
     Note that there is wordPattern in language-configuration.json that is supposed
     to address this, but it seems we cannot include . in word patterns.
+    There's also the same problem with -
     """
-    common_leading, _, _ = current_text.rpartition('.')
-    if common_leading:
-      return insert_text[len(common_leading) + 1:]
+    for char in ('.', '-'):
+      common_leading, _, _ = current_text.rpartition(char)
+      if common_leading:
+        insert_text = insert_text[len(common_leading) + 1:]
     return insert_text
 
   parsed = await buildout.open(ls, params.textDocument.uri)
