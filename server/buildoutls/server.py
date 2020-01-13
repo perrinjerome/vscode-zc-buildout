@@ -74,14 +74,6 @@ def getOptionValue(
   return getattr(option, 'value', option)
 
 
-def getTextInRange(source: str, r: Range) -> str:
-  lines = source.splitlines()[r.start.line:r.end.line + 1]
-  if lines:
-    lines[0] = lines[0][r.start.character:]
-    lines[-1] = lines[-1][:r.end.character]
-  return '\n'.join(lines)
-
-
 async def parseAndSendDiagnostics(
     ls: LanguageServer,
     uri: str,
@@ -542,14 +534,10 @@ async def lsp_references(
 
     for profile_path in pathlib.Path(
         server.workspace.root_path).glob('**/*.cfg'):
-      #logger.debug('looking for symbols in %s', profile_path)
       profile = await buildout.parse(server, profile_path.as_uri())
       if profile is not None:
         assert isinstance(profile, buildout.BuildoutProfile)
         async for symbol in profile.getAllOptionReferenceSymbols():
-          if '/references/' in str(profile_path):
-            logger.debug("found symbol %s", symbol)
-            #breakpoint()
           if symbol.referenced_section_name == searched_section:
             if searched_option is None:
               references.append(Location(profile.uri, symbol.section_range))

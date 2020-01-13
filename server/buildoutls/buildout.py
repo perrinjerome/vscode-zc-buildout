@@ -95,7 +95,7 @@ class MissingExtendedSection(ResolveError):
     [a]
     <= not_exists
   ```
-  
+
   """
 
 
@@ -819,7 +819,7 @@ async def _parse(
       - return ordered dicts in the same order as the input text.
       - optionally resolve extends directly here
       - ignore jinja contexts
-    
+
   The returned value changed to a BuildoutProfile instance.
 
   """
@@ -1156,7 +1156,7 @@ def _do_extend_raw(
       [user]
       <= macro
 
-  this is zc.buildout.buildout.Option._do_extend_raw    
+  this is zc.buildout.buildout.Option._do_extend_raw
   """
   if name == 'buildout':
     return section
