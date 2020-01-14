@@ -484,91 +484,39 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               slapos_instance_profile.section_header_locations.setdefault(
                   'slap-connection',
                   Location(uri='', range=Range(Position(), Position())))
+              slap_connection = BuildoutSection()
+              for k in (
+                  'computer-id',
+                  'partition-id',
+                  'server-url',
+                  'software-release-url',
+              ):
+                slap_connection[k] = BuildoutOptionDefinition(
+                    locations=[],
+                    value='',
+                    implicit_option=True,
+                )
               slapos_instance_profile.setdefault(
                   'slap-connection',
-                  BuildoutSection(
-                      **{
-                          'computer-id':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'partition-id':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'server-url':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'software-release-url':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                      }))
+                  slap_connection,
+              )
               slapos_instance_profile.section_header_locations.setdefault(
                   'slap-network-information',
                   Location(uri='', range=Range(Position(), Position())))
+              slap_network_information = BuildoutSection()
+              for k in ('local-ipv4', 'global-ipv6', 'network-interface',
+                        'tap-ipv4', 'tap-gateway', 'tap-netmask', 'tap-network',
+                        'global-ipv4-network'):
+                slap_network_information[k] = BuildoutOptionDefinition(
+                    locations=[],
+                    value='',
+                    implicit_option=True,
+                )
               slapos_instance_profile.setdefault(
                   'slap-network-information',
-                  BuildoutSection(
-                      **{
-                          'local-ipv4':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'global-ipv6':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'network-interface':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'tap-ipv4':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'tap-gateway':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'tap-netmask':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'tap-network':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                          'global-ipv4-network':
-                              BuildoutOptionDefinition(
-                                  locations=[],
-                                  value='',
-                                  implicit_option=True,
-                              ),
-                      }))
+                  slap_network_information,
+              )
+
               return slapos_instance_profile
             return BuildoutTemplate(
                 uri=uri,
