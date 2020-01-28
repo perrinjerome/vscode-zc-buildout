@@ -363,6 +363,23 @@ async def test_BuildoutTemplate_getAllOptionReferenceSymbols(
 
 
 @pytest.mark.asyncio
+async def test_getOptionValues(server: LanguageServer):
+  parsed = await open(
+      ls=server,
+      uri='file:///option_values/buildout.cfg',
+  )
+  assert isinstance(parsed, BuildoutProfile)
+  assert list(parsed.getOptionValues('multi_line', 'option')) == [
+      ('first line', Range(Position(2, 2), Position(2, 12))),
+      ('second line', Range(Position(3, 2), Position(3, 13))),
+  ]
+  assert list(parsed.getOptionValues('simple_line', 'option')) == [
+      ('first', Range(Position(6, 9), Position(6, 14))),
+      ('second', Range(Position(6, 15), Position(6, 21))),
+  ]
+
+
+@pytest.mark.asyncio
 async def test_open_extends(server: LanguageServer):
   parsed = await open(
       ls=server,

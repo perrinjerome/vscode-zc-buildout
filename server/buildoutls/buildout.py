@@ -654,7 +654,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
   async def getAllOptionReferenceSymbols(
       self) -> AsyncIterator[OptionReferenceSymbolWithPosition]:
     """Return all symbols of kind OptionReference in this profile.
-    
+
     In a buildout profile, we also resolve the current section name
     in ${:option}.
     """
@@ -665,6 +665,77 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
         assert sap is not None
         symbol.referenced_section_name = sap.current_section_name
       yield symbol
+
+  def getOptionValues(
+      self,
+      section_name: str,
+      option_name: str,
+  ) -> Iterator[Tuple[str, Range]]:
+    """Iterate on all values of an option
+
+    When we have:
+
+    ```
+    [section]
+    value =
+      a
+      b
+      c
+    ```
+
+    the iterator yields `"a"`, `"b"`, `"c"` and the range of each value.
+
+    ```
+    [section]
+    value = a b c
+    ```
+    """
+    option: BuildoutOptionDefinition
+    option = self[section_name][option_name]
+    start_line = option.locations[-1].range.start.line
+    lines = self.source.splitlines(
+    )[start_line:option.locations[-1].range.end.line + 1]
+    is_multi_line_option = len(lines) > 1
+    for line_offset, option_value_text in enumerate(lines):
+      if option_value_text and option_value_text[0] not in '#;':
+        start_character = 0
+
+        if option_value_text.startswith(option_name):
+          option_name_text, option_value_text = option_value_text.split('=', 1)
+          start_character += len(option_name_text) + 1
+
+        start_character += len(option_value_text) - len(
+            option_value_text.lstrip())
+        option_value_text = option_value_text.strip()
+        if option_value_text:
+          if is_multi_line_option:
+            yield (
+                option_value_text,
+                Range(
+                    Position(
+                        start_line + line_offset,
+                        start_character,
+                    ),
+                    Position(
+                        start_line + line_offset,
+                        start_character + len(option_value_text),
+                    ),
+                ),
+            )
+          else:
+            for match in re.finditer(r'(\w+)', option_value_text):
+              yield (match.group(),
+                     Range(
+                         Position(
+                             start_line + line_offset,
+                             start_character + match.start(),
+                         ),
+                         Position(
+                             start_line + line_offset,
+                             start_character + match.start() +
+                             len(match.group()),
+                         ),
+                     ))
 
 
 class ResolvedBuildout(BuildoutProfile):
