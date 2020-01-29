@@ -170,46 +170,30 @@ async def parseAndSendDiagnostics(
                     source='buildout',
                     severity=DiagnosticSeverity.Error,
                 ),)
-    parts = resolved_buildout['buildout'].get('parts')
-    if parts is not None:
-      doc = ls.workspace.get_document(uri)
-      assert doc is not None
-      start = parts.locations[-1].range.start.line
-      lines = doc.lines[start:parts.locations[-1].range.end.line + 1]
-      for part in lines:
-        character = 0
-        if part.startswith('parts'):
-          option, part = part.split('=', 1)
-          character += len(option) + 1
-        if part and part[0] not in '#;':
-          character += len(part) - len(part.lstrip())
-          part = part.strip()
-          if part:
-            if part.startswith('${'):
-              continue  # assume OK
-            if part not in resolved_buildout:
-              diagnostics.append(
-                  Diagnostic(
-                      message=f'Section `{part}` does not exist.',
-                      range=Range(
-                          start=Position(start, character),
-                          end=Position(start, character + len(part)),
-                      ),
-                      source='buildout',
-                      severity=DiagnosticSeverity.Error,
-                  ),)
-            elif 'recipe' not in resolved_buildout[part]:
-              diagnostics.append(
-                  Diagnostic(
-                      message=f'Section `{part}` has no recipe.',
-                      range=Range(
-                          start=Position(start, character),
-                          end=Position(start, character + len(part)),
-                      ),
-                      source='buildout',
-                      severity=DiagnosticSeverity.Error,
-                  ),)
-        start += 1
+
+    if 'parts' in resolved_buildout['buildout']:
+      for part_name, part_range in resolved_buildout.getOptionValues(
+          'buildout', 'parts'):
+        if part_name:
+          if part_name.startswith('${') or part_name.startswith('{{'):
+            # Assume buildout/jinja substitutions are OK.
+            continue
+          if part_name not in resolved_buildout:
+            diagnostics.append(
+                Diagnostic(
+                    message=f'Section `{part_name}` does not exist.',
+                    range=part_range,
+                    source='buildout',
+                    severity=DiagnosticSeverity.Error,
+                ),)
+          elif 'recipe' not in resolved_buildout[part_name]:
+            diagnostics.append(
+                Diagnostic(
+                    message=f'Section `{part_name}` has no recipe.',
+                    range=part_range,
+                    source='buildout',
+                    severity=DiagnosticSeverity.Error,
+                ),)
 
   ls.publish_diagnostics(
       uri,
@@ -629,33 +613,13 @@ async def lsp_document_link(
   uri = params.textDocument.uri
   parsed_buildout = await buildout.parse(ls, uri)
   base = uri[:uri.rfind('/')] + '/'
-  extends = parsed_buildout['buildout'].get('extends')
 
-  doc = ls.workspace.get_document(uri)
-
-  if extends:
-    start = extends.locations[-1].range.start.line
-    lines = doc.lines[start:extends.locations[-1].range.end.line + 1]
-    for extend in lines:
-      character = 0
-      if extend.startswith('extends'):
-        option, extend = extend.split('=', 1)
-        character += len(option) + 1
-
-      if extend and extend[0] not in '#;':
-        character += len(extend) - len(extend.lstrip())
-        extend = extend.strip()
-
-        target = extend
-        if target:
-          if not buildout._isurl(extend):
-            target = urllib.parse.urljoin(base, extend)
-          links.append(
-              DocumentLink(
-                  range=Range(
-                      start=Position(start, character),
-                      end=Position(start, character + len(extend)),
-                  ),
-                  target=target))
-      start += 1
+  if 'extends' in parsed_buildout['buildout']:
+    for extend, extend_range in parsed_buildout.getOptionValues(
+        'buildout', 'extends'):
+      target = extend
+      if target:
+        if not buildout._isurl(extend):
+          target = urllib.parse.urljoin(base, extend)
+        links.append(DocumentLink(range=extend_range, target=target))
   return links
