@@ -46,6 +46,7 @@ The automatic installation does not seem to work with theia and the python egg h
 
 - from `${section:options}` we can go to the location where `option` is defined in `section`, or to `section` header if it's not defined.
 - from `<= section` we can go to `section`.
+- from `${buildout:extends}` we can go to the extended profile.
 
 ## Hover
 
