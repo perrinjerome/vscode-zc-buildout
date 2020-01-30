@@ -660,6 +660,20 @@ async def test_goto_definition_macro(server: LanguageServer):
 
 
 @pytest.mark.asyncio
+async def test_goto_definition_extended_profile(server: LanguageServer):
+  params = TextDocumentPositionParams(
+      TextDocumentIdentifier(uri='file:///extended/buildout.cfg'),
+      Position(2, 5),
+  )
+  definitions = await lsp_definition(server, params)
+  assert definitions == [
+      Location(
+          uri='file:///extended/another/buildout.cfg',
+          range=Range(start=Position(0, 0), end=Position(1, 0)))
+  ]
+
+
+@pytest.mark.asyncio
 async def test_document_link(server: LanguageServer):
   params = DocumentLinkParams(
       text_document=TextDocumentIdentifier(uri="file:///extended/buildout.cfg"))

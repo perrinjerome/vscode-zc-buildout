@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Added
 
+- definitions: paths from `${buildout:extends}` can also be opened with jump to definition.
 - completions: fix insertText with `-`.
 - diagnostics: detect missing non existant sections listed in `${buildout:parts}`.
 - diagnostics: detect sections without recipe listed in `${buildout:parts}`.

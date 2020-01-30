@@ -528,7 +528,15 @@ async def lsp_definition(
         l = parsed.section_header_locations.get(symbol.value)
         if l:
           locations.append(l)
-
+      elif symbol.current_section_name == 'buildout' and symbol.current_option_name == 'extends':
+        extend = symbol.value
+        if not buildout._isurl(extend):
+          uri = params.textDocument.uri
+          base = uri[:uri.rfind('/')] + '/'
+          locations.append(
+              Location(
+                  uri=urllib.parse.urljoin(base, extend),
+                  range=Range(start=Position(0, 0), end=Position(1, 0))))
   return locations
 
 
