@@ -16,22 +16,8 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - name: Run Tox
         run: |
           cd server
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r test-requirements.txt
-          pip install -e .
-      - name: Check format with yapf
-        run: |
-          cd server
-          yapf --recursive --diff *.py buildoutls/
-      - name: Typecheck with mypy
-        run: |
-          cd server
-          mypy buildoutls
-      - name: Test with pytest
-        run: |
-          cd server
-          pytest -l buildoutls
+          pip install tox
+          tox -e py
