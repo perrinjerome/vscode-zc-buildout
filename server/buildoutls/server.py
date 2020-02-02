@@ -6,7 +6,7 @@ import re
 import tempfile
 import urllib.parse
 import pathlib
-from typing import Any, List, Union, Tuple, Iterable, Optional, Sequence
+from typing import Any, List, Set, Union, Tuple, Iterable, Optional, Sequence
 
 from zc.buildout import configparser
 from zc.buildout.buildout import Buildout
@@ -152,8 +152,14 @@ async def parseAndSendDiagnostics(
           ))
 
   if isinstance(resolved_buildout, buildout.BuildoutProfile):
+    installed_parts: Set[str] = set([])
+    if 'parts' in resolved_buildout['buildout']:
+      installed_parts = set((
+          v[0] for v in resolved_buildout.getOptionValues('buildout', 'parts')))
+
     for section_name, section in resolved_buildout.items():
-      if resolved_buildout.section_header_locations[section_name].uri == uri:
+      if section_name in installed_parts and resolved_buildout.section_header_locations[
+          section_name].uri == uri:
         # check for required options
         recipe = section.getRecipe()
         if recipe:

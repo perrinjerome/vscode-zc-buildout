@@ -168,7 +168,7 @@ async def test_diagnostics_required_recipe_option(server) -> None:
   assert diagnostics[0].severity == DiagnosticSeverity.Error
   assert diagnostics[0].message == \
     "Missing required options for `plone.recipe.command`: `command`"
-  assert diagnostics[0].range == Range(start=Position(2, 0), end=Position(3, 0))
+  assert diagnostics[0].range == Range(start=Position(6, 0), end=Position(7, 0))
 
 
 @pytest.mark.asyncio

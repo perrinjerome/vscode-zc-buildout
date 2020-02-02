@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed
 
 - fixed broken v0.1.1 release, it could not be installed from pypi.
+- diagnostics: prevent "missing required options" false positive on sections used only as macros.
 
 ## [0.1.1]
 
