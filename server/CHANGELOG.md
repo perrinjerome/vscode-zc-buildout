@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning][semver].
 - fixed broken v0.1.1 release, it could not be installed from pypi.
 - diagnostics: prevent "missing required options" false positive on sections used only as macros.
 
-## [0.1.1]
+## [0.1.1] - 2020-01-30
 
 ### Added
 
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning][semver].
 - diagnostics: detect missing non existant sections listed in `${buildout:parts}`.
 - diagnostics: detect sections without recipe listed in `${buildout:parts}`.
 
-## 0.1.0
+## 0.1.0 - 2020-01-04
 
 - Initial Version
 
