@@ -81,8 +81,9 @@ async def parseAndSendDiagnostics(
   diagnostics: List[Diagnostic] = []
   parsed = None
 
-  if (uri.endswith('.cfg') or uri.endswith('.cfg.in') or
-      uri.endswith('.cfg.j2')):
+  looks_like_profile = buildout.BuildoutProfile.looksLikeBuildoutProfile(uri)
+
+  if looks_like_profile:
     # parse errors
     try:
       parsed = await buildout.parse(
@@ -94,8 +95,7 @@ async def parseAndSendDiagnostics(
       if e.filename != uri:
         logger.debug("skipping error in external file %s", e.filename)
       elif isinstance(e, MissingSectionHeaderError):
-        if (uri.endswith('.cfg') or uri.endswith('.cfg.in') or
-            uri.endswith('.cfg.j2')):
+        if looks_like_profile:
           diagnostics.append(
               Diagnostic(
                   message=e.message,
@@ -106,8 +106,7 @@ async def parseAndSendDiagnostics(
                   source='buildout',
               ))
       else:
-        if (uri.endswith('.cfg') or uri.endswith('.cfg.in') or
-            uri.endswith('.cfg.j2')):
+        if looks_like_profile:
           for (lineno, _), msg in zip(e.errors, e.message.splitlines()[1:]):
             msg = msg.split(':', 1)[1].strip()
             diagnostics.append(

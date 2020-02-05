@@ -479,44 +479,6 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               assert isinstance(slapos_instance_profile, BuildoutProfile)
               slapos_instance_profile.second_level_buildout = slapos_instance_profile
               slapos_instance_profile.buildout = self
-
-              # Add slapos instance generated sections.
-              slapos_instance_profile.section_header_locations.setdefault(
-                  'slap-connection',
-                  Location(uri='', range=Range(Position(), Position())))
-              slap_connection = BuildoutSection()
-              for k in (
-                  'computer-id',
-                  'partition-id',
-                  'server-url',
-                  'software-release-url',
-              ):
-                slap_connection[k] = BuildoutOptionDefinition(
-                    locations=[],
-                    value='',
-                    implicit_option=True,
-                )
-              slapos_instance_profile.setdefault(
-                  'slap-connection',
-                  slap_connection,
-              )
-              slapos_instance_profile.section_header_locations.setdefault(
-                  'slap-network-information',
-                  Location(uri='', range=Range(Position(), Position())))
-              slap_network_information = BuildoutSection()
-              for k in ('local-ipv4', 'global-ipv6', 'network-interface',
-                        'tap-ipv4', 'tap-gateway', 'tap-netmask', 'tap-network',
-                        'global-ipv4-network'):
-                slap_network_information[k] = BuildoutOptionDefinition(
-                    locations=[],
-                    value='',
-                    implicit_option=True,
-                )
-              slapos_instance_profile.setdefault(
-                  'slap-network-information',
-                  slap_network_information,
-              )
-
               return slapos_instance_profile
             return BuildoutTemplate(
                 uri=uri,
@@ -739,6 +701,13 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
                            ),
                        ))
 
+  @staticmethod
+  def looksLikeBuildoutProfile(uri: URI):
+    """Check if this URI looks like a buildout profile URI.
+    """
+    return (uri.endswith('.cfg') or uri.endswith('.cfg.in') or
+            uri.endswith('.cfg.j2') or uri.endswith('.cfg.jinja2'))
+
 
 class ResolvedBuildout(BuildoutProfile):
   """A buildout where extends and section macros <= have been extended.
@@ -859,17 +828,53 @@ async def _parse(
         locations=[Location(uri=uri, range=Range(Position(0), Position(0)))],
         implicit_option=True,
     )
-
   sections['buildout']['directory'] = BuildoutOptionDefinition(
       value='.',
       locations=[Location(uri=uri, range=Range(Position(0), Position(0)))],
       implicit_option=True,
   )
-
   sections.section_header_locations['buildout'] = Location(
       uri="",
       range=Range(Position(), Position()),
   )
+  if slapos_instance_profile_filename_re.match(uri):
+    # Add slapos instance generated sections.
+    sections.section_header_locations.setdefault(
+        'slap-connection',
+        Location(uri='', range=Range(Position(), Position())))
+    slap_connection = BuildoutSection()
+    for k in (
+        'computer-id',
+        'partition-id',
+        'server-url',
+        'software-release-url',
+    ):
+      slap_connection[k] = BuildoutOptionDefinition(
+          locations=[],
+          value='',
+          implicit_option=True,
+      )
+    sections.setdefault('slap-connection', slap_connection)
+    sections.section_header_locations.setdefault(
+        'slap-network-information',
+        Location(uri='', range=Range(Position(), Position())))
+    slap_network_information = BuildoutSection()
+    for k in (
+        'local-ipv4',
+        'global-ipv6',
+        'network-interface',
+        'tap-ipv4',
+        'tap-gateway',
+        'tap-netmask',
+        'tap-network',
+        'global-ipv4-network',
+    ):
+      slap_network_information[k] = BuildoutOptionDefinition(
+          locations=[],
+          value='',
+          implicit_option=True,
+      )
+    sections.setdefault('slap-network-information', slap_network_information)
 
   in_jinja_context = False
   cursect: Optional[Dict[str, BuildoutOptionDefinition]] = None
@@ -1010,7 +1015,9 @@ async def open(
 ) -> Optional[Union[BuildoutTemplate, ResolvedBuildout]]:
   """Open an URI and returnes either a buildout or a profile connected to buildout.
 
-  In the case of slapos buildout templates (instance.cfg.in), it is both.
+  In the case of slapos buildout templates (instance.cfg.in), it is both. This is
+  not true for slapos buildout templates as jinja templates, which have their own
+  namespace as ${} and not as $${}.
 
   For buildout, it is a wrapper over _open which uses language server's workspace
   """
@@ -1042,13 +1049,12 @@ async def open(
             [],
             allow_errors=allow_errors,
         )
-
         assert isinstance(buildout, BuildoutProfile)
         template = await buildout.getTemplate(ls, uri)
         if template is not None:
           return template
 
-  if uri.endswith('.cfg') or open_as_buildout_profile:
+  if BuildoutProfile.looksLikeBuildoutProfile(uri) or open_as_buildout_profile:
     fp = io.StringIO(document.source)
     return await _open(ls, '', uri, [], allow_errors=allow_errors)
 
