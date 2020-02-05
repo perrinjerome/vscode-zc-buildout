@@ -9,15 +9,33 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: [3.6, 3.7, 3.8]
-
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Run Tox
+      - name: Run Tox on 3.6
         run: |
           cd server
           pip install tox
-          tox -e py
+          tox
+        env:
+          TOXENV: py36-buildout_2_9_2,py36-buildout_current
+        if: matrix.python-version == '3.6'
+      - name: Run Tox on 3.7
+        run: |
+          cd server
+          pip install tox
+          tox
+        env:
+          TOXENV: py37-buildout_2_9_2,py37-buildout_current
+        if: matrix.python-version == '3.7'
+      - name: Run Tox on 3.8
+        run: |
+          cd server
+          pip install tox
+          tox
+        env:
+          TOXENV: py38-buildout_2_9_2,py38-buildout_current
+        if: matrix.python-version == '3.8'

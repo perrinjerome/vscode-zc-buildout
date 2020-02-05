@@ -1,6 +1,6 @@
 import zc.buildout.download
 from collections import MutableMapping as DictMixin
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Tuple, Union
 from zc.buildout.rmtree import rmtree as rmtree
 
 PY3: Any
@@ -12,7 +12,10 @@ def print_(*args: Any, **kw: Any) -> None: ...
 
 realpath: Any
 
-_buildout_default_options: Dict[str, SectionKey]
+DefaultOptionBuildout292 =  Dict[str, Tuple[str, str]]
+DefaultOptionBuildoutCurrent =  Dict[str, SectionKey]
+
+_buildout_default_options: Union[DefaultOptionBuildout292, DefaultOptionBuildoutCurrent]
 
 class MissingOption(zc.buildout.UserError, KeyError): ...
 class MissingSection(zc.buildout.UserError, KeyError): ...

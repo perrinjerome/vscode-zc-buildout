@@ -850,11 +850,16 @@ async def _parse(
   # buildout default values
   sections['buildout'] = BuildoutSection()
   for k, v in _buildout_default_options.items():
+    if isinstance(v, tuple):
+      value = v[0]  # buildout < 2.9.3
+    else:
+      value = v.value
     sections['buildout'][k] = BuildoutOptionDefinition(
-        value=v.value,
+        value=value,
         locations=[Location(uri=uri, range=Range(Position(0), Position(0)))],
         implicit_option=True,
     )
+
   sections['buildout']['directory'] = BuildoutOptionDefinition(
       value='.',
       locations=[Location(uri=uri, range=Range(Position(0), Position(0)))],
