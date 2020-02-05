@@ -692,50 +692,52 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     """
     option: BuildoutOptionDefinition
     option = self[section_name][option_name]
-    start_line = option.locations[-1].range.start.line
-    lines = self.source.splitlines(
-    )[start_line:option.locations[-1].range.end.line + 1]
-    is_multi_line_option = len(lines) > 1
-    for line_offset, option_value_text in enumerate(lines):
-      if option_value_text and option_value_text[0] not in '#;':
-        start_character = 0
+    location = option.locations[-1]
+    if location.uri == self.uri:
+      start_line = location.range.start.line
+      lines = self.source.splitlines()[start_line:location.range.end.line + 1]
+      is_multi_line_option = len(lines) > 1
+      for line_offset, option_value_text in enumerate(lines):
+        if option_value_text and option_value_text[0] not in '#;':
+          start_character = 0
 
-        if option_value_text.startswith(option_name):
-          option_name_text, option_value_text = option_value_text.split('=', 1)
-          start_character += len(option_name_text) + 1
+          if option_value_text.startswith(option_name):
+            option_name_text, option_value_text = option_value_text.split(
+                '=', 1)
+            start_character += len(option_name_text) + 1
 
-        start_character += len(option_value_text) - len(
-            option_value_text.lstrip())
-        option_value_text = option_value_text.strip()
-        if option_value_text:
-          if is_multi_line_option:
-            yield (
-                option_value_text,
-                Range(
-                    Position(
-                        start_line + line_offset,
-                        start_character,
-                    ),
-                    Position(
-                        start_line + line_offset,
-                        start_character + len(option_value_text),
-                    ),
-                ),
-            )
-          else:
-            for match in re.finditer(r'([^\s]+)', option_value_text):
-              yield (match.group(),
-                     Range(
-                         Position(
-                             start_line + line_offset,
-                             start_character + match.start(),
-                         ),
-                         Position(
-                             start_line + line_offset,
-                             start_character + match.start() +
-                             len(match.group()),
-                         ),
-                     ))
+          start_character += len(option_value_text) - len(
+              option_value_text.lstrip())
+          option_value_text = option_value_text.strip()
+          if option_value_text:
+            if is_multi_line_option:
+              yield (
+                  option_value_text,
+                  Range(
+                      Position(
+                          start_line + line_offset,
+                          start_character,
+                      ),
+                      Position(
+                          start_line + line_offset,
+                          start_character + len(option_value_text),
+                      ),
+                  ),
+              )
+            else:
+              for match in re.finditer(r'([^\s]+)', option_value_text):
+                yield (match.group(),
+                       Range(
+                           Position(
+                               start_line + line_offset,
+                               start_character + match.start(),
+                           ),
+                           Position(
+                               start_line + line_offset,
+                               start_character + match.start() +
+                               len(match.group()),
+                           ),
+                       ))
 
 
 class ResolvedBuildout(BuildoutProfile):

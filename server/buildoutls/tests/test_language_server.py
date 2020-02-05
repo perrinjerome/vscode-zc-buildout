@@ -218,8 +218,14 @@ async def test_diagnostics_buildout_parts_section_name_with_dot(server) -> None:
 @pytest.mark.asyncio
 async def test_diagnostics_ok(server) -> None:
   # no false positives
-  await parseAndSendDiagnostics(server, 'file:///ok.cfg')
-  server.publish_diagnostics.assert_called_once_with('file:///ok.cfg', [])
+  for url in (
+      'file:///ok.cfg',
+      'file:///broken/extended.cfg',
+      'file:///broken/extended/buildout.cfg',
+  ):
+    await parseAndSendDiagnostics(server, url)
+    server.publish_diagnostics.assert_called_once_with(url, [])
+    server.publish_diagnostics.reset_mock()
 
 
 @pytest.mark.asyncio
