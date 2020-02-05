@@ -204,6 +204,18 @@ async def test_diagnostics_buildout_parts(server) -> None:
 
 
 @pytest.mark.asyncio
+async def test_diagnostics_buildout_parts_section_name_with_dot(server) -> None:
+  # This test checks that we supports section name with dots or dash
+  await parseAndSendDiagnostics(
+      server, 'file:///broken/buildout_parts_section_name_with_dot.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///broken/buildout_parts_section_name_with_dot.cfg', [mock.ANY])
+  diagnostic, = server.publish_diagnostics.call_args[0][1]
+  assert diagnostic.message == "Section `c.d` has no recipe."
+  assert diagnostic.range == Range(start=Position(1, 12), end=Position(1, 15))
+
+
+@pytest.mark.asyncio
 async def test_diagnostics_ok(server) -> None:
   # no false positives
   await parseAndSendDiagnostics(server, 'file:///ok.cfg')

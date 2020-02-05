@@ -723,7 +723,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
                 ),
             )
           else:
-            for match in re.finditer(r'(\w+)', option_value_text):
+            for match in re.finditer(r'([^\s]+)', option_value_text):
               yield (match.group(),
                      Range(
                          Position(

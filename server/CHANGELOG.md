@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 - fixed broken v0.1.1 release, it could not be installed from pypi.
 - diagnostics: prevent "missing required options" false positive on sections used only as macros.
+- diagnostic: Correctly analyze sections with `.` or `-` in their names
 
 ## [0.1.1] - 2020-01-30
 
