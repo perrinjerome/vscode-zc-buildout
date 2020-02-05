@@ -53,9 +53,9 @@ def getTextDocumentItem(workspace: Workspace, doc_uri: str) -> TextDocumentItem:
 @pytest.mark.asyncio
 async def test_diagnostics_syntax_error(server) -> None:
   # syntax error
-  await parseAndSendDiagnostics(server, 'file:///broken/syntax_error.cfg')
+  await parseAndSendDiagnostics(server, 'file:///diagnostics/syntax_error.cfg')
   server.publish_diagnostics.assert_called_once_with(
-      'file:///broken/syntax_error.cfg',
+      'file:///diagnostics/syntax_error.cfg',
       [mock.ANY],
   )
   diagnostic, = server.publish_diagnostics.call_args[0][1]
@@ -66,26 +66,26 @@ async def test_diagnostics_syntax_error(server) -> None:
 @pytest.mark.asyncio
 async def test_diagnostics_missing_section_error(server) -> None:
   # missing section error (a parse error handled differently)
-  await parseAndSendDiagnostics(server,
-                                'file:///broken/missing_section_error.cfg')
+  await parseAndSendDiagnostics(
+      server, 'file:///diagnostics/missing_section_error.cfg')
   server.publish_diagnostics.assert_called_once_with(
-      'file:///broken/missing_section_error.cfg',
+      'file:///diagnostics/missing_section_error.cfg',
       [mock.ANY],
   )
   diagnostic, = server.publish_diagnostics.call_args[0][1]
   assert diagnostic.range == Range(start=Position(0, 0), end=Position(1, 0))
   assert diagnostic.message == textwrap.dedent("""\
       File contains no section headers.
-      file: file:///broken/missing_section_error.cfg, line: 0
+      file: file:///diagnostics/missing_section_error.cfg, line: 0
       'key = value'""")
 
 
 @pytest.mark.asyncio
 async def test_diagnostics_non_existent_sections(server) -> None:
   # warnings for reference to non existent options
-  await parseAndSendDiagnostics(server, 'file:///broken/reference.cfg')
+  await parseAndSendDiagnostics(server, 'file:///diagnostics/reference.cfg')
   server.publish_diagnostics.assert_called_once_with(
-      'file:///broken/reference.cfg',
+      'file:///diagnostics/reference.cfg',
       [mock.ANY, mock.ANY],
   )
   diagnostics: Sequence[Diagnostic] = sorted(
@@ -107,9 +107,9 @@ async def test_diagnostics_non_existent_sections(server) -> None:
 async def test_diagnostics_non_existent_sections_multiple_references_per_line(
     server,) -> None:
   # harder version, two errors on same line
-  await parseAndSendDiagnostics(server, 'file:///broken/harder.cfg')
+  await parseAndSendDiagnostics(server, 'file:///diagnostics/harder.cfg')
   server.publish_diagnostics.assert_called_once_with(
-      'file:///broken/harder.cfg',
+      'file:///diagnostics/harder.cfg',
       [mock.ANY] * 8,
   )
   diagnostics = sorted(
@@ -155,10 +155,10 @@ async def test_diagnostics_non_existent_sections_multiple_references_per_line(
 
 @pytest.mark.asyncio
 async def test_diagnostics_required_recipe_option(server) -> None:
-  await parseAndSendDiagnostics(server,
-                                'file:///broken/recipe_required_option.cfg')
+  await parseAndSendDiagnostics(
+      server, 'file:///diagnostics/recipe_required_option.cfg')
   server.publish_diagnostics.assert_called_once_with(
-      'file:///broken/recipe_required_option.cfg',
+      'file:///diagnostics/recipe_required_option.cfg',
       [mock.ANY],
   )
   diagnostics = sorted(
@@ -189,9 +189,10 @@ async def test_diagnostics_template(server) -> None:
 
 @pytest.mark.asyncio
 async def test_diagnostics_buildout_parts(server) -> None:
-  await parseAndSendDiagnostics(server, 'file:///broken/buildout_parts.cfg')
+  await parseAndSendDiagnostics(server,
+                                'file:///diagnostics/buildout_parts.cfg')
   server.publish_diagnostics.assert_called_once_with(
-      'file:///broken/buildout_parts.cfg',
+      'file:///diagnostics/buildout_parts.cfg',
       [mock.ANY, mock.ANY],
   )
   diagnostic1, diagnostic2 = sorted(
@@ -207,9 +208,10 @@ async def test_diagnostics_buildout_parts(server) -> None:
 async def test_diagnostics_buildout_parts_section_name_with_dot(server) -> None:
   # This test checks that we supports section name with dots or dash
   await parseAndSendDiagnostics(
-      server, 'file:///broken/buildout_parts_section_name_with_dot.cfg')
+      server, 'file:///diagnostics/buildout_parts_section_name_with_dot.cfg')
   server.publish_diagnostics.assert_called_once_with(
-      'file:///broken/buildout_parts_section_name_with_dot.cfg', [mock.ANY])
+      'file:///diagnostics/buildout_parts_section_name_with_dot.cfg',
+      [mock.ANY])
   diagnostic, = server.publish_diagnostics.call_args[0][1]
   assert diagnostic.message == "Section `c.d` has no recipe."
   assert diagnostic.range == Range(start=Position(1, 12), end=Position(1, 15))
@@ -220,8 +222,8 @@ async def test_diagnostics_ok(server) -> None:
   # no false positives
   for url in (
       'file:///ok.cfg',
-      'file:///broken/extended.cfg',
-      'file:///broken/extended/buildout.cfg',
+      'file:///diagnostics/extended.cfg',
+      'file:///diagnostics/extended/buildout.cfg',
   ):
     await parseAndSendDiagnostics(server, url)
     server.publish_diagnostics.assert_called_once_with(url, [])
@@ -434,7 +436,7 @@ async def test_complete_option_reference(server: LanguageServer):
   # complete options of a section (when document has invalid syntax)
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
-          uri="file:///broken/syntax_error.cfg"),
+          uri="file:///diagnostics/syntax_error.cfg"),
       position=Position(3, 0),
       context=context)
   completions = await lsp_completion(server, params)
@@ -656,7 +658,7 @@ async def test_goto_definition_unknown_option(server: LanguageServer):
 @pytest.mark.asyncio
 async def test_goto_definition_unknown_section(server: LanguageServer):
   params = TextDocumentPositionParams(
-      TextDocumentIdentifier(uri='file:///broken/reference.cfg'),
+      TextDocumentIdentifier(uri='file:///diagnostics/reference.cfg'),
       Position(1, 21),
   )
   definitions = await lsp_definition(server, params)

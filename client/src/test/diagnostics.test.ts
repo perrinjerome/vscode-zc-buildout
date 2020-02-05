@@ -10,7 +10,7 @@ import * as assert from "assert";
 import { getDocUri, activateExtension, sleep } from "./helper";
 
 describe("Diagnostics", () => {
-  const docUri = getDocUri("broken/reference.cfg");
+  const docUri = getDocUri("diagnostics/reference.cfg");
 
   it("Diagnoses non existent options and sections.", async () => {
     await testDiagnostics(docUri, [
