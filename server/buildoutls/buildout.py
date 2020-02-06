@@ -185,6 +185,7 @@ class Symbol:
       current_option_name: Optional[str] = None,
       referenced_section_name: Optional[str] = None,
       referenced_option_name: Optional[str] = None,
+      is_same_section_reference=False,
   ):
     self._buildout = buildout
     self.kind = kind
@@ -193,6 +194,7 @@ class Symbol:
     self.current_option_name = current_option_name
     self.referenced_section_name = referenced_section_name
     self.referenced_option_name = referenced_option_name
+    self.is_same_section_reference = is_same_section_reference
 
   def __repr__(self):
     referenced = ""
@@ -323,6 +325,7 @@ class BuildoutTemplate:
               current_option_name=current_option_name,
               referenced_section_name=referenced_section_name or
               current_section_name,
+              is_same_section_reference=referenced_section_name == '',
               referenced_option_name=referenced_option_name,
           )
         else:
@@ -352,6 +355,7 @@ class BuildoutTemplate:
               current_option_name=current_option_name,
               referenced_section_name=referenced_section_name or
               current_section_name,
+              is_same_section_reference=referenced_section_name == '',
           )
         else:
           logger.debug("section_reference_match was not in range, advancing")
@@ -387,6 +391,7 @@ class BuildoutTemplate:
             value=match.string[slice(*match.span())],
             referenced_section_name=match.group('section'),
             referenced_option_name=match.group('option'),
+            is_same_section_reference=match.group('section') == '',
         )
         symbol.section_range = Range(
             Position(

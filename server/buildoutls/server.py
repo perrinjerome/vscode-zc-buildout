@@ -124,6 +124,13 @@ async def parseAndSendDiagnostics(
       uri=uri,
   )
   assert resolved_buildout is not None
+
+  installed_parts: Set[str] = set([])
+  if isinstance(resolved_buildout, buildout.BuildoutProfile):
+    if 'parts' in resolved_buildout['buildout']:
+      installed_parts = set((
+          v[0] for v in resolved_buildout.getOptionValues('buildout', 'parts')))
+
   async for symbol in resolved_buildout.getAllOptionReferenceSymbols():
     if symbol.referenced_section is None:
       diagnostics.append(
@@ -142,6 +149,9 @@ async def parseAndSendDiagnostics(
               symbol.referenced_option_name in
               symbol.referenced_section_recipe.generated_options):
         continue
+      # if a section is a macro, it's OK to self reference ${:missing}
+      if symbol.is_same_section_reference and symbol.current_section_name not in installed_parts:
+        continue
       diagnostics.append(
           Diagnostic(
               message=f'Option `{symbol.referenced_option_name}` does not exist in `{symbol.referenced_section_name}`.',
@@ -151,11 +161,6 @@ async def parseAndSendDiagnostics(
           ))
 
   if isinstance(resolved_buildout, buildout.BuildoutProfile):
-    installed_parts: Set[str] = set([])
-    if 'parts' in resolved_buildout['buildout']:
-      installed_parts = set((
-          v[0] for v in resolved_buildout.getOptionValues('buildout', 'parts')))
-
     for section_name, section in resolved_buildout.items():
       if section_name in installed_parts and resolved_buildout.section_header_locations[
           section_name].uri == uri:
