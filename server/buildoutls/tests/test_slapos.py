@@ -136,7 +136,7 @@ async def test_goto_definition_slapos_instance_software(server: LanguageServer):
   assert definitions == [
       Location(
           uri='file:///slapos/instance_as_buildout_profile/software.cfg',
-          range=Range(Position(5, 0), Position(6, 0)))
+          range=Range(Position(7, 0), Position(8, 0)))
   ]
 
 

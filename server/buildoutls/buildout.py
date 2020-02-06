@@ -48,6 +48,9 @@ logger = logging.getLogger(__name__)
 # We also tolerate ${section: without option or the ending } to generate completions.
 option_reference_re = re.compile(
     r'\${(?P<section>[-a-zA-Z0-9 ._]*):(?P<option>[-a-zA-Z0-9 ._]*)')
+# In this version, we don't tolerate the missing }
+option_reference_strict_re = re.compile(
+    r'\${(?P<section>[-a-zA-Z0-9 ._]*):(?P<option>[-a-zA-Z0-9 ._]*)}')
 
 # Matches of an unterminated ${section:
 section_reference_re = re.compile(r'.*\$\{(?P<section>[-a-zA-Z0-9 ._]*)[^:]*$')
@@ -433,7 +436,6 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     One exception is for profiles names software.cfg or buildout.cfg - we just assume
     that the template is valid for these profiles. For other profiles, we check if
     the profile really uses this template.
-    XXX this might not be good, but we don't resolve subsitutions inside buildout now.
     """
 
     # uri can be passed as relative or absolute. Let's build a set of absolute
@@ -457,34 +459,62 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     if not os.path.exists(document.path):
       return None
 
-    for section_value in self.values():
+    for section_name, section_value in self.items():
       recipe = section_value.getRecipe()
       if recipe is not None:
-
         for template_option_name in recipe.template_options:
           template_option_value = section_value.get(template_option_name)
-          if (template_option_value is not None and
-              template_option_value.value in uris or
-              self.uri.endswith('/buildout.cfg') or
-              self.uri.endswith('/software.cfg')):
+          if template_option_value is not None:
+            template_option_value_uri = template_option_value.value
+            # expand substitutions
+            if '${' in template_option_value_uri:
+              section_value_dict = dict(section_value)
+              if '<' in section_value:
+                section_value_dict = dict(self[section_value['<'].value])
+                section_value_dict.update(dict(section_value))
+              logger.debug("We have a section reference %s in %s",
+                           template_option_value_uri, section_value_dict)
 
-            if slapos_instance_profile_filename_re.match(uri):
-              # a slapos "buildout profile as a template"
-              slapos_instance_profile = await open(
-                  ls,
-                  uri,
-                  allow_errors=True,
-                  open_as_buildout_profile=True,
+              def expand_section_reference(match: Match):
+                referenced_section_name = match.group('section') or section_name
+                if referenced_section_name in self:
+                  referenced_section = self[referenced_section_name]
+                  if match.group('option') in referenced_section:
+                    return referenced_section[match.group('option')].value
+                return '\0'  # won't likely match a filename
+
+              template_option_value_uri = option_reference_strict_re.sub(
+                  expand_section_reference,
+                  template_option_value_uri,
               )
-              assert isinstance(slapos_instance_profile, BuildoutProfile)
-              slapos_instance_profile.second_level_buildout = slapos_instance_profile
-              slapos_instance_profile.buildout = self
-              return slapos_instance_profile
-            return BuildoutTemplate(
-                uri=uri,
-                source=document.source,
-                buildout=self,
-            )
+              logger.debug("Section reference expanded to: %s",
+                           template_option_value_uri)
+
+            # Normalize URI path, in case it contain double slashes, ./ or ..
+            template_option_value_parsed = urllib.parse.urlparse(
+                template_option_value_uri)
+            template_option_value_uri = urllib.parse.urlunparse(
+                template_option_value_parsed._replace(
+                    path=os.path.normpath(template_option_value_parsed.path)))
+
+            if template_option_value_uri in uris:
+              if slapos_instance_profile_filename_re.match(uri):
+                # a slapos "buildout profile as a template"
+                slapos_instance_profile = await open(
+                    ls,
+                    uri,
+                    allow_errors=True,
+                    force_open_as_buildout_profile=True,
+                )
+                assert isinstance(slapos_instance_profile, BuildoutProfile)
+                slapos_instance_profile.second_level_buildout = slapos_instance_profile
+                slapos_instance_profile.buildout = self
+                return slapos_instance_profile
+              return BuildoutTemplate(
+                  uri=uri,
+                  source=document.source,
+                  buildout=self,
+              )
     return None
 
   async def getSymbolAtPosition(self, position: Position) -> Optional[Symbol]:
@@ -1016,7 +1046,7 @@ async def open(
     ls: LanguageServer,
     uri: URI,
     allow_errors: bool = True,
-    open_as_buildout_profile: bool = False,
+    force_open_as_buildout_profile: bool = False,
 ) -> Optional[Union[BuildoutTemplate, ResolvedBuildout]]:
   """Open an URI and returnes either a buildout or a profile connected to buildout.
 
@@ -1024,22 +1054,28 @@ async def open(
   not true for slapos buildout templates as jinja templates, which have their own
   namespace as ${} and not as $${}.
 
+  force_open_as_buildout_profile is used to force assuming that this file is a
+  buildout profile (and not a buildout template).
+
   For buildout, it is a wrapper over _open which uses language server's workspace
   """
   document = ls.workspace.get_document(uri)
   logger.debug("open %s", uri)
-  if not open_as_buildout_profile:
+  if not force_open_as_buildout_profile:
+
+    def getCandidateBuildoutProfiles():
+      path = pathlib.Path(document.path).parent
+      for _ in range(3):  # look for buildouts up to 3 levels
+        # we sort just to have stable behavior
+        for profile in sorted(path.glob('*.cfg')):
+          yield profile
+        path = path.parent
+
     # First, try to read as a template, because buildout profiles can be templates.
     if slapos_instance_profile_filename_re.match(
         uri) or not uri.endswith('.cfg'):
-      logger.debug('Trying to open %s as a template', uri)
-      for buildout_path in sorted(
-          pathlib.Path(document.path).parent.glob('*.cfg'),
-          # we try buildout.cfg and software.cfg at last, because getTemplate
-          # returns a valid template for any file.
-          key=lambda path: path.name in ('buildout.cfg', 'software.cfg')):
-
-        # We don't use  buildout_path.resolve().as_uri(), because we have fake uri -> path mapping in tests
+      for buildout_path in getCandidateBuildoutProfiles():
+        # We don't use buildout_path.resolve().as_uri(), because we have fake uri -> path mapping in tests
         buildout_uri = str(buildout_path.resolve()).replace(
             ls.workspace.root_path,
             ls.workspace.root_uri,
@@ -1059,7 +1095,8 @@ async def open(
         if template is not None:
           return template
 
-  if BuildoutProfile.looksLikeBuildoutProfile(uri) or open_as_buildout_profile:
+  if BuildoutProfile.looksLikeBuildoutProfile(
+      uri) or force_open_as_buildout_profile:
     fp = io.StringIO(document.source)
     return await _open(ls, '', uri, [], allow_errors=allow_errors)
 

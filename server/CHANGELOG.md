@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Added:
 
 - support running with buildout < 2.9.3
+- initial support of `instance.cfg` defined using `slapos.recipe.template:jinja2`
 
 ### Fixed
 
