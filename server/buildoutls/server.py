@@ -177,12 +177,18 @@ async def parseAndSendDiagnostics(
                 ),)
 
     if 'parts' in resolved_buildout['buildout']:
+      in_jinja_context = False
       for part_name, part_range in resolved_buildout.getOptionValues(
           'buildout', 'parts'):
         if part_name:
-          if part_name.startswith('${') or part_name.startswith('{{'):
+          if part_name.startswith('{%'):
+            in_jinja_context = not in_jinja_context
+          if (part_name.startswith('${') or part_name.startswith('{{') or
+              part_name.startswith('{#') or part_name.startswith('{%') or
+              in_jinja_context):
             # Assume buildout/jinja substitutions are OK.
             continue
+
           if part_name not in resolved_buildout:
             diagnostics.append(
                 Diagnostic(

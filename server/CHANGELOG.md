@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning][semver].
 - diagnostics: prevent "missing required options" false positive on sections used only as macros.
 - diagnostic: Correctly analyze sections with `.` or `-` in their names
 - diagnostic: Fix false positives on `${buildout:parts}` with extended sections
+- diagnostic: Fix false positives on `${buildout:parts}` when dynamically adding parts with jinja.
 
 ## [0.1.1] - 2020-01-30
 

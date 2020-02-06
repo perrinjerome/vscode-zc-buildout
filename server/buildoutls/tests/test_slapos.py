@@ -87,7 +87,7 @@ async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///slapos/instance_as_jinja/instance.cfg.in"),
-      position=Position(14, 27),
+      position=Position(18, 27),
       context=context)
 
   completions = await lsp_completion(server, params)

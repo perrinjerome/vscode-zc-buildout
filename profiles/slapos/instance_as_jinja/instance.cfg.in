@@ -1,5 +1,9 @@
 [buildout]
 parts =
+    {%- for part in some_jinja_variable %}
+        some jinja to define parts ... this should not report missing sections
+    {%- endfor %}
+    {# jinja comment #}
     publish
 
 [directory]
