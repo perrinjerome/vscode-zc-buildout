@@ -847,6 +847,8 @@ async def _parse(
         'computer-id',
         'partition-id',
         'server-url',
+        'key-file',
+        'cert-file',
         'software-release-url',
     ):
       slap_connection[k] = BuildoutOptionDefinition(
