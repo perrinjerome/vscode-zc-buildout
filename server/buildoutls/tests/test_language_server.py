@@ -224,6 +224,7 @@ async def test_diagnostics_ok(server) -> None:
       'file:///ok.cfg',
       'file:///diagnostics/extended.cfg',
       'file:///diagnostics/extended/buildout.cfg',
+      'file:///diagnostics/jinja.cfg',
   ):
     await parseAndSendDiagnostics(server, url)
     server.publish_diagnostics.assert_called_once_with(url, [])

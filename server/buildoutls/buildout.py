@@ -38,6 +38,7 @@ from zc.buildout.configparser import (
     section_header,
 )
 from . import recipes
+from . import jinja
 
 from pygls.server import LanguageServer
 from pygls.types import Position, Range, Location
@@ -913,7 +914,7 @@ async def _parse(
       )
     sections.setdefault('slap-network-information', slap_network_information)
 
-  in_jinja_context = False
+  jinja_parser = jinja.JinjaParser()
   cursect: Optional[Dict[str, BuildoutOptionDefinition]] = None
   blockmode = False
   optname: Optional[str] = None
@@ -923,16 +924,14 @@ async def _parse(
     line = fp.readline()
     if not line:
       break  # EOF
-
     lineno = lineno + 1
+
+    jinja_parser.feed(line)
+    if jinja_parser.is_in_jinja:
+      continue
 
     if line[0] in '#;':
       continue  # comment
-
-    if line.startswith('{') or in_jinja_context:
-      in_jinja_context = '}' in line
-    if in_jinja_context:
-      continue
 
     if line[0].isspace() and (cursect is not None) and optname:
       _line = line

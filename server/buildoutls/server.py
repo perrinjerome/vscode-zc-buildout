@@ -55,6 +55,7 @@ from pygls.types import (
 
 from . import buildout
 from . import recipes
+from . import jinja
 import itertools
 
 server = LanguageServer()
@@ -184,17 +185,15 @@ async def parseAndSendDiagnostics(
                 ),)
 
     if 'parts' in resolved_buildout['buildout']:
-      in_jinja_context = False
+      jinja_parser = jinja.JinjaParser()
       for part_name, part_range in resolved_buildout.getOptionValues(
           'buildout', 'parts'):
         if part_name:
-          if part_name.startswith('{%'):
-            in_jinja_context = not in_jinja_context
-          if (part_name.startswith('${') or part_name.startswith('{{') or
-              part_name.startswith('{#') or part_name.startswith('{%') or
-              in_jinja_context):
-            # Assume buildout/jinja substitutions are OK.
-            continue
+          if part_name.startswith('${'):
+            continue  # assume substitutions are OK
+          jinja_parser.feed(part_name)
+          if jinja_parser.is_in_jinja:
+            continue  # ignore anything in jinja context
 
           if part_name not in resolved_buildout:
             diagnostics.append(
