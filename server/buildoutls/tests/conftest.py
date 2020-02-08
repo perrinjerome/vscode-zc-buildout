@@ -34,7 +34,7 @@ def server() -> Any:
 
   server = FakeServer()
 
-  def get_document(uri):
+  def get_document(uri) -> Document:
     parsed_uri = urllib.parse.urlparse(uri)
     assert parsed_uri.scheme == "file"
     assert parsed_uri.path[0] == '/'
@@ -45,7 +45,7 @@ def server() -> Any:
 
   server.workspace.get_document = mock.Mock(side_effect=get_document)
 
-  def clearCaches():
+  def clearCaches() -> None:
     _resolved_buildout_cache.clear()
     _parse_cache.clear()
     _extends_dependency_graph.clear()

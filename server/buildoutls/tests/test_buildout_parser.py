@@ -549,8 +549,7 @@ async def test_open_extends_cache_clear(server: LanguageServer):
   def getModifiedDocument(uri: str):
     doc = original_get_document(uri)
     if uri == 'file:///extended/extended.cfg':
-      doc._source = textwrap.dedent(  # type: ignore
-          '''\
+      doc._source = textwrap.dedent('''\
           [extended_option]
           new_option = after modification
           ''')

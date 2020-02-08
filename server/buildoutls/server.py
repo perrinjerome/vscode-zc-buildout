@@ -71,13 +71,15 @@ def getOptionValue(
   # Options read with our patch remember the position and have their values in
   # .value but options added by buildout for default values does not.
   # We normalize this here.
-  return getattr(option, 'value', option)
+  if isinstance(option, str):
+    return option
+  return option.value
 
 
 async def parseAndSendDiagnostics(
     ls: LanguageServer,
     uri: str,
-):
+) -> None:
   diagnostics: List[Diagnostic] = []
   parsed = None
 

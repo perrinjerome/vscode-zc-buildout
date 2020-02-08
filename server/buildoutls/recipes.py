@@ -1,7 +1,8 @@
-from typing import Sequence, Dict, Set
 """Registry of well-known recipes.
 
 """
+
+from typing import Sequence, Dict, Set, Optional
 
 
 class RecipeOption:
@@ -27,23 +28,23 @@ class Recipe:
       name: str = "",
       description: str = "",
       url: str = "",
-      options: Dict[str, RecipeOption] = None,
-      generated_options: Dict[str, RecipeOption] = None,
-      required_options: Sequence[str] = None,
-      template_options: Sequence[str] = None,
+      options: Optional[Dict[str, RecipeOption]] = None,
+      generated_options: Optional[Dict[str, RecipeOption]] = None,
+      required_options: Sequence[str] = (),
+      template_options: Sequence[str] = (),
   ):
     self.name = name
     self.description = description
     self.url = url
-    self.options = options or {}
+    self.options: Dict[str, RecipeOption] = options or {}
     self.generated_options = generated_options or {}
-    self.required_options: Set[str] = set(required_options or [])
+    self.required_options: Set[str] = set(required_options)
     # Template options are filenames which are using buildout substitution.
-    self.template_options: Set[str] = set(template_options or [])
+    self.template_options: Set[str] = set(template_options)
     registry[self.name] = self
 
   @property
-  def documentation(self):
+  def documentation(self) -> str:
     """Documentation of the recipe
     """
     return '## `{}`\n\n---\n{}'.format(self.name, self.description)

@@ -113,7 +113,7 @@ class BuildoutOptionDefinition:
     self.value = value
     self.implicit_option = implicit_option
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     locations = ' '.join(
         ['{} {}'.format(l.uri, l.range) for l in self.locations])
     return '{} ({})'.format(self.value, locations)
@@ -185,7 +185,7 @@ class Symbol:
       current_option_name: Optional[str] = None,
       referenced_section_name: Optional[str] = None,
       referenced_option_name: Optional[str] = None,
-      is_same_section_reference=False,
+      is_same_section_reference: bool = False,
   ):
     self._buildout = buildout
     self.kind = kind
@@ -196,7 +196,7 @@ class Symbol:
     self.referenced_option_name = referenced_option_name
     self.is_same_section_reference = is_same_section_reference
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     referenced = ""
     if self.referenced_section_name:
       referenced = f"referenced=${{{self.referenced_section_name}:{self.referenced_option_name}}}"
@@ -480,7 +480,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               logger.debug("We have a section reference %s in %s",
                            template_option_value_uri, section_value_dict)
 
-              def expand_section_reference(match: Match):
+              def expand_section_reference(match: Match[str]) -> str:
                 referenced_section_name = match.group('section') or section_name
                 if referenced_section_name in self:
                   referenced_section = self[referenced_section_name]
@@ -737,7 +737,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
                        ))
 
   @staticmethod
-  def looksLikeBuildoutProfile(uri: URI):
+  def looksLikeBuildoutProfile(uri: URI) -> bool:
     """Check if this URI looks like a buildout profile URI.
     """
     return (uri.endswith('.cfg') or uri.endswith('.cfg.in') or
@@ -760,7 +760,7 @@ _resolved_buildout_cache: Dict[URI, ResolvedBuildout] = {}
 _extends_dependency_graph: Dict[URI, Set[URI]] = collections.defaultdict(set)
 
 
-def clearCache(uri: URI):
+def clearCache(uri: URI) -> None:
   """Clear all caches for uri.
 
   This is to be called when the document is modified.
@@ -770,7 +770,7 @@ def clearCache(uri: URI):
   _clearExtendCache(uri, set())
 
 
-def _clearExtendCache(uri: URI, done: Set[URI]):
+def _clearExtendCache(uri: URI, done: Set[URI]) -> None:
   """Clear the `extends` cache for URI.
 
   This is to be called for all URIs extended by `uri`.
@@ -798,7 +798,7 @@ _isurl = re.compile('([a-zA-Z0-9+.-]+)://').match
 async def parse(
     ls: LanguageServer,
     uri: URI,
-    allow_errors=True,
+    allow_errors: bool = True,
 ) -> BuildoutProfile:
   """
   Parse a sectioned setup file and return a non-resolved buildout.
@@ -829,7 +829,7 @@ async def parse(
 async def _parse(
     fp: TextIO,
     uri: URI,
-    allow_errors,
+    allow_errors: bool,
 ) -> BuildoutProfile:
   """Parse a sectioned setup file and return a non-resolved buildout.
 
@@ -1068,7 +1068,7 @@ async def open(
   logger.debug("open %s", uri)
   if not force_open_as_buildout_profile:
 
-    def getCandidateBuildoutProfiles():
+    def getCandidateBuildoutProfiles() -> Iterator[pathlib.Path]:
       path = pathlib.Path(document.path).parent
       for _ in range(3):  # look for buildouts up to 3 levels
         # we sort just to have stable behavior
