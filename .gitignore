@@ -12,3 +12,4 @@ server/.pytype/
 **/*.egg-info
 **/.env/
 **/.*cache/
+**/.tox/
