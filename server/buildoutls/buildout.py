@@ -938,13 +938,16 @@ async def _parse(
               value=sectname,
               implicit_option=True,
           )
-          # this is a slapos.buildout extension
+          # _profile_base_location_ is a slapos.buildout extension
+          base_location = '.'
+          if '/' in uri:
+            base_location = uri[:uri.rfind('/')] + '/'
           cursect['_profile_base_location_'] = BuildoutOptionDefinition(
               locations=[
                   Location(
                       uri=uri, range=Range(Position(0, 0), Position(0, 0)))
               ],
-              value=uri,
+              value=base_location,
               implicit_option=True,
           )
 
