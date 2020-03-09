@@ -831,3 +831,16 @@ async def test_references_on_section_reference(server: LanguageServer):
   reference, = references
   assert reference.uri.endswith('/references/buildout.cfg')
   assert reference.range == Range(Position(5, 30), Position(5, 36))
+
+
+@pytest.mark.asyncio
+async def test_references_from_parts(server: LanguageServer):
+  references = await lsp_references(
+      server,
+      TextDocumentPositionParams(
+          text_document=TextDocumentIdentifier(
+              uri="file:///references/parts.cfg"),
+          position=Position(5, 4)))
+  reference, = references
+  assert reference.uri.endswith('/references/parts.cfg')
+  assert reference.range == Range(Position(2, 4), Position(2, 22))

@@ -581,12 +581,21 @@ async def lsp_references(
         searched_option = searched_symbol.referenced_option_name
     logger.debug("Looking for references for %s ${%s:%s}", searched_symbol,
                  searched_section, searched_option)
-
+    assert searched_section
     for profile_path in pathlib.Path(
         server.workspace.root_path).glob('**/*.cfg'):
       profile = await buildout.parse(server, profile_path.as_uri())
       if profile is not None:
         assert isinstance(profile, buildout.BuildoutProfile)
+
+        # listing a section in ${buildout:parts} is a reference
+        parts = profile['buildout'].get('parts')
+        if parts is not None and searched_section in parts.value:
+          for option_text, option_range in profile.getOptionValues(
+              'buildout', 'parts'):
+            if searched_section == option_text:
+              references.append(Location(profile.uri, option_range))
+
         async for symbol in profile.getAllOptionReferenceSymbols():
           if symbol.referenced_section_name == searched_section:
             if searched_option is None:
