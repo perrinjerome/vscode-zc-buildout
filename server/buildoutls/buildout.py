@@ -571,7 +571,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
       if line_offset == 0:
         # we can be in the following cases (> denotes beginning of lines)
         # - a section header
-        #   [section]
+        #   >[section]
         # - a single line option and value:
         #   >option = value
         # - an option without value:

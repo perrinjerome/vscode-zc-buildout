@@ -69,15 +69,96 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
 
   completions = await lsp_completion(server, params)
   assert completions is not None
-  assert sorted([c.label for c in completions]) == [
-      'buildout',
-      'directory',
-      'publish',
-      'service',
-      'slap-connection',
-      'slap-network-information',
-      'template',
-  ]
+  textEditRange = Range(Position(15, 26), Position(15, 28))
+  assert sorted([(c.textEdit.range, c.textEdit.newText, c.filterText, c.label)
+                 for c in completions
+                 if c.textEdit is not None]) == [
+                     (
+                         textEditRange,
+                         '${buildout',
+                         '${buildout',
+                         'buildout',
+                     ),
+                     (
+                         textEditRange,
+                         '${directory',
+                         '${directory',
+                         'directory',
+                     ),
+                     (
+                         textEditRange,
+                         '${publish',
+                         '${publish',
+                         'publish',
+                     ),
+                     (
+                         textEditRange,
+                         '${service',
+                         '${service',
+                         'service',
+                     ),
+                     (
+                         textEditRange,
+                         '${slap-connection',
+                         '${slap-connection',
+                         'slap-connection',
+                     ),
+                     (
+                         textEditRange,
+                         '${slap-network-information',
+                         '${slap-network-information',
+                         'slap-network-information',
+                     ),
+                     (
+                         textEditRange,
+                         '${template',
+                         '${template',
+                         'template',
+                     ),
+                 ]
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+      position=Position(13, 61),
+      context=context)
+
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  textEditRange = Range(Position(13, 60), Position(13, 71))
+  assert sorted([(c.textEdit.range, c.textEdit.newText, c.label)
+                 for c in completions
+                 if c.textEdit is not None]) == [
+                     (
+                         textEditRange,
+                         'cert-file}',
+                         'cert-file',
+                     ),
+                     (
+                         textEditRange,
+                         'computer-id}',
+                         'computer-id',
+                     ),
+                     (
+                         textEditRange,
+                         'key-file}',
+                         'key-file',
+                     ),
+                     (
+                         textEditRange,
+                         'partition-id}',
+                         'partition-id',
+                     ),
+                     (
+                         textEditRange,
+                         'server-url}',
+                         'server-url',
+                     ),
+                     (
+                         textEditRange,
+                         'software-release-url}',
+                         'software-release-url',
+                     ),
+                 ]
 
 
 @pytest.mark.asyncio

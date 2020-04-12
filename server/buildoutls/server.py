@@ -25,6 +25,7 @@ from pygls.features import (
     WORKSPACE_DID_CHANGE_WATCHED_FILES,
 )
 from pygls.server import LanguageServer
+from pygls.workspace import Document
 from pygls.types import (
     CompletionItem,
     CompletionItemKind,
@@ -309,26 +310,104 @@ async def lsp_completion(
   items: List[CompletionItem] = []
   doc = ls.workspace.get_document(params.textDocument.uri)
 
-  def getInsertText(current_text: str, insert_text: str) -> str:
-    """Calculate the text to be inserted.
-
-    When we already have:
-
-      plone.rec|
-
-    and the completion is `plone.recipe.command`, if we return "plone.recipe.command",
-    this will be appended to the current word, which is `plone`.
-    In this case we want to insert only "recipe.command".
-
-    Note that there is wordPattern in language-configuration.json that is supposed
-    to address this, but it seems we cannot include . in word patterns.
-    There's also the same problem with -
+  def getSectionReferenceCompletionTextEdit(
+      doc: Document,
+      pos: Position,
+      new_text: str,
+  ) -> TextEdit:
+    """Calculate the edition to insert ${section: in ${section:option}
     """
-    for char in ('.', '-'):
-      common_leading, _, _ = current_text.rpartition(char)
-      if common_leading:
-        insert_text = insert_text[len(common_leading) + 1:]
-    return insert_text
+    words_split = re.compile(r'\$\{[-a-zA-Z0-9 ._]*')
+    line = doc.lines[pos.line]
+    index = 0
+    while True:
+      match = words_split.search(line, index)
+      assert match
+      if match.start() <= pos.character <= match.end():
+        start = match.start()
+        end = match.end()
+        return TextEdit(
+            Range(Position(pos.line, start), Position(pos.line, end)),
+            new_text,
+        )
+      index = max(match.start(), index + 1)
+
+    return TextEdit(
+        Range(
+            Position(pos.line, pos.character),
+            Position(pos.line, pos.character),
+        ),
+        new_text,
+    )
+
+  def getOptionReferenceTextEdit(
+      doc: Document,
+      pos: Position,
+      new_text: str,
+  ) -> TextEdit:
+    """Calculate the edition to insert option} a ${section:option}
+    """
+    words_split = re.compile(
+        r'(?P<section>\${[-a-zA-Z0-9 ._]*\:)(?P<option>[-a-zA-Z0-9._]*\}{0,1})')
+    line = doc.lines[pos.line]
+    index = 0
+    while True:
+      match = words_split.search(line, index)
+      assert match
+      section_len = len(match.group('section'))
+      if match.start() + section_len <= pos.character <= match.end():
+        start = match.start() + section_len
+        end = match.end()
+        return TextEdit(
+            Range(Position(pos.line, start), Position(pos.line, end)),
+            new_text,
+        )
+      index = max(match.start(), index + 1)
+
+    return TextEdit(
+        Range(
+            Position(pos.line, pos.character),
+            Position(pos.line, pos.character),
+        ),
+        new_text,
+    )
+
+  def getDefaultTextEdit(
+      doc: Document,
+      pos: Position,
+      new_text: str,
+  ) -> TextEdit:
+    """Calculate the edition to replace the current token at position by the new text.
+    """
+    # regex to split the current token, basically we consider everything a word
+    # but stop at substitution start and end.
+    words_split = re.compile(r'[-a-zA-Z0-9\._\$\{\/]*')
+    line = ''
+    if len(doc.lines) > pos.line:
+      line = doc.lines[pos.line]
+    if not line.strip():
+      return TextEdit(
+          Range(
+              Position(pos.line, pos.character),
+              Position(pos.line, pos.character)),
+          new_text,
+      )
+    index = 0
+    while True:
+      match = words_split.search(line, index)
+      assert match
+      if match.start() <= pos.character <= match.end():
+        start = match.start()
+        end = match.end()
+        # if end was a '}', erase it
+        if (line + '  ')[end] == '}':
+          end += 1
+        # TODO: test
+        return TextEdit(
+            Range(Position(pos.line, start), Position(pos.line, end)),
+            new_text,
+        )
+      index = max(match.start(), index + 1)
 
   parsed = await buildout.open(ls, params.textDocument.uri)
   if parsed is None:
@@ -352,10 +431,12 @@ async def lsp_completion(
         items.append(
             CompletionItem(
                 label=buildout_section_name,
-                insert_text=getInsertText(
-                    symbol.value,
-                    buildout_section_name,
+                text_edit=getSectionReferenceCompletionTextEdit(
+                    doc,
+                    params.position,
+                    '${' + buildout_section_name,
                 ),
+                filter_text='${' + buildout_section_name,
                 kind=CompletionItemKind.Class,
                 documentation=MarkupContent(
                     kind=MarkupKind.Markdown,
@@ -385,7 +466,11 @@ async def lsp_completion(
         items.append(
             CompletionItem(
                 label=buildout_option_name,
-                insert_text=getInsertText(symbol.value, buildout_option_name),
+                text_edit=getOptionReferenceTextEdit(
+                    doc,
+                    params.position,
+                    buildout_option_name + '}',
+                ),
                 kind=CompletionItemKind.Property,
                 documentation=MarkupContent(
                     kind=MarkupKind.Markdown,
@@ -404,7 +489,11 @@ async def lsp_completion(
           items.append(
               CompletionItem(
                   label=option_name,
-                  insert_text=f'{getInsertText(symbol.value, option_name)} = ',
+                  text_edit=getDefaultTextEdit(
+                      doc,
+                      params.position,
+                      option_name + ' = ',
+                  ),
                   kind=CompletionItemKind.Variable,
                   documentation=MarkupContent(
                       kind=MarkupKind.Markdown,
@@ -419,7 +508,11 @@ async def lsp_completion(
           items.append(
               CompletionItem(
                   label=option_name,
-                  insert_text=f'{getInsertText(symbol.value, option_name)} =\n  ',
+                  text_edit=getDefaultTextEdit(
+                      doc,
+                      params.position,
+                      option_name + ' =\n    ',
+                  ),
                   kind=CompletionItemKind.Variable,
                   documentation=MarkupContent(
                       kind=MarkupKind.Markdown,
@@ -433,7 +526,11 @@ async def lsp_completion(
             items.append(
                 CompletionItem(
                     label=k,
-                    insert_text=f'{getInsertText(symbol.value, k)} = ',
+                    text_edit=getDefaultTextEdit(
+                        doc,
+                        params.position,
+                        k + ' = ',
+                    ),
                     kind=CompletionItemKind.Variable,
                     documentation=MarkupContent(
                         kind=MarkupKind.Markdown,
@@ -444,7 +541,11 @@ async def lsp_completion(
           items.append(
               CompletionItem(
                   label='recipe',
-                  insert_text=f'{getInsertText(symbol.value, "recipe")} = ',
+                  text_edit=getDefaultTextEdit(
+                      doc,
+                      params.position,
+                      'recipe = ',
+                  ),
                   kind=CompletionItemKind.Variable))
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionValue:
       # complete option = |
@@ -456,7 +557,8 @@ async def lsp_completion(
           items.append(
               CompletionItem(
                   label=recipe_name,
-                  insert_text=getInsertText(symbol.value, recipe_name),
+                  text_edit=getDefaultTextEdit(doc, params.position,
+                                               recipe_name),
                   kind=CompletionItemKind.Constructor,
                   documentation=MarkupContent(
                       kind=MarkupKind.Markdown,
@@ -469,7 +571,8 @@ async def lsp_completion(
             items.append(
                 CompletionItem(
                     label=section_name,
-                    insert_text=getInsertText(symbol.value, section_name),
+                    text_edit=getDefaultTextEdit(doc, params.position,
+                                                 section_name),
                     kind=CompletionItemKind.Function))
       if symbol.current_section_recipe:
         # complete with recipe options if recipe is known
@@ -479,7 +582,7 @@ async def lsp_completion(
               items.append(
                   CompletionItem(
                       label=valid,
-                      insert_text=getInsertText(symbol.value, valid),
+                      text_edit=getDefaultTextEdit(doc, params.position, valid),
                       kind=CompletionItemKind.Keyword))
       if symbol.current_section_name == 'buildout':
         # complete options of [buildout]
@@ -493,8 +596,9 @@ async def lsp_completion(
             items.append(
                 CompletionItem(
                     label=profile_relative_path,
-                    insert_text=getInsertText(
-                        symbol.value,
+                    text_edit=getDefaultTextEdit(
+                        doc,
+                        params.position,
                         profile_relative_path,
                     ),
                     kind=CompletionItemKind.File,
@@ -509,7 +613,11 @@ async def lsp_completion(
               items.append(
                   CompletionItem(
                       label=section,
-                      insert_text=f'{getInsertText(symbol.value, section)}\n',
+                      text_edit=getDefaultTextEdit(
+                          doc,
+                          params.position,
+                          section + '\n',
+                      ),
                       kind=CompletionItemKind.Function))
 
   return items

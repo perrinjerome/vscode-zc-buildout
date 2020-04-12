@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed
 
 - references: consider listing a section in `${buildout:parts}` as a reference.
+- completions: use `textEdit` to properly overwrite exiting text.
 
 ## [0.2.0] - 2020-02-12
 

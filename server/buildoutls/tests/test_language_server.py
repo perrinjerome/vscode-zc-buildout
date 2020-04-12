@@ -319,15 +319,17 @@ async def test_complete_section_reference(server: LanguageServer):
   )
   completions = await lsp_completion(server, params)
   assert completions is not None
-  assert sorted([c.label for c in completions]) == [
-      'buildout',
-      'section1',
-      'section2',
-      'section3',
-      'xsection4',
-  ]
+  assert sorted([(c.textEdit.range, c.textEdit.newText)
+                 for c in completions
+                 if c.textEdit is not None]) == [
+                     (Range(Position(13, 10), Position(13, 13)), '${buildout'),
+                     (Range(Position(13, 10), Position(13, 13)), '${section1'),
+                     (Range(Position(13, 10), Position(13, 13)), '${section2'),
+                     (Range(Position(13, 10), Position(13, 13)), '${section3'),
+                     (Range(Position(13, 10), Position(13, 13)), '${xsection4'),
+                 ]
 
-  # edge case: complete section names on a line with a ${section:ref}
+  # edge cases: complete section names on a line with a ${section:ref}
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///completions/sections.cfg"),
@@ -335,14 +337,15 @@ async def test_complete_section_reference(server: LanguageServer):
       context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
-  # sections
-  assert sorted([c.label for c in completions]) == [
-      'buildout',
-      'section1',
-      'section2',
-      'section3',
-      'xsection4',
-  ]
+  assert sorted([(c.textEdit.range, c.textEdit.newText)
+                 for c in completions
+                 if c.textEdit is not None]) == [
+                     (Range(Position(4, 30), Position(4, 32)), '${buildout'),
+                     (Range(Position(4, 30), Position(4, 32)), '${section1'),
+                     (Range(Position(4, 30), Position(4, 32)), '${section2'),
+                     (Range(Position(4, 30), Position(4, 32)), '${section3'),
+                     (Range(Position(4, 30), Position(4, 32)), '${xsection4'),
+                 ]
 
   # in documentation we show the section content
   documentation, = [
@@ -371,6 +374,34 @@ async def test_complete_section_reference(server: LanguageServer):
       recipe = plone.recipe.command
       option4 = value4
       ```'''))
+
+  # test completions from various positions where all sections are suggested
+  for (completion_position, textEditRange) in (
+      (Position(5, 10), Range(Position(5, 10), Position(5, 20))),
+      (Position(5, 17), Range(Position(5, 10), Position(5, 20))),
+      (Position(5, 32), Range(Position(5, 30), Position(5, 40))),
+      (Position(5, 34), Range(Position(5, 30), Position(5, 40))),
+      (Position(5, 40), Range(Position(5, 30), Position(5, 40))),
+      (Position(5, 52), Range(Position(5, 50), Position(5, 60))),
+      (Position(5, 56), Range(Position(5, 50), Position(5, 60))),
+  ):
+    params = CompletionParams(
+        text_document=TextDocumentIdentifier(
+            uri="file:///completions/sections.cfg"),
+        position=completion_position,
+        context=context)
+    completions = await lsp_completion(server, params)
+    assert completions is not None
+    assert sorted([(c.textEdit.range, c.textEdit.newText, c.filterText, c.label)
+                   for c in completions
+                   if c.textEdit is not None]) == [
+                       (textEditRange, '${buildout', '${buildout', 'buildout'),
+                       (textEditRange, '${section1', '${section1', 'section1'),
+                       (textEditRange, '${section2', '${section2', 'section2'),
+                       (textEditRange, '${section3', '${section3', 'section3'),
+                       (textEditRange, '${xsection4', '${xsection4',
+                        'xsection4'),
+                   ]
 
 
 @pytest.mark.asyncio
@@ -410,7 +441,7 @@ async def test_complete_option_reference(server: LanguageServer):
       context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
-  # options of xsection4
+  # options of section1
   assert sorted([c.label for c in completions]) == [
       '_buildout_section_name_',
       '_profile_base_location_',
@@ -418,13 +449,31 @@ async def test_complete_option_reference(server: LanguageServer):
       'option2',
       'option3',
   ]
-  assert sorted([c.insertText for c in completions]) == [
-      '_buildout_section_name_',
-      '_profile_base_location_',
-      'option1',
-      'option2',
-      'option3',
-  ]
+
+  assert sorted([(c.textEdit.range, c.textEdit.newText)
+                 for c in completions
+                 if c.textEdit is not None]) == [
+                     (
+                         Range(Position(2, 13), Position(2, 13)),
+                         '_buildout_section_name_}',
+                     ),
+                     (
+                         Range(Position(2, 13), Position(2, 13)),
+                         '_profile_base_location_}',
+                     ),
+                     (
+                         Range(Position(2, 13), Position(2, 13)),
+                         'option1}',
+                     ),
+                     (
+                         Range(Position(2, 13), Position(2, 13)),
+                         'option2}',
+                     ),
+                     (
+                         Range(Position(2, 13), Position(2, 13)),
+                         'option3}',
+                     ),
+                 ]
 
   # options has values for docstrings
   documentation, = [
@@ -434,17 +483,70 @@ async def test_complete_option_reference(server: LanguageServer):
   assert documentation.kind == MarkupKind.Markdown
   assert documentation.value == '```\nvalue3```'
 
-  # complete options of a section (when document has invalid syntax)
+  # more complex replace text scenarios
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
-          uri="file:///diagnostics/syntax_error.cfg"),
-      position=Position(3, 0),
+          uri="file:///completions/options.cfg"),
+      position=Position(13, 53),
       context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
-  assert sorted([c.label for c in completions]) == [
-      'recipe',
-  ]
+  assert sorted([(c.textEdit.range, c.textEdit.newText)
+                 for c in completions
+                 if c.textEdit is not None]) == [
+                     (
+                         Range(Position(13, 51), Position(13, 59)),
+                         '_buildout_section_name_}',
+                     ),
+                     (
+                         Range(Position(13, 51), Position(13, 59)),
+                         '_profile_base_location_}',
+                     ),
+                     (
+                         Range(Position(13, 51), Position(13, 59)),
+                         'option1}',
+                     ),
+                     (
+                         Range(Position(13, 51), Position(13, 59)),
+                         'option2}',
+                     ),
+                     (
+                         Range(Position(13, 51), Position(13, 59)),
+                         'option3}',
+                     ),
+                 ]
+
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///completions/options.cfg"),
+      position=Position(14, 53),
+      context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted([(c.textEdit.range, c.textEdit.newText)
+                 for c in completions
+                 if c.textEdit is not None]) == [
+                     (
+                         Range(Position(14, 51), Position(14, 58)),
+                         '_buildout_section_name_}',
+                     ),
+                     (
+                         Range(Position(14, 51), Position(14, 58)),
+                         '_profile_base_location_}',
+                     ),
+                     (
+                         Range(Position(14, 51), Position(14, 58)),
+                         'option1}',
+                     ),
+                     (
+                         Range(Position(14, 51), Position(14, 58)),
+                         'option2}',
+                     ),
+                     (
+                         Range(Position(14, 51), Position(14, 58)),
+                         'option3}',
+                     ),
+                 ]
 
 
 @pytest.mark.asyncio
@@ -462,8 +564,10 @@ async def test_complete_option_name(server: LanguageServer):
       'command', 'location', 'stop-on-error', 'update-command'
   ]
   # we insert with the = like: option =
-  assert [c.insertText for c in completions if c.label == 'command'
-         ] == ['command = ']
+  textEdit, = [c.textEdit for c in completions if c.label == 'command']
+  assert textEdit is not None
+  assert textEdit.range == Range(Position(8, 0), Position(8, 0))
+  assert textEdit.newText == 'command = '
   assert [
       c.documentation.value
       for c in completions
@@ -479,6 +583,24 @@ async def test_complete_option_name(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([c.label for c in completions]) == ['recipe']
+  assert sorted([
+      c.textEdit.newText for c in completions if c.textEdit is not None
+  ]) == ['recipe = ']
+
+  # Also works when document has invalid syntax
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///diagnostics/syntax_error.cfg"),
+      position=Position(3, 0),
+      context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted([c.label for c in completions]) == [
+      'recipe',
+  ]
+  assert sorted([
+      c.textEdit.newText for c in completions if c.textEdit is not None
+  ]) == ['recipe = ']
 
 
 @pytest.mark.asyncio
@@ -493,6 +615,9 @@ async def test_complete_referenced_option_recipe_valid_values(
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([c.label for c in completions]) == ['true', 'yes']
+  assert sorted([
+      c.textEdit.newText for c in completions if c.textEdit is not None
+  ]) == ['true', 'yes']
 
 
 @pytest.mark.asyncio
@@ -507,8 +632,15 @@ async def test_complete_recipe_option_value(server: LanguageServer):
   assert completions is not None
   assert 'plone.recipe.command' in [c.label for c in completions]
   assert [
-      c.insertText for c in completions if c.label == 'plone.recipe.command'
-  ] == ['recipe.command']
+      c.textEdit.newText
+      for c in completions
+      if c.textEdit is not None and c.label == 'plone.recipe.command'
+  ] == ['plone.recipe.command']
+  assert [
+      c.textEdit.range
+      for c in completions
+      if c.textEdit is not None and c.label == 'plone.recipe.command'
+  ] == [Range(Position(1, 9), Position(1, 18))]
 
 
 @pytest.mark.asyncio
@@ -530,8 +662,6 @@ async def test_complete_macro_option_value(server: LanguageServer):
 
 @pytest.mark.asyncio
 async def test_complete_insert_text(server: LanguageServer):
-  # Only insert the last "word". This is made to accomodate vscode, the spec
-  # does not seem to document how editor should behave for this.
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked,)
   # Only insert the text after the latest -
   params = CompletionParams(
@@ -542,20 +672,26 @@ async def test_complete_insert_text(server: LanguageServer):
   )
   completions = await lsp_completion(server, params)
   assert completions is not None
-  assert [c.insertText for c in completions if c.label == 'sec-tion-one'
-         ] == ['tion-one']
+  completion, = [c for c in completions if c.label == 'sec-tion-one']
+  assert completion.textEdit is not None
+  assert completion.textEdit.range == Range(Position(1, 18), Position(1, 24))
+  assert completion.textEdit.newText == '${sec-tion-one'
+  # we set a filter text, because the inserted text is different from the label
+  assert completion.filterText == '${sec-tion-one'
 
   # Only insert the text after the latest .
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///completions/partial_completions.cfg"),
-      position=Position(1, 24),
+      position=Position(2, 24),
       context=context,
   )
   completions = await lsp_completion(server, params)
   assert completions is not None
-  assert [c.insertText for c in completions if c.label == 'sect.ion.three'
-         ] == ['.ion.three']
+  completion, = [c for c in completions if c.label == 'sect.ion.three']
+  assert completion.textEdit is not None
+  assert completion.textEdit.range == Range(Position(2, 17), Position(2, 24))
+  assert completion.textEdit.newText == '${sect.ion.three'
 
 
 @pytest.mark.asyncio
@@ -623,7 +759,6 @@ async def test_complete_buildout_extends(server: LanguageServer):
   assert "not_buildout.txt" not in [c.label for c in completions]
   assert "../buildout.cfg" in [c.label for c in completions]
   assert "../symbol/buildout.cfg" in [c.label for c in completions]
-  assert "../symbol/buildout.cfg" in [c.label for c in completions]
 
   # multi lines
   params = CompletionParams(
@@ -637,7 +772,39 @@ async def test_complete_buildout_extends(server: LanguageServer):
   assert "not_buildout.txt" not in [c.label for c in completions]
   assert "../buildout.cfg" in [c.label for c in completions]
   assert "../symbol/buildout.cfg" in [c.label for c in completions]
+
+  # multi line on empty line
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///completions/buildout.cfg"),
+      position=Position(8, 4),
+      context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert "buildout.cfg" in [c.label for c in completions]
+  assert "not_buildout.txt" not in [c.label for c in completions]
+  assert "../buildout.cfg" in [c.label for c in completions]
   assert "../symbol/buildout.cfg" in [c.label for c in completions]
+
+  # multi line with existing text
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///completions/buildout.cfg"),
+      position=Position(10, 10),
+      context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert "buildout.cfg" in [c.label for c in completions]
+  assert "not_buildout.txt" not in [c.label for c in completions]
+  assert "../buildout.cfg" in [c.label for c in completions]
+  assert "../symbol/buildout.cfg" in [c.label for c in completions]
+  completion, = [c for c in completions if c.label == '../symbol/buildout.cfg']
+  assert completion.textEdit is not None
+  assert completion.textEdit.newText == '../symbol/buildout.cfg'
+  assert completion.textEdit.range == Range(
+      Position(10, 4),
+      Position(10, 10),
+  )
 
 
 @pytest.mark.asyncio
