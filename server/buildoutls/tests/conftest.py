@@ -8,6 +8,8 @@ from pygls.workspace import Document, Workspace
 
 from ..buildout import _resolved_buildout_cache, _parse_cache, _extends_dependency_graph, parse
 
+from .. import server as _server_module
+
 
 @pytest.fixture
 def server() -> Any:
@@ -51,7 +53,10 @@ def server() -> Any:
     _extends_dependency_graph.clear()
 
   clearCaches()
+  old_debounce_delay = _server_module.DEBOUNCE_DELAY
+  _server_module.DEBOUNCE_DELAY = 0
   yield server
+  _server_module.DEBOUNCE_DELAY = old_debounce_delay
   server.publish_diagnostics.reset_mock()
   server.show_message.reset_mock()
   server.show_message_log.reset_mock()

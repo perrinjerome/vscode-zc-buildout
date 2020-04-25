@@ -66,6 +66,8 @@ reference_re = re.compile(
 
 logger = logging.getLogger(__name__)
 
+DEBOUNCE_DELAY = 0.3
+
 
 def getOptionValue(
     option: Union[buildout.BuildoutOptionDefinition, str]) -> str:
@@ -81,6 +83,7 @@ async def parseAndSendDiagnostics(
     ls: LanguageServer,
     uri: str,
 ) -> None:
+  await asyncio.sleep(DEBOUNCE_DELAY)
   diagnostics: List[Diagnostic] = []
   parsed = None
 
@@ -249,6 +252,7 @@ async def lsp_symbols(
     ls: LanguageServer,
     params: DocumentSymbolParams,
 ) -> List[DocumentSymbol]:
+  await asyncio.sleep(DEBOUNCE_DELAY)
   symbols: List[DocumentSymbol] = []
 
   parsed = await buildout.parse(
@@ -306,6 +310,7 @@ async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
 ) -> Optional[List[CompletionItem]]:
+  await asyncio.sleep(DEBOUNCE_DELAY)
   items: List[CompletionItem] = []
   doc = ls.workspace.get_document(params.textDocument.uri)
 
@@ -627,6 +632,7 @@ async def lsp_definition(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
 ) -> List[Location]:
+  await asyncio.sleep(DEBOUNCE_DELAY)
   parsed = await buildout.open(ls, params.textDocument.uri)
   if parsed is None:
     return []
@@ -727,6 +733,7 @@ async def lsp_hover(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
 ) -> Optional[Hover]:
+  await asyncio.sleep(DEBOUNCE_DELAY)
   parsed = await buildout.open(ls, params.textDocument.uri)
   if parsed is None:
     return None
@@ -750,6 +757,7 @@ async def lsp_document_link(
     ls: LanguageServer,
     params: DocumentLinkParams,
 ) -> List[DocumentLink]:
+  await asyncio.sleep(DEBOUNCE_DELAY)
   links: List[DocumentLink] = []
   uri = params.textDocument.uri
   parsed_buildout = await buildout.parse(ls, uri)

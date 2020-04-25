@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 - references: consider listing a section in `${buildout:parts}` as a reference.
 - completions: use `textEdit` to properly overwrite exiting text.
+- all: debounce protocol functions to accept cancellations.
 
 ## [0.2.0] - 2020-02-12
 
