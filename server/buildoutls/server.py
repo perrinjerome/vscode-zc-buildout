@@ -1,12 +1,14 @@
+import asyncio
 import contextlib
 import io
+import itertools
 import logging
 import os
+import pathlib
 import re
 import tempfile
 import urllib.parse
-import pathlib
-from typing import Any, List, Set, Union, Tuple, Iterable, Optional, Sequence
+from typing import Any, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 from zc.buildout import configparser
 from zc.buildout.buildout import Buildout
@@ -15,8 +17,8 @@ from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 from pygls.features import (
     COMPLETION,
     DEFINITION,
-    DOCUMENT_SYMBOL,
     DOCUMENT_LINK,
+    DOCUMENT_SYMBOL,
     HOVER,
     REFERENCES,
     TEXT_DOCUMENT_DID_CHANGE,
@@ -25,7 +27,6 @@ from pygls.features import (
     WORKSPACE_DID_CHANGE_WATCHED_FILES,
 )
 from pygls.server import LanguageServer
-from pygls.workspace import Document
 from pygls.types import (
     CompletionItem,
     CompletionItemKind,
@@ -37,6 +38,8 @@ from pygls.types import (
     DidChangeWatchedFiles,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
+    DocumentLink,
+    DocumentLinkParams,
     DocumentSymbol,
     DocumentSymbolParams,
     Hover,
@@ -48,16 +51,12 @@ from pygls.types import (
     Range,
     SymbolKind,
     TextDocumentPositionParams,
-    DocumentLink,
-    DocumentLinkParams,
     TextEdit,
     WorkspaceEdit,
 )
+from pygls.workspace import Document
 
-from . import buildout
-from . import recipes
-from . import jinja
-import itertools
+from . import buildout, jinja, recipes
 
 server = LanguageServer()
 
