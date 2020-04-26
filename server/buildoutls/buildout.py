@@ -1079,12 +1079,18 @@ async def open(
     if slapos_instance_profile_filename_re.match(
         uri) or not uri.endswith('.cfg'):
       for buildout_path in getCandidateBuildoutProfiles():
-        # We don't use buildout_path.resolve().as_uri(), because we have fake uri -> path mapping in tests
-        buildout_uri = str(buildout_path.resolve()).replace(
-            ls.workspace.root_path,
-            ls.workspace.root_uri,
-            1,
-        )
+        resolved_path = str(buildout_path.resolve())
+        # For paths in workspace, we don't use buildout_path.resolve().as_uri(),
+        # because we have fake uri -> path mapping in tests
+        if resolved_path.startswith(ls.workspace.root_path):
+          buildout_uri = resolved_path.replace(
+              ls.workspace.root_path,
+              ls.workspace.root_uri,
+              1,
+          )
+        else:
+          # but we still need to support the case where the path is outside the workspace
+          buildout_uri = buildout_path.resolve().as_uri()
         logger.debug("Trying to find templates's buildout with %s -> %s",
                      buildout_path, buildout_uri)
         buildout = await _open(
