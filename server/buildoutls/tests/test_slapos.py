@@ -184,6 +184,45 @@ async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
 
 
 @pytest.mark.asyncio
+async def test_hover_slapos_instance(server: LanguageServer):
+  hover = await lsp_hover(
+      server,
+      TextDocumentPositionParams(
+          text_document=TextDocumentIdentifier(
+              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+          position=Position(13, 16)))
+  assert hover is not None
+  assert hover.contents == '```\nslapos.recipe.cmmi\n```'
+
+  hover = await lsp_hover(
+      server,
+      TextDocumentPositionParams(
+          text_document=TextDocumentIdentifier(
+              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+          position=Position(13, 24)))
+  assert hover is not None
+  assert hover.contents == '```\n\n```'
+
+  hover = await lsp_hover(
+      server,
+      TextDocumentPositionParams(
+          text_document=TextDocumentIdentifier(
+              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+          position=Position(13, 42)))
+  assert hover is not None
+  assert hover.contents == '```\n\n```'
+
+  hover = await lsp_hover(
+      server,
+      TextDocumentPositionParams(
+          text_document=TextDocumentIdentifier(
+              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+          position=Position(13, 63)))
+  assert hover is not None
+  assert hover.contents == '```\n\n```'
+
+
+@pytest.mark.asyncio
 async def test_complete_slapos_instance_template(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked,)
 
