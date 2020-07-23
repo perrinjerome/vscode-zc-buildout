@@ -10,6 +10,7 @@ import * as assert from "assert";
 import { getDocUri, activateExtension, sleep } from "./helper";
 import * as child_process from "child_process";
 import * as sinon from "sinon";
+import { describe, before, after, it } from "mocha";
 
 /**
  * This test verifies the installation process of the extension, it has to run first.

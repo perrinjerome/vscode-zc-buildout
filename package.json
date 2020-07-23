@@ -14,7 +14,7 @@
     "multi-root ready"
   ],
   "engines": {
-    "vscode": "^1.33.0"
+    "vscode": "^1.43.0"
   },
   "activationEvents": [
     "onLanguage:zc.buildout"
@@ -70,12 +70,12 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "cd client && npm run update-vscode && cd .. && npm run compile",
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -b",
     "build": "vsce",
     "watch": "tsc -b -w",
     "postinstall": "cd client && npm install && cd ..",
-    "test": "bash -c 'CODE_TESTS_PATH=\"$(pwd)/client/out/test\" CODE_TESTS_WORKSPACE=\"$(pwd)/profiles/\" node \"$(pwd)/client/node_modules/vscode/bin/test\"'",
+    "test": "bash -c 'CODE_TESTS_PATH=\"$(pwd)/client/out/test\" CODE_TESTS_WORKSPACE=\"$(pwd)/profiles/\" node \"$(pwd)/client/out/test/runTest\"'",
     "lint": "eslint . --ext .js,.ts",
     "lint-fix": "eslint . --ext .js,.ts --fix"
   },
@@ -83,18 +83,19 @@
     "@babel/core": "^7.6.4",
     "@babel/preset-env": "^7.6.3",
     "@babel/preset-typescript": "^7.6.0",
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^8.0.0",
-    "@types/sinon": "^7.5.1",
+    "@types/mocha": "^8.0.0",
+    "@types/node": "^12.12.0",
+    "@types/sinon": "^9.0.4",
     "@typescript-eslint/eslint-plugin": "^2.3.3",
-    "@typescript-eslint/parser": "^2.3.3",
-    "eslint": "^6.5.1",
+    "@typescript-eslint/parser": "^2.3.0",
+    "eslint": "^6.4.0",
     "eslint-config-prettier": "^6.4.0",
     "eslint-plugin-prettier": "^3.1.1",
+    "mocha": "^8.0.1",
     "prettier": "^1.18.2",
-    "sinon": "^7.5.0",
+    "sinon": "^9.0.2",
     "tslint": "^5.16.0",
-    "typescript": "^3.5.1",
-    "vsce": "^1.71.0"
+    "typescript": "^3.9.4",
+    "vsce": "^1.77.0"
   }
 }

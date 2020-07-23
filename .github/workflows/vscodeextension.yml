@@ -27,8 +27,8 @@ jobs:
           npm run compile
       - name: npm audit
         run: |
-          npm audit --audit-level=critical
-          cd client && npm audit --audit-level=critical
+          npm audit
+          cd client && npm audit
       - name: lint
         run: npm run lint
       - name: run end to end test

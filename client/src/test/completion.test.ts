@@ -8,6 +8,7 @@
 import * as vscode from "vscode";
 import * as assert from "assert";
 import { getDocUri, activateExtension, sleep } from "./helper";
+import { describe, it } from "mocha";
 
 describe("Completions", () => {
   const docUri = getDocUri("completions/sections.cfg");
