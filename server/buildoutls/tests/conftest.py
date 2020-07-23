@@ -2,6 +2,7 @@ import os
 import urllib.parse
 from unittest import mock
 import pytest
+import responses
 
 from typing import Any
 from pygls.workspace import Document, Workspace
@@ -9,6 +10,12 @@ from pygls.workspace import Document, Workspace
 from ..buildout import _resolved_buildout_cache, _parse_cache, _extends_dependency_graph, parse
 
 from .. import server as _server_module
+
+
+@pytest.fixture
+def mocked_responses():
+  with responses.RequestsMock() as rsps:
+    yield rsps
 
 
 @pytest.fixture

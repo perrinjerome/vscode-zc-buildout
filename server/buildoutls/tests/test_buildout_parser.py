@@ -1,6 +1,7 @@
 import io
 
 import textwrap
+import responses
 from typing import List
 
 import pytest
@@ -23,6 +24,7 @@ from ..buildout import (
 )
 from buildoutls.buildout import clearCache
 from unittest import mock
+import requests
 
 
 ## parse tests
@@ -566,3 +568,47 @@ async def test_open_macro(server: LanguageServer):
   assert parsed['macro_user']['option2'].value == 'value2'
   assert parsed['macro_user']['option3'].value == 'value3'
   assert '<' not in parsed['macro_user']
+
+
+@pytest.mark.asyncio
+async def test_open_extends_network(server: LanguageServer, mocked_responses):
+  mocked_responses.add(responses.GET,
+                       'https://example.com/profiles/buildout.cfg',
+                       body=textwrap.dedent('''\
+        [buildout]
+        extends = ./other.cfg
+        '''))
+  mocked_responses.add(responses.GET,
+                       'https://example.com/profiles/other.cfg',
+                       body=textwrap.dedent('''\
+        [section]
+        option = value
+        '''))
+
+  parsed = await open(
+      ls=server,
+      uri='file:///extended/network.cfg',
+      allow_errors=False,
+  )
+
+  assert isinstance(parsed, BuildoutProfile)
+  assert list(parsed.keys()) == ['buildout', 'section']
+  assert parsed['section']['option'].value == 'value'
+
+
+@pytest.mark.asyncio
+async def test_open_extends_network_fail(server: LanguageServer,
+                                         mocked_responses):
+  mocked_responses.add(
+      responses.GET,
+      'https://example.com/profiles/buildout.cfg',
+      body=requests.exceptions.ConnectionError('random network error'))
+
+  parsed = await open(
+      ls=server,
+      uri='file:///extended/network.cfg',
+      allow_errors=False,
+  )
+
+  assert isinstance(parsed, BuildoutProfile)
+  assert list(parsed.keys()) == ['buildout']

@@ -31,6 +31,7 @@ setup(
     python_requires='>=3.6.*',
     install_requires=[
         'pygls',
+        'requests',
         'zc.buildout',
     ],
     extras_require={
@@ -38,6 +39,7 @@ setup(
             'coverage',
             'pytest',
             'pytest-asyncio',
+            'responses',
         ],
     },
     entry_points={

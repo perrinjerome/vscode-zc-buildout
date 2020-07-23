@@ -37,6 +37,7 @@ from zc.buildout.configparser import (
     option_start,
     section_header,
 )
+import requests
 from . import recipes
 from . import jinja
 
@@ -44,6 +45,7 @@ from pygls.server import LanguageServer
 from pygls.types import Position, Range, Location
 
 logger = logging.getLogger(__name__)
+requests_session = requests.Session()
 
 # Matches a reference like ${section:option}
 # We also tolerate ${section: without option or the ending } to generate completions.
@@ -816,13 +818,23 @@ async def parse(
   if uri in _parse_cache:
     return copy.deepcopy(_parse_cache[uri])
 
-  document = ls.workspace.get_document(uri)
-  try:
-    fp = io.StringIO(document.source)
-  except IOError:
-    if not allow_errors:
-      raise
-    fp = io.StringIO('')
+  parsed_uri = urllib.parse.urlparse(uri)
+  if parsed_uri.scheme in (
+      'http',
+      'https',
+  ):
+    try:
+      fp = io.StringIO(requests_session.get(uri).text)
+    except requests.exceptions.ConnectionError:
+      fp = io.StringIO('')
+  else:
+    document = ls.workspace.get_document(uri)
+    try:
+      fp = io.StringIO(document.source)
+    except IOError:
+      if not allow_errors:
+        raise
+      fp = io.StringIO('')
   parsed = await _parse(
       fp,
       uri,
