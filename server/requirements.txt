@@ -1,2 +1,2 @@
--e git+https://github.com/perrinjerome/pygls/@8879078#egg=pygls
-zc.buildout==2.13.2
+pygls==0.9.0
+zc.buildout==2.13.3
