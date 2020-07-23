@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed:
 
 - don't skip lines containing jinja expressions. This was causing some missing options when jinja was used in option
+- diagnostic: tolerate unknown part when extends jinja
 
 ## [0.3.0] - 2020-02-23
 

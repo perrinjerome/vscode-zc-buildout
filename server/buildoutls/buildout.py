@@ -436,6 +436,9 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
                                         Location] = collections.OrderedDict()
     """The locations for each section, keyed by section names.
     """
+    self.extends_jinja = False
+    """Flag true if this resolved buildout had extends defined by jinja expressions.
+    """
 
   async def getTemplate(
       self,
@@ -1166,13 +1169,15 @@ async def _open(
 
   extends_option = result['buildout'].pop(
       'extends', None) if 'buildout' in result else None
-
+  extends_jinja = False
   if extends_option:
     extends = extends_option.value.split()
+    extends_jinja = (jinja.JinjaParser.jinja_value in extends)
     if extends:
       # extends, as absolute URI that we can use as cache key
       absolute_extends = tuple(urllib.parse.urljoin(base, x) for x in extends)
       eresult = await _open(ls, base, extends.pop(0), seen, allow_errors)
+      extends_jinja = extends_jinja or eresult.extends_jinja
       for fname in extends:
         _update(eresult, await _open(ls, base, fname, seen, allow_errors))
       for absolute_extend in absolute_extends:
@@ -1195,6 +1200,7 @@ async def _open(
         # this happens with non top-level buildout
         pass
 
+  result.extends_jinja = extends_jinja
   resolved = cast(ResolvedBuildout, result)
   _resolved_buildout_cache[uri] = resolved
   return copy.deepcopy(resolved)

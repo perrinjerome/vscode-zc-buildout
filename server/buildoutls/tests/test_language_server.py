@@ -155,6 +155,15 @@ async def test_diagnostics_non_existent_sections_multiple_references_per_line(
 
 
 @pytest.mark.asyncio
+async def test_diagnostics_non_existent_sections_unknown_extends(
+    server, ) -> None:
+  await parseAndSendDiagnostics(
+      server, 'file:///diagnostics/non_existant_sections_unknown_extends.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/non_existant_sections_unknown_extends.cfg', [])
+
+
+@pytest.mark.asyncio
 async def test_diagnostics_required_recipe_option(server) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///diagnostics/recipe_required_option.cfg')

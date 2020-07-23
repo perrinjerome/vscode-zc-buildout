@@ -203,13 +203,14 @@ async def parseAndSendDiagnostics(
             continue  # ignore anything in jinja context
 
           if part_name not in resolved_buildout:
-            diagnostics.append(
-                Diagnostic(
-                    message=f'Section `{part_name}` does not exist.',
-                    range=part_range,
-                    source='buildout',
-                    severity=DiagnosticSeverity.Error,
-                ), )
+            if not resolved_buildout.extends_jinja:
+              diagnostics.append(
+                  Diagnostic(
+                      message=f'Section `{part_name}` does not exist.',
+                      range=part_range,
+                      source='buildout',
+                      severity=DiagnosticSeverity.Error,
+                  ), )
           elif 'recipe' not in resolved_buildout[part_name]:
             diagnostics.append(
                 Diagnostic(
