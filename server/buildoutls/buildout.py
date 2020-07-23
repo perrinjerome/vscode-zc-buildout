@@ -298,21 +298,24 @@ class BuildoutTemplate:
       option_reference_match = option_reference_re.match(remaining_line)
       section_reference_match = section_reference_re.match(remaining_line)
       if option_reference_match:
-        logger.debug("got an option_reference_match %s", option_reference_match)
+        logger.debug("got an option_reference_match %s",
+                     option_reference_match)
         referenced_buildout = self.buildout
-        if (option_reference_match.start() + line_offset > 0 and
-            line[option_reference_match.start() + line_offset - 1] == '$'):
+        if (option_reference_match.start() + line_offset > 0
+            and line[option_reference_match.start() + line_offset - 1] == '$'):
           if self.second_level_buildout:
             referenced_buildout = self.second_level_buildout
           else:
             return None
 
         if (option_reference_match.start() <=
-            (position.character - line_offset) <= option_reference_match.end()):
+            (position.character - line_offset) <=
+            option_reference_match.end()):
           # the position is in ${section:option}, find out wether it is in section or option
-          position_on_option = (
-              line_offset + option_reference_match.start() + len('${') +
-              len(option_reference_match.group('section'))) < position.character
+          position_on_option = (line_offset + option_reference_match.start() +
+                                len('${') +
+                                len(option_reference_match.group('section'))
+                                ) < position.character
           referenced_section_name = option_reference_match.group('section')
           referenced_option_name = option_reference_match.group('option')
 
@@ -324,8 +327,8 @@ class BuildoutTemplate:
               if position_on_option else referenced_section_name,
               current_section_name=current_section_name,
               current_option_name=current_option_name,
-              referenced_section_name=referenced_section_name or
-              current_section_name,
+              referenced_section_name=referenced_section_name
+              or current_section_name,
               is_same_section_reference=referenced_section_name == '',
               referenced_option_name=referenced_option_name,
           )
@@ -354,8 +357,8 @@ class BuildoutTemplate:
               value=referenced_section_name,
               current_section_name=current_section_name,
               current_option_name=current_option_name,
-              referenced_section_name=referenced_section_name or
-              current_section_name,
+              referenced_section_name=referenced_section_name
+              or current_section_name,
               is_same_section_reference=referenced_section_name == '',
           )
         else:
@@ -446,7 +449,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
 
     # uri can be passed as relative or absolute. Let's build a set of absolute
     # and relative uris.
-    uris = set((uri,))
+    uris = set((uri, ))
 
     if not _isurl(uri):
       base = self.uri[:self.uri.rfind('/')] + '/'
@@ -482,7 +485,8 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
                            template_option_value_uri, section_value_dict)
 
               def expand_section_reference(match: Match[str]) -> str:
-                referenced_section_name = match.group('section') or section_name
+                referenced_section_name = match.group(
+                    'section') or section_name
                 if referenced_section_name in self:
                   referenced_section = self[referenced_section_name]
                   if match.group('option') in referenced_section:
@@ -606,8 +610,9 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
                 line_offset + option_value_definition_match.start() +
                 len(option_value_definition_match.group('option')))
 
-            logger.debug("option_value_definition_match, position on option %s",
-                         position_on_option)
+            logger.debug(
+                "option_value_definition_match, position on option %s",
+                position_on_option)
             return Symbol(
                 kind=SymbolKind.BuildoutOptionKey
                 if position_on_option else SymbolKind.BuildoutOptionValue,
@@ -741,8 +746,8 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
   def looksLikeBuildoutProfile(uri: URI) -> bool:
     """Check if this URI looks like a buildout profile URI.
     """
-    return (uri.endswith('.cfg') or uri.endswith('.cfg.in') or
-            uri.endswith('.cfg.j2') or uri.endswith('.cfg.jinja2'))
+    return (uri.endswith('.cfg') or uri.endswith('.cfg.in')
+            or uri.endswith('.cfg.j2') or uri.endswith('.cfg.jinja2'))
 
 
 class ResolvedBuildout(BuildoutProfile):
@@ -876,8 +881,8 @@ async def _parse(
   if slapos_instance_profile_filename_re.match(uri):
     # Add slapos instance generated sections.
     sections.section_header_locations.setdefault(
-        'slap-connection',
-        Location(uri='', range=Range(Position(), Position())))
+        'slap-connection', Location(uri='',
+                                    range=Range(Position(), Position())))
     slap_connection = BuildoutSection()
     for k in (
         'computer-id',
@@ -955,7 +960,8 @@ async def _parse(
       if header:
         sectname = header.group('name')
         sections.section_header_locations[sectname] = Location(
-            uri=uri, range=Range(
+            uri=uri,
+            range=Range(
                 Position(lineno, 0),
                 Position(lineno + 1, 0),
             ))
@@ -966,8 +972,8 @@ async def _parse(
           # initialize buildout default options
           cursect['_buildout_section_name_'] = BuildoutOptionDefinition(
               locations=[
-                  Location(
-                      uri=uri, range=Range(Position(0, 0), Position(0, 0)))
+                  Location(uri=uri,
+                           range=Range(Position(0, 0), Position(0, 0)))
               ],
               value=sectname,
               implicit_option=True,
@@ -978,8 +984,8 @@ async def _parse(
             base_location = uri[:uri.rfind('/')] + '/'
           cursect['_profile_base_location_'] = BuildoutOptionDefinition(
               locations=[
-                  Location(
-                      uri=uri, range=Range(Position(0, 0), Position(0, 0)))
+                  Location(uri=uri,
+                           range=Range(Position(0, 0), Position(0, 0)))
               ],
               value=base_location,
               implicit_option=True,
@@ -1009,13 +1015,12 @@ async def _parse(
           option_def.value = optval
 
           option_def.locations.append(
-              Location(
-                  uri=uri,
-                  range=Range(
-                      start=Position(
-                          line=lineno, character=len(mo.groups()[0]) + 1),
-                      end=Position(line=lineno, character=len(line) - 1),
-                  )))
+              Location(uri=uri,
+                       range=Range(
+                           start=Position(line=lineno,
+                                          character=len(mo.groups()[0]) + 1),
+                           end=Position(line=lineno, character=len(line) - 1),
+                       )))
           option_def.implicit_option = False
           cursect[optname] = option_def
           blockmode = not optval
@@ -1195,9 +1200,9 @@ def _update_section(
       # Find v1 in s2 first; it may have been set by a += operation first
       option_def = s2.get(k, s1.get(k, v))
       # same logic as as SectionKey.removeFromValue
-      option_def.value = '\n'.join(
-          new_v for new_v in option_def.value.split('\n')
-          if new_v not in v.value.split('\n'))
+      option_def.value = '\n'.join(new_v
+                                   for new_v in option_def.value.split('\n')
+                                   if new_v not in v.value.split('\n'))
       option_def.locations.extend(v.locations)
       s1[k] = option_def
     elif k.endswith('+'):

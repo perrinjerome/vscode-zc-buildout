@@ -17,7 +17,8 @@ def main() -> None:
 
   parser.add_argument(
       '--check-install',
-      help='Utility flag to check if language server is installed on this python',
+      help=
+      'Utility flag to check if language server is installed on this python',
       action='store_true',
   )
   parser.add_argument(

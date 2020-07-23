@@ -40,13 +40,12 @@ from unittest import mock
 
 @pytest.mark.asyncio
 async def test_complete_slapos_instance_software(server: LanguageServer):
-  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked,)
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete ${ with software
-  params = CompletionParams(
-      text_document=TextDocumentIdentifier(
-          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-      position=Position(14, 27),
-      context=context)
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+                            position=Position(14, 27),
+                            context=context)
 
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -59,20 +58,18 @@ async def test_complete_slapos_instance_software(server: LanguageServer):
 
 @pytest.mark.asyncio
 async def test_complete_slapos_instance_instance(server: LanguageServer):
-  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked,)
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete $${ with instance
-  params = CompletionParams(
-      text_document=TextDocumentIdentifier(
-          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-      position=Position(15, 28),
-      context=context)
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+                            position=Position(15, 28),
+                            context=context)
 
   completions = await lsp_completion(server, params)
   assert completions is not None
   textEditRange = Range(Position(15, 26), Position(15, 28))
   assert sorted([(c.textEdit.range, c.textEdit.newText, c.filterText, c.label)
-                 for c in completions
-                 if c.textEdit is not None]) == [
+                 for c in completions if c.textEdit is not None]) == [
                      (
                          textEditRange,
                          '${buildout',
@@ -116,18 +113,16 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
                          'template',
                      ),
                  ]
-  params = CompletionParams(
-      text_document=TextDocumentIdentifier(
-          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-      position=Position(13, 61),
-      context=context)
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+                            position=Position(13, 61),
+                            context=context)
 
   completions = await lsp_completion(server, params)
   assert completions is not None
   textEditRange = Range(Position(13, 60), Position(13, 71))
   assert sorted([(c.textEdit.range, c.textEdit.newText, c.label)
-                 for c in completions
-                 if c.textEdit is not None]) == [
+                 for c in completions if c.textEdit is not None]) == [
                      (
                          textEditRange,
                          'cert-file}',
@@ -163,13 +158,12 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
 
 @pytest.mark.asyncio
 async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
-  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked,)
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # in jinja instance, complete ${ with instance
-  params = CompletionParams(
-      text_document=TextDocumentIdentifier(
-          uri="file:///slapos/instance_as_jinja/instance.cfg.in"),
-      position=Position(18, 27),
-      context=context)
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///slapos/instance_as_jinja/instance.cfg.in"),
+                            position=Position(18, 27),
+                            context=context)
 
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -187,51 +181,46 @@ async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
 async def test_hover_slapos_instance(server: LanguageServer):
   hover = await lsp_hover(
       server,
-      TextDocumentPositionParams(
-          text_document=TextDocumentIdentifier(
-              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-          position=Position(13, 16)))
+      TextDocumentPositionParams(text_document=TextDocumentIdentifier(
+          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+                                 position=Position(13, 16)))
   assert hover is not None
   assert hover.contents == '```\nslapos.recipe.cmmi\n```'
 
   hover = await lsp_hover(
       server,
-      TextDocumentPositionParams(
-          text_document=TextDocumentIdentifier(
-              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-          position=Position(13, 24)))
+      TextDocumentPositionParams(text_document=TextDocumentIdentifier(
+          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+                                 position=Position(13, 24)))
   assert hover is not None
   assert hover.contents == '```\n\n```'
 
   hover = await lsp_hover(
       server,
-      TextDocumentPositionParams(
-          text_document=TextDocumentIdentifier(
-              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-          position=Position(13, 42)))
+      TextDocumentPositionParams(text_document=TextDocumentIdentifier(
+          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+                                 position=Position(13, 42)))
   assert hover is not None
   assert hover.contents == '```\n\n```'
 
   hover = await lsp_hover(
       server,
-      TextDocumentPositionParams(
-          text_document=TextDocumentIdentifier(
-              uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-          position=Position(13, 63)))
+      TextDocumentPositionParams(text_document=TextDocumentIdentifier(
+          uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
+                                 position=Position(13, 63)))
   assert hover is not None
   assert hover.contents == '```\n\n```'
 
 
 @pytest.mark.asyncio
 async def test_complete_slapos_instance_template(server: LanguageServer):
-  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked,)
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
 
   # complete ${ in instance's template with instance
-  params = CompletionParams(
-      text_document=TextDocumentIdentifier(
-          uri="file:///slapos/instance_as_buildout_profile/template.in"),
-      position=Position(0, 75),
-      context=context)
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///slapos/instance_as_buildout_profile/template.in"),
+                            position=Position(0, 75),
+                            context=context)
 
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -245,7 +234,8 @@ async def test_complete_slapos_instance_template(server: LanguageServer):
 
 
 @pytest.mark.asyncio
-async def test_goto_definition_slapos_instance_software(server: LanguageServer):
+async def test_goto_definition_slapos_instance_software(
+    server: LanguageServer):
   definitions = await lsp_definition(
       server,
       TextDocumentPositionParams(
@@ -254,14 +244,14 @@ async def test_goto_definition_slapos_instance_software(server: LanguageServer):
           Position(13, 23),
       ))
   assert definitions == [
-      Location(
-          uri='file:///slapos/instance_as_buildout_profile/software.cfg',
-          range=Range(Position(7, 0), Position(8, 0)))
+      Location(uri='file:///slapos/instance_as_buildout_profile/software.cfg',
+               range=Range(Position(7, 0), Position(8, 0)))
   ]
 
 
 @pytest.mark.asyncio
-async def test_goto_definition_slapos_instance_instance(server: LanguageServer):
+async def test_goto_definition_slapos_instance_instance(
+    server: LanguageServer):
   definitions = await lsp_definition(
       server,
       TextDocumentPositionParams(
@@ -270,9 +260,8 @@ async def test_goto_definition_slapos_instance_instance(server: LanguageServer):
           Position(12, 26),
       ))
   assert definitions == [
-      Location(
-          uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
-          range=Range(Position(7, 5), Position(7, 20)))
+      Location(uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
+               range=Range(Position(7, 5), Position(7, 20)))
   ]
 
 
@@ -287,14 +276,14 @@ async def test_goto_definition_slapos_instance_software_empty_section(
           Position(7, 12),
       ))
   assert definitions == [
-      Location(
-          uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
-          range=Range(Position(6, 6), Position(6, 29)))
+      Location(uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
+               range=Range(Position(6, 6), Position(6, 29)))
   ]
 
 
 @pytest.mark.asyncio
-async def test_goto_definition_slapos_instance_template(server: LanguageServer):
+async def test_goto_definition_slapos_instance_template(
+    server: LanguageServer):
   definitions = await lsp_definition(
       server,
       TextDocumentPositionParams(
@@ -303,23 +292,22 @@ async def test_goto_definition_slapos_instance_template(server: LanguageServer):
           Position(0, 75),
       ))
   assert definitions == [
-      Location(
-          uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
-          range=Range(Position(6, 6), Position(6, 29)))
+      Location(uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
+               range=Range(Position(6, 6), Position(6, 29)))
   ]
 
 
 @pytest.mark.asyncio
 async def test_open_instance_type(server: LanguageServer):
   assert isinstance(
-      await open(
-          ls=server,
-          uri='file:///slapos/instance_as_buildout_profile/instance.cfg'),
+      await
+      open(ls=server,
+           uri='file:///slapos/instance_as_buildout_profile/instance.cfg'),
       BuildoutProfile,
   )
   assert isinstance(
-      await
-      open(ls=server, uri='file:///slapos/instance_as_jinja/instance.cfg.in'),
+      await open(ls=server,
+                 uri='file:///slapos/instance_as_jinja/instance.cfg.in'),
       BuildoutProfile,
   )
 

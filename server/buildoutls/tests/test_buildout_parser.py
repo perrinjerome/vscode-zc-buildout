@@ -57,39 +57,35 @@ async def test_parse() -> None:
   assert parsed['s2']['opt3'].value == "multi\nline"
 
   assert parsed['s1']['opt1'].locations == [
-      Location(
-          uri='file:///buildout.cfg',
-          range=Range(
-              start=Position(line=1, character=6),
-              end=Position(line=1, character=13),
-          ))
+      Location(uri='file:///buildout.cfg',
+               range=Range(
+                   start=Position(line=1, character=6),
+                   end=Position(line=1, character=13),
+               ))
   ]
   assert parsed['s1']['opt2'].locations == [
-      Location(
-          uri='file:///buildout.cfg',
-          range=Range(
-              start=Position(line=2, character=6),
-              end=Position(line=2, character=13),
-          )),
-      Location(
-          uri='file:///buildout.cfg',
-          range=Range(
-              start=Position(line=8, character=6),
-              end=Position(line=8, character=16),
-          )),
+      Location(uri='file:///buildout.cfg',
+               range=Range(
+                   start=Position(line=2, character=6),
+                   end=Position(line=2, character=13),
+               )),
+      Location(uri='file:///buildout.cfg',
+               range=Range(
+                   start=Position(line=8, character=6),
+                   end=Position(line=8, character=16),
+               )),
   ]
   assert parsed['s2']['opt3'].locations == [
-      Location(
-          uri='file:///buildout.cfg',
-          range=Range(
-              start=Position(line=4, character=6),
-              end=Position(line=6, character=8),
-          )),
+      Location(uri='file:///buildout.cfg',
+               range=Range(
+                   start=Position(line=4, character=6),
+                   end=Position(line=6, character=8),
+               )),
   ]
   # section headers ranges are properties of buildout
   assert list(parsed.section_header_locations.items()) == [
-      ('buildout',
-       Location(uri='', range=Range(Position(0, 0), Position(0, 0)))),
+      ('buildout', Location(uri='',
+                            range=Range(Position(0, 0), Position(0, 0)))),
       (
           's1',
           Location(
@@ -97,9 +93,8 @@ async def test_parse() -> None:
               # we only have the last range
               range=Range(Position(7, 0), Position(8, 0)))),
       ('s2',
-       Location(
-           uri='file:///buildout.cfg',
-           range=Range(Position(3, 0), Position(4, 0)))),
+       Location(uri='file:///buildout.cfg',
+                range=Range(Position(3, 0), Position(4, 0)))),
   ]
 
 
@@ -123,7 +118,7 @@ async def test_BuildoutProfile_getSymbolAtPosition_BuildoutOptionKey(
     assert symbol.current_option_name == 'op'
 
   # an empty line is a buildout option key
-  for pos in (Position(6, 0),):
+  for pos in (Position(6, 0), ):
     symbol = await buildout.getSymbolAtPosition(pos)
     assert symbol is not None
     assert symbol.kind == SymbolKind.BuildoutOptionKey
@@ -168,7 +163,8 @@ async def test_BuildoutProfile_getSymbolAtPosition_SectionReference(
     assert symbol.current_option_name == 'command'
     assert symbol.referenced_section_name == 'section1'
     assert symbol.referenced_section is not None
-    assert symbol.referenced_section['command'].value == 'echo install section1'
+    assert symbol.referenced_section[
+        'command'].value == 'echo install section1'
     assert symbol.referenced_section_recipe is not None
     assert symbol.referenced_section_recipe.name == 'plone.recipe.command'
     assert symbol.referenced_option is not None
@@ -187,7 +183,8 @@ async def test_BuildoutProfile_getSymbolAtPosition_SectionReference(
     assert symbol.current_option_name == 'option_with_section_reference'
     assert symbol.referenced_section_name == 'section1'
     assert symbol.referenced_section is not None
-    assert symbol.referenced_section['command'].value == 'echo install section1'
+    assert symbol.referenced_section[
+        'command'].value == 'echo install section1'
     assert symbol.referenced_section_recipe is not None
     assert symbol.referenced_section_recipe.name == 'plone.recipe.command'
 
@@ -200,7 +197,8 @@ async def test_BuildoutProfile_getSymbolAtPosition_SectionReference(
     assert symbol.current_option_name == 'multi_line_option'
     assert symbol.referenced_section_name == 'section1'
     assert symbol.referenced_section is not None
-    assert symbol.referenced_section['command'].value == 'echo install section1'
+    assert symbol.referenced_section[
+        'command'].value == 'echo install section1'
     assert symbol.referenced_section_recipe is not None
     assert symbol.referenced_section_recipe.name == 'plone.recipe.command'
 
@@ -241,7 +239,7 @@ async def test_BuildoutProfile_getSymbolAtPosition_OptionReference(
 
 @pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_SectionDefinition(
-    buildout: BuildoutProfile,) -> None:
+    buildout: BuildoutProfile, ) -> None:
   for pos in (Position(3, 1), Position(3, 0), Position(3, 10)):
     symbol = await buildout.getSymbolAtPosition(pos)
     assert symbol is not None
@@ -255,14 +253,14 @@ async def test_BuildoutProfile_getAllOptionReferenceSymbols(
   symbols: List[Symbol] = []
   async for symbol in buildout.getAllOptionReferenceSymbols():
     symbols.append(symbol)
-  assert [(s.referenced_section_name, s.referenced_option_name) for s in symbols
-         ] == [
-             ('section1', 'command'),
-             ('section2', 'command'),
-             ('section1', 'command'),
-             # this is ${:command} in the source, but this had been expanded
-             ('section5', 'command'),
-         ]
+  assert [(s.referenced_section_name, s.referenced_option_name)
+          for s in symbols] == [
+              ('section1', 'command'),
+              ('section2', 'command'),
+              ('section1', 'command'),
+              # this is ${:command} in the source, but this had been expanded
+              ('section5', 'command'),
+          ]
   assert [(s.referenced_section is not None, s.referenced_option is not None)
           for s in symbols] == [
               (True, True),
@@ -286,7 +284,7 @@ async def test_BuildoutProfile_getTemplate(
 
 @pytest.mark.asyncio
 async def test_BuildoutTemplate_getSymbolAtPosition_SectionReference(
-    template: BuildoutTemplate,) -> None:
+    template: BuildoutTemplate, ) -> None:
   for pos in (Position(2, 24), Position(2, 22), Position(2, 30)):
     symbol = await template.getSymbolAtPosition(pos)
     assert symbol is not None
@@ -307,7 +305,7 @@ async def test_BuildoutTemplate_getSymbolAtPosition_SectionReference(
 
 @pytest.mark.asyncio
 async def test_BuildoutTemplate_getSymbolAtPosition_OptionReference(
-    template: BuildoutTemplate,) -> None:
+    template: BuildoutTemplate, ) -> None:
   for pos in (Position(2, 34), Position(2, 31), Position(2, 38)):
     symbol = await template.getSymbolAtPosition(pos)
     assert symbol is not None
@@ -329,7 +327,7 @@ async def test_BuildoutTemplate_getSymbolAtPosition_OptionReference(
 
 @pytest.mark.asyncio
 async def test_BuildoutTemplate_getSymbolAtPosition_None(
-    template: BuildoutTemplate,) -> None:
+    template: BuildoutTemplate, ) -> None:
   for pos in (Position(0, 0), Position(4, 11), Position(6, 60)):
     symbol = await template.getSymbolAtPosition(pos)
     assert symbol is None
@@ -342,14 +340,14 @@ async def test_BuildoutTemplate_getAllOptionReferenceSymbols(
   async for symbol in template.getAllOptionReferenceSymbols():
     symbols.append(symbol)
 
-  assert [(s.referenced_section_name, s.referenced_option_name) for s in symbols
-         ] == [
-             ('buildout', 'directory'),
-             ('section5', 'command'),
-             ('section5', 'option'),
-             ('missing', 'option'),
-             ('section5', 'missing_option'),
-         ]
+  assert [(s.referenced_section_name, s.referenced_option_name)
+          for s in symbols] == [
+              ('buildout', 'directory'),
+              ('section5', 'command'),
+              ('section5', 'option'),
+              ('missing', 'option'),
+              ('section5', 'missing_option'),
+          ]
   assert [(s.referenced_section is not None, s.referenced_option is not None)
           for s in symbols] == [
               (True, True),
@@ -391,36 +389,31 @@ async def test_open_extends(server: LanguageServer):
   assert (parsed['overloaded_from_another_buildout']['option'].value ==
           'this is overloaded in extended/extended.cfg')
   assert parsed['overloaded_from_another_buildout']['option'].locations == [
-      Location(
-          uri='file:///extended/extended.cfg',
-          range=Range(Position(7, 8), Position(7, 52)))
+      Location(uri='file:///extended/extended.cfg',
+               range=Range(Position(7, 8), Position(7, 52)))
   ]
 
   # options are mixed in the same section
   assert parsed['merged_section'][
       'kept_option'].value == 'this is from extended/another/buildout.cfg'
   assert parsed['merged_section']['kept_option'].locations == [
-      Location(
-          uri='file:///extended/another/buildout.cfg',
-          range=Range(Position(5, 13), Position(5, 56)))
+      Location(uri='file:///extended/another/buildout.cfg',
+               range=Range(Position(5, 13), Position(5, 56)))
   ]
   assert parsed['merged_section'][
       'overloaded_option'].value == 'from extended/buildout.cfg'
   assert parsed['merged_section']['overloaded_option'].locations == [
-      Location(
-          uri='file:///extended/buildout.cfg',
-          range=Range(Position(6, 19), Position(6, 46)))
+      Location(uri='file:///extended/buildout.cfg',
+               range=Range(Position(6, 19), Position(6, 46)))
   ]
   # options are extended with +=
   assert parsed['extended_option'][
       'option'].value == 'option from extended/extended.cfg\nthen extended in extended/buildout.cfg'
   assert parsed['extended_option']['option'].locations == [
-      Location(
-          uri='file:///extended/extended.cfg',
-          range=Range(Position(1, 8), Position(1, 42))),
-      Location(
-          uri='file:///extended/buildout.cfg',
-          range=Range(Position(9, 9), Position(9, 48)))
+      Location(uri='file:///extended/extended.cfg',
+               range=Range(Position(1, 8), Position(1, 42))),
+      Location(uri='file:///extended/buildout.cfg',
+               range=Range(Position(9, 9), Position(9, 48)))
   ]
   assert 'option +' not in parsed['extended_option']
 
@@ -428,24 +421,20 @@ async def test_open_extends(server: LanguageServer):
   assert parsed['extended_option'][
       'mutli_line_option'].value == 'value1\nvalue2\nvalue3'
   assert parsed['extended_option']['mutli_line_option'].locations == [
-      Location(
-          uri='file:///extended/extended.cfg',
-          range=Range(Position(2, 19), Position(5, 0))),
-      Location(
-          uri='file:///extended/buildout.cfg',
-          range=Range(Position(10, 20), Position(12, 0)))
+      Location(uri='file:///extended/extended.cfg',
+               range=Range(Position(2, 19), Position(5, 0))),
+      Location(uri='file:///extended/buildout.cfg',
+               range=Range(Position(10, 20), Position(12, 0)))
   ]
   assert 'mutli_line_option +' not in parsed['extended_option']
 
   # options can be removed with -=
   assert parsed['reduced_option']['option'].value == 'value1\nvalue3'
   assert parsed['reduced_option']['option'].locations == [
-      Location(
-          uri='file:///extended/extended.cfg',
-          range=Range(Position(10, 8), Position(13, 9))),
-      Location(
-          uri='file:///extended/buildout.cfg',
-          range=Range(Position(14, 9), Position(15, 9)))
+      Location(uri='file:///extended/extended.cfg',
+               range=Range(Position(10, 8), Position(13, 9))),
+      Location(uri='file:///extended/buildout.cfg',
+               range=Range(Position(14, 9), Position(15, 9)))
   ]
   assert 'option -' not in parsed['reduced_option']
 
@@ -458,8 +447,8 @@ async def test_open_extends_file_not_found(server: LanguageServer):
         uri='file:///extended/broken/file_not_found.cfg',
         allow_errors=False,
     )
-  parsed = await open(
-      ls=server, uri='file:///extended/broken/file_not_found.cfg')
+  parsed = await open(ls=server,
+                      uri='file:///extended/broken/file_not_found.cfg')
   assert isinstance(parsed, BuildoutProfile)
   assert list(parsed.keys()) == ['buildout', 'section']
 
@@ -467,8 +456,9 @@ async def test_open_extends_file_not_found(server: LanguageServer):
 @pytest.mark.asyncio
 async def test_open_extends_loop(server: LanguageServer):
   with pytest.raises(RecursiveIncludeError):
-    await open(
-        ls=server, uri='file:///extended/broken/loop.cfg', allow_errors=False)
+    await open(ls=server,
+               uri='file:///extended/broken/loop.cfg',
+               allow_errors=False)
   parsed = await open(ls=server, uri='file:///extended/broken/loop.cfg')
   assert isinstance(parsed, BuildoutProfile)
   assert list(parsed.keys()) == ['buildout', 'section']
@@ -498,25 +488,20 @@ async def test_open_extends_section_header_locations(server: LanguageServer):
   assert isinstance(parsed, BuildoutProfile)
   assert list(parsed.section_header_locations.items()) == [
       ('buildout',
-       Location(
-           uri='file:///extended/buildout.cfg',
-           range=Range(Position(0, 0), Position(1, 0)))),
+       Location(uri='file:///extended/buildout.cfg',
+                range=Range(Position(0, 0), Position(1, 0)))),
       ('extended_option',
-       Location(
-           uri='file:///extended/buildout.cfg',
-           range=Range(Position(8, 0), Position(9, 0)))),
+       Location(uri='file:///extended/buildout.cfg',
+                range=Range(Position(8, 0), Position(9, 0)))),
       ('overloaded_from_another_buildout',
-       Location(
-           uri='file:///extended/extended.cfg',
-           range=Range(Position(6, 0), Position(7, 0)))),
+       Location(uri='file:///extended/extended.cfg',
+                range=Range(Position(6, 0), Position(7, 0)))),
       ('reduced_option',
-       Location(
-           uri='file:///extended/buildout.cfg',
-           range=Range(Position(13, 0), Position(14, 0)))),
+       Location(uri='file:///extended/buildout.cfg',
+                range=Range(Position(13, 0), Position(14, 0)))),
       ('merged_section',
-       Location(
-           uri='file:///extended/buildout.cfg',
-           range=Range(Position(5, 0), Position(6, 0)))),
+       Location(uri='file:///extended/buildout.cfg',
+                range=Range(Position(5, 0), Position(6, 0)))),
   ]
 
 

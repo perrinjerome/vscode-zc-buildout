@@ -134,14 +134,16 @@ async def parseAndSendDiagnostics(
   installed_parts: Set[str] = set([])
   if isinstance(resolved_buildout, buildout.BuildoutProfile):
     if 'parts' in resolved_buildout['buildout']:
-      installed_parts = set((
-          v[0] for v in resolved_buildout.getOptionValues('buildout', 'parts')))
+      installed_parts = set(
+          (v[0]
+           for v in resolved_buildout.getOptionValues('buildout', 'parts')))
 
   async for symbol in resolved_buildout.getAllOptionReferenceSymbols():
     if symbol.referenced_section is None:
       diagnostics.append(
           Diagnostic(
-              message=f'Section `{symbol.referenced_section_name}` does not exist.',
+              message=
+              f'Section `{symbol.referenced_section_name}` does not exist.',
               range=symbol.section_range,
               source='buildout',
           ))
@@ -149,18 +151,19 @@ async def parseAndSendDiagnostics(
       # if we have a recipe, either it's a known recipe where we know
       # all options that this recipe can generate, or it's an unknown
       # recipe and in this case we assume it's OK.
-      if (symbol.referenced_section_recipe_name is not None and
-          symbol.referenced_section_recipe is None) or (
-              symbol.referenced_section_recipe is not None and
-              symbol.referenced_option_name in
-              symbol.referenced_section_recipe.generated_options):
+      if (symbol.referenced_section_recipe_name is not None
+          and symbol.referenced_section_recipe is None) or (
+              symbol.referenced_section_recipe is not None
+              and symbol.referenced_option_name
+              in symbol.referenced_section_recipe.generated_options):
         continue
       # if a section is a macro, it's OK to self reference ${:missing}
       if symbol.is_same_section_reference and symbol.current_section_name not in installed_parts:
         continue
       diagnostics.append(
           Diagnostic(
-              message=f'Option `{symbol.referenced_option_name}` does not exist in `{symbol.referenced_section_name}`.',
+              message=
+              f'Option `{symbol.referenced_option_name}` does not exist in `{symbol.referenced_section_name}`.',
               range=symbol.option_range,
               source='buildout',
               severity=DiagnosticSeverity.Warning,
@@ -180,12 +183,13 @@ async def parseAndSendDiagnostics(
                 ['`{}`'.format(o) for o in missing_required_options])
             diagnostics.append(
                 Diagnostic(
-                    message=f'Missing required options for `{recipe.name}`: {missing_required_options_text}',
-                    range=resolved_buildout
-                    .section_header_locations[section_name].range,
+                    message=
+                    f'Missing required options for `{recipe.name}`: {missing_required_options_text}',
+                    range=resolved_buildout.
+                    section_header_locations[section_name].range,
                     source='buildout',
                     severity=DiagnosticSeverity.Error,
-                ),)
+                ), )
 
     if 'parts' in resolved_buildout['buildout']:
       jinja_parser = jinja.JinjaParser()
@@ -205,7 +209,7 @@ async def parseAndSendDiagnostics(
                     range=part_range,
                     source='buildout',
                     severity=DiagnosticSeverity.Error,
-                ),)
+                ), )
           elif 'recipe' not in resolved_buildout[part_name]:
             diagnostics.append(
                 Diagnostic(
@@ -213,7 +217,7 @@ async def parseAndSendDiagnostics(
                     range=part_range,
                     source='buildout',
                     severity=DiagnosticSeverity.Error,
-                ),)
+                ), )
 
   ls.publish_diagnostics(
       uri,
@@ -279,18 +283,17 @@ async def lsp_symbols(
         #  vscode does not like too long multi-lines detail
         detail = '{} ...'.format(detail.splitlines()[0])
       children.append(
-          DocumentSymbol(
-              name=option_name,
-              kind=SymbolKind.Field,
-              range=option_range,
-              selection_range=option_range,
-              detail=detail,
-              children=[]))
+          DocumentSymbol(name=option_name,
+                         kind=SymbolKind.Field,
+                         range=option_range,
+                         selection_range=option_range,
+                         detail=detail,
+                         children=[]))
     section_range = Range(
         start=section_header_location.range.start,
         end=Position(
             max(s.range.end.line for s in children
-               ) if children else section_header_location.range.end.line),
+                ) if children else section_header_location.range.end.line),
     )
 
     symbols.append(
@@ -352,7 +355,8 @@ async def lsp_completion(
     """Calculate the edition to insert option} a ${section:option}
     """
     words_split = re.compile(
-        r'(?P<section>\${[-a-zA-Z0-9 ._]*\:)(?P<option>[-a-zA-Z0-9._]*\}{0,1})')
+        r'(?P<section>\${[-a-zA-Z0-9 ._]*\:)(?P<option>[-a-zA-Z0-9._]*\}{0,1})'
+    )
     line = doc.lines[pos.line]
     index = 0
     while True:
@@ -391,9 +395,8 @@ async def lsp_completion(
       line = doc.lines[pos.line]
     if not line.strip():
       return TextEdit(
-          Range(
-              Position(pos.line, pos.character),
-              Position(pos.line, pos.character)),
+          Range(Position(pos.line, pos.character),
+                Position(pos.line, pos.character)),
           new_text,
       )
     index = 0
@@ -424,7 +427,7 @@ async def lsp_completion(
         documentation = '```ini\n{}\n```'.format(
             '\n'.join('{} = {}'.format(k, v.value)
                       for (k, v) in section_items.items()
-                      if v and not v.implicit_option),)
+                      if v and not v.implicit_option), )
         if section_items.get('recipe'):
           recipe = section_items.getRecipe()
           if recipe:
@@ -433,19 +436,18 @@ async def lsp_completion(
             documentation = f'## `{section_items["recipe"].value}`\n\n---\n{documentation}'
 
         items.append(
-            CompletionItem(
-                label=buildout_section_name,
-                text_edit=getSectionReferenceCompletionTextEdit(
-                    doc,
-                    params.position,
-                    '${' + buildout_section_name,
-                ),
-                filter_text='${' + buildout_section_name,
-                kind=CompletionItemKind.Class,
-                documentation=MarkupContent(
-                    kind=MarkupKind.Markdown,
-                    value=documentation,
-                )))
+            CompletionItem(label=buildout_section_name,
+                           text_edit=getSectionReferenceCompletionTextEdit(
+                               doc,
+                               params.position,
+                               '${' + buildout_section_name,
+                           ),
+                           filter_text='${' + buildout_section_name,
+                           kind=CompletionItemKind.Class,
+                           documentation=MarkupContent(
+                               kind=MarkupKind.Markdown,
+                               value=documentation,
+                           )))
     elif symbol.kind == buildout.SymbolKind.OptionReference:
       # complete referenced option:
       #   [section]
@@ -464,22 +466,22 @@ async def lsp_completion(
       if recipe:
         valid_option_references = itertools.chain(
             valid_option_references,
-            ((k, v.documentation) for k, v in recipe.generated_options.items()),
+            ((k, v.documentation)
+             for k, v in recipe.generated_options.items()),
         )
       for buildout_option_name, buildout_option_value in valid_option_references:
         items.append(
-            CompletionItem(
-                label=buildout_option_name,
-                text_edit=getOptionReferenceTextEdit(
-                    doc,
-                    params.position,
-                    buildout_option_name + '}',
-                ),
-                kind=CompletionItemKind.Property,
-                documentation=MarkupContent(
-                    kind=MarkupKind.Markdown,
-                    value=buildout_option_value,
-                )))
+            CompletionItem(label=buildout_option_name,
+                           text_edit=getOptionReferenceTextEdit(
+                               doc,
+                               params.position,
+                               buildout_option_name + '}',
+                           ),
+                           kind=CompletionItemKind.Property,
+                           documentation=MarkupContent(
+                               kind=MarkupKind.Markdown,
+                               value=buildout_option_value,
+                           )))
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionKey:
       # complete options of a section, ie:
       #   [section]
@@ -491,18 +493,17 @@ async def lsp_completion(
         # buildout default options
         for option_name, option_default_value in parsed['buildout'].items():
           items.append(
-              CompletionItem(
-                  label=option_name,
-                  text_edit=getDefaultTextEdit(
-                      doc,
-                      params.position,
-                      option_name + ' = ',
-                  ),
-                  kind=CompletionItemKind.Variable,
-                  documentation=MarkupContent(
-                      kind=MarkupKind.Markdown,
-                      value=f'`{option_default_value.value}`',
-                  )))
+              CompletionItem(label=option_name,
+                             text_edit=getDefaultTextEdit(
+                                 doc,
+                                 params.position,
+                                 option_name + ' = ',
+                             ),
+                             kind=CompletionItemKind.Variable,
+                             documentation=MarkupContent(
+                                 kind=MarkupKind.Markdown,
+                                 value=f'`{option_default_value.value}`',
+                             )))
         # extra buildout options that are usually defined as multi line
         # (so we insert a \n)
         for option_name, option_documentation in (
@@ -510,47 +511,44 @@ async def lsp_completion(
             ('parts', 'Parts that will be installed'),
         ):
           items.append(
-              CompletionItem(
-                  label=option_name,
-                  text_edit=getDefaultTextEdit(
-                      doc,
-                      params.position,
-                      option_name + ' =\n    ',
-                  ),
-                  kind=CompletionItemKind.Variable,
-                  documentation=MarkupContent(
-                      kind=MarkupKind.Markdown,
-                      value=option_documentation,
-                  )))
+              CompletionItem(label=option_name,
+                             text_edit=getDefaultTextEdit(
+                                 doc,
+                                 params.position,
+                                 option_name + ' =\n    ',
+                             ),
+                             kind=CompletionItemKind.Variable,
+                             documentation=MarkupContent(
+                                 kind=MarkupKind.Markdown,
+                                 value=option_documentation,
+                             )))
       else:
         # if section uses a known recipe, complete with the options of this recipe.
         recipe = symbol.current_section_recipe
         if recipe:
           for k, v in recipe.options.items():
             items.append(
-                CompletionItem(
-                    label=k,
-                    text_edit=getDefaultTextEdit(
-                        doc,
-                        params.position,
-                        k + ' = ',
-                    ),
-                    kind=CompletionItemKind.Variable,
-                    documentation=MarkupContent(
-                        kind=MarkupKind.Markdown,
-                        value=v.documentation,
-                    )))
+                CompletionItem(label=k,
+                               text_edit=getDefaultTextEdit(
+                                   doc,
+                                   params.position,
+                                   k + ' = ',
+                               ),
+                               kind=CompletionItemKind.Variable,
+                               documentation=MarkupContent(
+                                   kind=MarkupKind.Markdown,
+                                   value=v.documentation,
+                               )))
         else:
           # section has no recipe, complete `recipe` as an option name
           items.append(
-              CompletionItem(
-                  label='recipe',
-                  text_edit=getDefaultTextEdit(
-                      doc,
-                      params.position,
-                      'recipe = ',
-                  ),
-                  kind=CompletionItemKind.Variable))
+              CompletionItem(label='recipe',
+                             text_edit=getDefaultTextEdit(
+                                 doc,
+                                 params.position,
+                                 'recipe = ',
+                             ),
+                             kind=CompletionItemKind.Variable))
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionValue:
       # complete option = |
       assert isinstance(parsed, buildout.BuildoutProfile)
@@ -559,43 +557,41 @@ async def lsp_completion(
         # complete recipe = | with known recipes
         for recipe_name, recipe in recipes.registry.items():
           items.append(
-              CompletionItem(
-                  label=recipe_name,
-                  text_edit=getDefaultTextEdit(doc, params.position,
-                                               recipe_name),
-                  kind=CompletionItemKind.Constructor,
-                  documentation=MarkupContent(
-                      kind=MarkupKind.Markdown,
-                      value=recipe.documentation,
-                  )))
+              CompletionItem(label=recipe_name,
+                             text_edit=getDefaultTextEdit(
+                                 doc, params.position, recipe_name),
+                             kind=CompletionItemKind.Constructor,
+                             documentation=MarkupContent(
+                                 kind=MarkupKind.Markdown,
+                                 value=recipe.documentation,
+                             )))
       if symbol.current_option_name == '<':
         # complete <= | with parts
         for section_name in symbol._buildout:
           if section_name != 'buildout':
             items.append(
-                CompletionItem(
-                    label=section_name,
-                    text_edit=getDefaultTextEdit(doc, params.position,
-                                                 section_name),
-                    kind=CompletionItemKind.Function))
+                CompletionItem(label=section_name,
+                               text_edit=getDefaultTextEdit(
+                                   doc, params.position, section_name),
+                               kind=CompletionItemKind.Function))
       if symbol.current_section_recipe:
         # complete with recipe options if recipe is known
         for k, v in symbol.current_section_recipe.options.items():
           if k == symbol.current_option_name:
             for valid in v.valid_values:
               items.append(
-                  CompletionItem(
-                      label=valid,
-                      text_edit=getDefaultTextEdit(doc, params.position, valid),
-                      kind=CompletionItemKind.Keyword))
+                  CompletionItem(label=valid,
+                                 text_edit=getDefaultTextEdit(
+                                     doc, params.position, valid),
+                                 kind=CompletionItemKind.Keyword))
       if symbol.current_section_name == 'buildout':
         # complete options of [buildout]
         if symbol.current_option_name == 'extends':
           # complete extends = | with local files
           doc_path = pathlib.Path(doc.path)
           root_path = pathlib.Path(ls.workspace.root_path)
-          for profile in itertools.chain(
-              root_path.glob('**/*.cfg'), root_path.glob('*.cfg')):
+          for profile in itertools.chain(root_path.glob('**/*.cfg'),
+                                         root_path.glob('*.cfg')):
             profile_relative_path = os.path.relpath(profile, doc_path.parent)
             items.append(
                 CompletionItem(
@@ -615,14 +611,13 @@ async def lsp_completion(
           for section in parsed.keys():
             if section != 'buildout':
               items.append(
-                  CompletionItem(
-                      label=section,
-                      text_edit=getDefaultTextEdit(
-                          doc,
-                          params.position,
-                          section + '\n',
-                      ),
-                      kind=CompletionItemKind.Function))
+                  CompletionItem(label=section,
+                                 text_edit=getDefaultTextEdit(
+                                     doc,
+                                     params.position,
+                                     section + '\n',
+                                 ),
+                                 kind=CompletionItemKind.Function))
 
   return items
 
@@ -664,9 +659,8 @@ async def lsp_definition(
           uri = params.textDocument.uri
           base = uri[:uri.rfind('/')] + '/'
           locations.append(
-              Location(
-                  uri=urllib.parse.urljoin(base, extend),
-                  range=Range(start=Position(0, 0), end=Position(1, 0))))
+              Location(uri=urllib.parse.urljoin(base, extend),
+                       range=Range(start=Position(0, 0), end=Position(1, 0))))
   return locations
 
 
@@ -678,7 +672,8 @@ async def lsp_references(
   references: List[Location] = []
   searched_document = await buildout.parse(server, params.textDocument.uri)
   assert searched_document is not None
-  searched_symbol = await searched_document.getSymbolAtPosition(params.position)
+  searched_symbol = await searched_document.getSymbolAtPosition(params.position
+                                                                )
   if searched_symbol is not None:
     searched_option = None
     if searched_symbol.kind in (

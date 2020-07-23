@@ -26,8 +26,8 @@ def server() -> Any:
     """We don't need real server to unit test features."""
     def __init__(self):
       self.workspace = Workspace('', None)
-      self.workspace._root_path = (
-          root_path if root_path.endswith('/') else root_path + '/')
+      self.workspace._root_path = (root_path if root_path.endswith('/') else
+                                   root_path + '/')
       self.workspace._root_uri = 'file:///'
 
     publish_diagnostics = mock.Mock()

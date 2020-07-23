@@ -67,5 +67,5 @@ class JinjaParser:
 
   @property
   def is_in_jinja(self) -> bool:
-    return (bool(self._stack) or self.is_in_expression or
-            self._current_line_was_in_jinja)
+    return (bool(self._stack) or self.is_in_expression
+            or self._current_line_was_in_jinja)

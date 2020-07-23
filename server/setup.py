@@ -41,5 +41,8 @@ setup(
         ],
     },
     entry_points={
-        'console_scripts': ['buildoutls=buildoutls.cli:main',],
-    })
+        'console_scripts': [
+            'buildoutls=buildoutls.cli:main',
+        ],
+    },
+)
