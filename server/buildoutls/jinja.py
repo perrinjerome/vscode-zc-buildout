@@ -28,25 +28,33 @@ end_block_statement = {
 }
 
 statement_re = re.compile(r'.*\{%[\-\+\s]*(?P<statement>[\w]+).*%\}')
-expression_re = re.compile(r'.*\{\{.*\}\}')
+expression_re = re.compile(r'\{\{.*?\}\}')
 
 
 class JinjaParser:
   """A very simple jinja parser which allow skipping lines containing jinja blocks.
   """
+  # a replacement for jinja expressions, so that we
+  # can still parse them as buildout
+  jinja_value = "JINJA_EXPRESSION"
+
   def __init__(self) -> None:
-    self.is_in_expression = False
+    self.has_expression = False
     self.is_in_comment = False
     self.is_error = False
     self._stack: List[JinjaStatement] = []
     self._current_line_was_in_jinja = False
     self._in_comment = False
+    self.line = ""
 
   def feed(self, line: str) -> None:
     """Feeds a line and update the state.
     """
     self._current_line_was_in_jinja = False
-    self.is_in_expression = bool(expression_re.match(line))
+    self.has_expression = bool(expression_re.search(line))
+    if expression_re.search(line):
+      line = expression_re.sub(self.jinja_value, line)
+    self.line = line
     self.is_error = False
 
     if '{#' in line or self._in_comment:
@@ -67,5 +75,4 @@ class JinjaParser:
 
   @property
   def is_in_jinja(self) -> bool:
-    return (bool(self._stack) or self.is_in_expression
-            or self._current_line_was_in_jinja)
+    return (bool(self._stack) or self._current_line_was_in_jinja)

@@ -946,6 +946,7 @@ async def _parse(
     jinja_parser.feed(line)
     if jinja_parser.is_in_jinja:
       continue
+    line = jinja_parser.line
 
     if line[0] in '#;':
       continue  # comment

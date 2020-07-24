@@ -12,7 +12,9 @@ def test_is_in_jinja() -> None:
       ('not ${jinja', False),
 
       # expressions
-      ('{{ jinja }}', True),
+      ('{{ jinja }}', False),
+      ('[section{{ jinja }}]', False),
+      ('key = {{ jinja }}', False),
 
       # one line statements
       ('{% set something = True %}', True),

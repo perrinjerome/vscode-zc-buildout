@@ -101,6 +101,42 @@ async def test_parse() -> None:
 
 
 @pytest.mark.asyncio
+async def test_parse_jinja_option() -> None:
+  parsed = await _parse(
+      fp=io.StringIO(
+          textwrap.dedent("""\
+                [section]
+                option = {{ jinja_expression }}
+                {# ignored #}
+                {% jinja_key = value %}
+                {{ jinja_expression }} = value
+
+                [section{{ jinja_expression }}]
+                option = value
+
+                [another_section]
+                {{ jinja_expression }} = {{ jinja_expression }}
+                """)),
+      uri="file:///buildout.cfg",
+      allow_errors=False,
+  )
+  assert list(parsed.keys()) == [
+      'buildout', 'section', 'sectionJINJA_EXPRESSION', 'another_section'
+  ]
+  assert sorted(parsed['section'].keys()) == [
+      'JINJA_EXPRESSION',
+      '_buildout_section_name_',
+      '_profile_base_location_',
+      'option',
+  ]
+  assert parsed['section']['option'].value == 'JINJA_EXPRESSION'
+  assert parsed['section']['JINJA_EXPRESSION'].value == 'value'
+  assert parsed['sectionJINJA_EXPRESSION']['option'].value == 'value'
+  assert parsed['another_section'][
+      'JINJA_EXPRESSION'].value == 'JINJA_EXPRESSION'
+
+
+@pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_BuildoutOptionKey(
     buildout: BuildoutProfile) -> None:
   for pos in (Position(5, 3), Position(5, 0), Position(5, 7)):
