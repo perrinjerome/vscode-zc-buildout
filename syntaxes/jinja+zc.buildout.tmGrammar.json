@@ -1,6 +1,6 @@
 {
-  "name": "zc.buildout.jinja",
-  "scopeName": "source.zc.buildout.jinja",
+  "name": "zc-buildout-jinja",
+  "scopeName": "source.zc-buildout-jinja",
   "comment": "Buildout in jinja",
   "fileTypes": ["in", "cfg", ".j2"],
   "patterns": [
@@ -8,7 +8,7 @@
       "include": "source.jinja"
     },
     {
-      "include": "source.zc.buildout"
+      "include": "source.zc-buildout"
     }
   ]
 }

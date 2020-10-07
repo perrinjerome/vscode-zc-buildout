@@ -89,7 +89,7 @@ export async function activate() {
   // Options to control the language client
   let clientOptions: LanguageClientOptions = {
     // Register the server for buildout files
-    documentSelector: [{ language: "zc.buildout" }],
+    documentSelector: [{ language: "zc-buildout" }],
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher("**/*.{cfg,in,j2}")
     }

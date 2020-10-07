@@ -17,13 +17,13 @@
     "vscode": "^1.43.0"
   },
   "activationEvents": [
-    "onLanguage:zc.buildout"
+    "onLanguage:zc-buildout"
   ],
   "main": "./client/out/extension",
   "contributes": {
     "languages": [
       {
-        "id": "zc.buildout",
+        "id": "zc-buildout",
         "extensions": [
           ".in",
           ".cfg"
@@ -33,12 +33,12 @@
     ],
     "grammars": [
       {
-        "scopeName": "source.zc.buildout",
+        "scopeName": "source.zc-buildout",
         "path": "./syntaxes/zc.buildout.tmGrammar.json"
       },
       {
-        "language": "zc.buildout",
-        "scopeName": "source.zc.buildout.jinja",
+        "language": "zc-buildout",
+        "scopeName": "source.zc-buildout-jinja",
         "path": "./syntaxes/jinja+zc.buildout.tmGrammar.json"
       }
     ],

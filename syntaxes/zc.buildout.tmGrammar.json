@@ -2,14 +2,14 @@
   "information_for_contributors": [
     "comes from https://github.com/microsoft/vscode/blob/45c4f228944953e310b9d8ddc2c4b2fd35e26b21/extensions/ini/syntaxes/ini.tmLanguage.json"
   ],
-  "name": "zc.buildout",
-  "scopeName": "source.zc.buildout",
+  "name": "zc-buildout",
+  "scopeName": "source.zc-buildout",
   "patterns": [
     {
       "begin": "(^[ \\t]+)?(?=#)",
       "beginCaptures": {
         "1": {
-          "name": "punctuation.whitespace.comment.leading.zc.buildout"
+          "name": "punctuation.whitespace.comment.leading.zc-buildout"
         }
       },
       "end": "(?!\\G)",
@@ -18,11 +18,11 @@
           "begin": "#",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.comment.zc.buildout"
+              "name": "punctuation.definition.comment.zc-buildout"
             }
           },
           "end": "\\n",
-          "name": "comment.line.number-sign.zc.buildout"
+          "name": "comment.line.number-sign.zc-buildout"
         }
       ]
     },
@@ -30,7 +30,7 @@
       "begin": "(^[ \\t]+)?(?=;)",
       "beginCaptures": {
         "1": {
-          "name": "punctuation.whitespace.comment.leading.zc.buildout"
+          "name": "punctuation.whitespace.comment.leading.zc-buildout"
         }
       },
       "end": "(?!\\G)",
@@ -39,21 +39,21 @@
           "begin": ";",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.comment.zc.buildout"
+              "name": "punctuation.definition.comment.zc-buildout"
             }
           },
           "end": "\\n",
-          "name": "comment.line.semicolon.zc.buildout"
+          "name": "comment.line.semicolon.zc-buildout"
         }
       ]
     },
     {
       "captures": {
         "1": {
-          "name": "keyword.other.definition.zc.buildout"
+          "name": "keyword.other.definition.zc-buildout"
         },
         "2": {
-          "name": "punctuation.separator.key-value.zc.buildout"
+          "name": "punctuation.separator.key-value.zc-buildout"
         }
       },
       "match": "\\b([a-zA-Z0-9_.-]+)\\b\\s*(=)"
@@ -61,51 +61,51 @@
     {
       "captures": {
         "1": {
-          "name": "punctuation.definition.entity.zc.buildout"
+          "name": "punctuation.definition.entity.zc-buildout"
         },
         "2": {
-          "name": "keyword.other.section.zc.buildout"
+          "name": "keyword.other.section.zc-buildout"
         },
         "3": {
-          "name": "punctuation.definition.entity.zc.buildout"
+          "name": "punctuation.definition.entity.zc-buildout"
         }
       },
       "match": "^(\\[)(.*?)(\\])",
-      "name": "entity.name.section.group-title.zc.buildout"
+      "name": "entity.name.section.group-title.zc-buildout"
     },
     {
       "begin": "\"",
       "beginCaptures": {
         "0": {
-          "name": "punctuation.definition.string.begin.zc.buildout"
+          "name": "punctuation.definition.string.begin.zc-buildout"
         }
       },
       "end": "\"",
       "endCaptures": {
         "0": {
-          "name": "punctuation.definition.string.end.zc.buildout"
+          "name": "punctuation.definition.string.end.zc-buildout"
         }
       },
-      "name": "string.quoted.double.zc.buildout"
+      "name": "string.quoted.double.zc-buildout"
     },
     {
       "begin": "[^\\$]\\$\\{",
       "beginCaptures": {
         "0": {
-          "name": "punctuation.definition.string.begin.zc.buildout"
+          "name": "punctuation.definition.string.begin.zc-buildout"
         }
       },
       "end": "(\\}|\n)",
       "endCaptures": {
         "0": {
-          "name": "punctuation.definition.string.end.zc.buildout"
+          "name": "punctuation.definition.string.end.zc-buildout"
         }
       },
-      "name": "variable.other.single.zc.buildout",
+      "name": "variable.other.single.zc-buildout",
       "patterns": [
         {
           "match": "\\\\.",
-          "name": "constant.character.escape.zc.buildout"
+          "name": "constant.character.escape.zc-buildout"
         }
       ]
     }
