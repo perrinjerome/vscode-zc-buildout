@@ -2,7 +2,7 @@
   "information_for_contributors": [
     "comes from https://github.com/microsoft/vscode/blob/45c4f228944953e310b9d8ddc2c4b2fd35e26b21/extensions/ini/syntaxes/ini.tmLanguage.json"
   ],
-  "name": "zc.buildout",
+  "name": "zc-buildout",
   "scopeName": "source.zc.buildout",
   "patterns": [
     {
