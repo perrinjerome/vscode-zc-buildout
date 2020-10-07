@@ -33,12 +33,12 @@
     ],
     "grammars": [
       {
-        "scopeName": "source.zc.buildout",
+        "scopeName": "source.zc-buildout",
         "path": "./syntaxes/zc.buildout.tmGrammar.json"
       },
       {
         "language": "zc-buildout",
-        "scopeName": "source.zc.buildout.jinja",
+        "scopeName": "source.zc-buildout-jinja",
         "path": "./syntaxes/jinja+zc.buildout.tmGrammar.json"
       }
     ],
