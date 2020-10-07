@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+## [0.4.0] - 2020-10-08
+
 ### Fixed:
 
 - don't skip lines containing jinja expressions. This was causing some missing options when jinja was used in option
@@ -61,4 +63,5 @@ and this project adheres to [Semantic Versioning][semver].
 [0.2.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.1.1...v0.2.0
 [0.2.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.2.1...v0.3.0
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.3.0...master
+[0.4.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.2.1...v0.4.0
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.4.0...master
