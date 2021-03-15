@@ -10,6 +10,8 @@ for mod in \
     zc.buildout.download \
     zc.buildout.easy_install \
     zc.buildout.rmtree \
+    setuptools \
+    setuptools.package_index \
 ; do
     stubgen -v -m $mod -o ./stubs/
 done
