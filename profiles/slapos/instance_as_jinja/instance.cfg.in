@@ -28,3 +28,7 @@ url = ${service:url}
 {% if 1 == 3 -%}
 inside_jinja = sections are evaluated
 {% endif -%}
+
+{{
+ a jinja multiline block, ignored
+}}

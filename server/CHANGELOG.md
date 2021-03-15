@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+### Fixed:
+
+- stop emitting false positives diagnostic with multi line jinja
+
 ## [0.4.0] - 2020-10-08
 
 ### Fixed:

@@ -29,6 +29,8 @@ end_block_statement = {
 
 statement_re = re.compile(r'.*\{%[\-\+\s]*(?P<statement>[\w]+).*%\}')
 expression_re = re.compile(r'\{\{.*?\}\}')
+multiline_expression_start_re = re.compile(r'^\s*\{\{')
+multiline_expression_end_re = re.compile(r'\}\}')
 
 
 class JinjaParser:
@@ -45,6 +47,7 @@ class JinjaParser:
     self._stack: List[JinjaStatement] = []
     self._current_line_was_in_jinja = False
     self._in_comment = False
+    self._in_multiline_exression = False
     self.line = ""
 
   def feed(self, line: str) -> None:
@@ -60,6 +63,12 @@ class JinjaParser:
     if '{#' in line or self._in_comment:
       self._current_line_was_in_jinja = True
       self._in_comment = '#}' not in line
+
+    if multiline_expression_start_re.match(
+        line) or self._in_multiline_exression:
+      self._current_line_was_in_jinja = True
+      self._in_multiline_exression = multiline_expression_end_re.search(
+          line) is None
 
     statement_match = statement_re.match(line)
     if statement_match:

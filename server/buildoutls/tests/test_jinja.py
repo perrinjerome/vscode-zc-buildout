@@ -70,6 +70,14 @@ def test_is_in_jinja() -> None:
       ('{% endfor %}', True),
       (' out of block', False),
 
+      # multi line expressions
+      ('{{ ', True),
+      (' multi ', True),
+      (' line ', True),
+      ('}}', True),
+      ('{{multi ', True),
+      (' line}}', True),
+
       # comments
       ('{# one line comment #}', True),
       ('after comment', False),
