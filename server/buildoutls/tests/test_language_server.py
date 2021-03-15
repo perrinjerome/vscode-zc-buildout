@@ -1,6 +1,6 @@
 import textwrap
 import urllib.parse
-from typing import List, Sequence
+from typing import cast, List, Sequence
 from unittest import mock
 
 import pytest
@@ -114,7 +114,7 @@ async def test_diagnostics_non_existent_sections_multiple_references_per_line(
       [mock.ANY] * 8,
   )
   diagnostics = sorted(
-      server.publish_diagnostics.call_args[0][1],
+      cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
       key=lambda d: d.range.start,
   )
   assert diagnostics[0].severity == DiagnosticSeverity.Error
@@ -172,7 +172,7 @@ async def test_diagnostics_required_recipe_option(server) -> None:
       [mock.ANY],
   )
   diagnostics = sorted(
-      server.publish_diagnostics.call_args[0][1],
+      cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
       key=lambda d: d.range.start,
   )
   assert diagnostics[0].severity == DiagnosticSeverity.Error
@@ -206,7 +206,8 @@ async def test_diagnostics_buildout_parts(server) -> None:
       'file:///diagnostics/buildout_parts.cfg',
       [mock.ANY, mock.ANY],
   )
-  diagnostic1, diagnostic2 = sorted(server.publish_diagnostics.call_args[0][1],
+  diagnostic1, diagnostic2 = sorted(cast(
+      List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
                                     key=lambda d: d.range.start)
   assert diagnostic1.message == "Section `b` has no recipe."
   assert diagnostic1.range == Range(start=Position(3, 4), end=Position(3, 5))
