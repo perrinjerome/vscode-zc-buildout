@@ -106,10 +106,11 @@ async def parseAndSendDiagnostics(
               Diagnostic(
                   message=e.message,
                   range=Range(
-                      start=Position(e.lineno, 0),
-                      end=Position(e.lineno + 1, 0),
+                      start=Position(line=e.lineno, character=0),
+                      end=Position(line=e.lineno + 1, character=0),
                   ),
                   source='buildout',
+                  severity=DiagnosticSeverity.Error,
               ))
       else:
         if looks_like_profile:
@@ -119,10 +120,11 @@ async def parseAndSendDiagnostics(
                 Diagnostic(
                     message=f'ParseError: {msg}',
                     range=Range(
-                        start=Position(lineno, 0),
-                        end=Position(lineno + 1, 0),
+                        start=Position(line=lineno, character=0),
+                        end=Position(line=lineno + 1, character=0),
                     ),
                     source='buildout',
+                    severity=DiagnosticSeverity.Error,
                 ))
 
   resolved_buildout = await buildout.open(
@@ -146,6 +148,7 @@ async def parseAndSendDiagnostics(
               f'Section `{symbol.referenced_section_name}` does not exist.',
               range=symbol.section_range,
               source='buildout',
+              severity=DiagnosticSeverity.Error,
           ))
     elif symbol.referenced_option is None:
       # if we have a recipe, either it's a known recipe where we know
@@ -276,9 +279,12 @@ async def lsp_symbols(
       if option_value.implicit_option:
         continue
       option_range = Range(
-          start=Position(
-              min(r.range.start.line for r in option_value.locations)),
-          end=Position(max(r.range.end.line for r in option_value.locations)))
+          start=Position(line=min(r.range.start.line
+                                  for r in option_value.locations),
+                         character=0),
+          end=Position(line=max(r.range.end.line
+                                for r in option_value.locations),
+                       character=0))
       detail = getOptionValue(option_value)
       if len(detail.splitlines()) > 1:
         #  vscode does not like too long multi-lines detail
@@ -293,8 +299,10 @@ async def lsp_symbols(
     section_range = Range(
         start=section_header_location.range.start,
         end=Position(
-            max(s.range.end.line for s in children
-                ) if children else section_header_location.range.end.line),
+            line=max(s.range.end.line for s in children)
+            if children else section_header_location.range.end.line,
+            character=0,
+        ),
     )
 
     symbols.append(
@@ -335,17 +343,18 @@ async def lsp_completion(
         start = match.start()
         end = match.end()
         return TextEdit(
-            Range(Position(pos.line, start), Position(pos.line, end)),
-            new_text,
+            range=Range(start=Position(line=pos.line, character=start),
+                        end=Position(line=pos.line, character=end)),
+            new_text=new_text,
         )
       index = max(match.start(), index + 1)
 
     return TextEdit(
         Range(
-            Position(pos.line, pos.character),
-            Position(pos.line, pos.character),
+            start=Position(line=pos.line, character=pos.character),
+            end=Position(line=pos.line, character=pos.character),
         ),
-        new_text,
+        new_text=new_text,
     )
 
   def getOptionReferenceTextEdit(
@@ -368,17 +377,18 @@ async def lsp_completion(
         start = match.start() + section_len
         end = match.end()
         return TextEdit(
-            Range(Position(pos.line, start), Position(pos.line, end)),
-            new_text,
+            range=Range(start=Position(line=pos.line, character=start),
+                        end=Position(line=pos.line, character=end)),
+            new_text=new_text,
         )
       index = max(match.start(), index + 1)
 
     return TextEdit(
-        Range(
-            Position(pos.line, pos.character),
-            Position(pos.line, pos.character),
+        range=Range(
+            start=Position(line=pos.line, character=pos.character),
+            end=Position(line=pos.line, character=pos.character),
         ),
-        new_text,
+        new_text=new_text,
     )
 
   def getDefaultTextEdit(
@@ -396,9 +406,11 @@ async def lsp_completion(
       line = doc.lines[pos.line]
     if not line.strip():
       return TextEdit(
-          Range(Position(pos.line, pos.character),
-                Position(pos.line, pos.character)),
-          new_text,
+          range=Range(
+              start=Position(line=pos.line, character=pos.character),
+              end=Position(line=pos.line, character=pos.character),
+          ),
+          new_text=new_text,
       )
     index = 0
     while True:
@@ -412,8 +424,9 @@ async def lsp_completion(
           end += 1
         # TODO: test
         return TextEdit(
-            Range(Position(pos.line, start), Position(pos.line, end)),
-            new_text,
+            range=Range(start=Position(line=pos.line, character=start),
+                        end=Position(line=pos.line, character=end)),
+            new_text=new_text,
         )
       index = max(match.start(), index + 1)
 
@@ -661,7 +674,8 @@ async def lsp_definition(
           base = uri[:uri.rfind('/')] + '/'
           locations.append(
               Location(uri=urllib.parse.urljoin(base, extend),
-                       range=Range(start=Position(0, 0), end=Position(1, 0))))
+                       range=Range(start=Position(line=0, character=0),
+                                   end=Position(line=1, character=0))))
   return locations
 
 
@@ -703,14 +717,16 @@ async def lsp_references(
           for option_text, option_range in profile.getOptionValues(
               'buildout', 'parts'):
             if searched_section == option_text:
-              references.append(Location(profile.uri, option_range))
+              references.append(Location(uri=profile.uri, range=option_range))
 
         async for symbol in profile.getAllOptionReferenceSymbols():
           if symbol.referenced_section_name == searched_section:
             if searched_option is None:
-              references.append(Location(profile.uri, symbol.section_range))
+              references.append(
+                  Location(uri=profile.uri, range=symbol.section_range))
             elif symbol.referenced_option_name == searched_option:
-              references.append(Location(profile.uri, symbol.option_range))
+              references.append(
+                  Location(uri=profile.uri, range=symbol.option_range))
 
         if searched_option is None:
           # find references in <= macros

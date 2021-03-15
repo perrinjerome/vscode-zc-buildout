@@ -400,23 +400,23 @@ class BuildoutTemplate:
             is_same_section_reference=match.group('section') == '',
         )
         symbol.section_range = Range(
-            Position(
-                lineno,
-                match.start() + 2,  # the ${ was captured
+            start=Position(
+                line=lineno,
+                character=match.start() + 2,  # the ${ was captured
             ),
-            Position(
-                lineno,
-                match.end() - len(match.group('option')) - 1,
+            end=Position(
+                line=lineno,
+                character=match.end() - len(match.group('option')) - 1,
             ),
         )
         symbol.option_range = Range(
-            Position(
-                lineno,
-                match.end() - len(match.group('option')),
+            start=Position(
+                line=lineno,
+                character=match.end() - len(match.group('option')),
             ),
-            Position(
-                lineno,
-                match.end(),
+            end=Position(
+                line=lineno,
+                character=match.end(),
             ),
         )
         yield symbol
@@ -722,13 +722,13 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               yield (
                   option_value_text,
                   Range(
-                      Position(
-                          start_line + line_offset,
-                          start_character,
+                      start=Position(
+                          line=start_line + line_offset,
+                          character=start_character,
                       ),
-                      Position(
-                          start_line + line_offset,
-                          start_character + len(option_value_text),
+                      end=Position(
+                          line=start_line + line_offset,
+                          character=start_character + len(option_value_text),
                       ),
                   ),
               )
@@ -736,13 +736,13 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               for match in re.finditer(r'([^\s]+)', option_value_text):
                 yield (match.group(),
                        Range(
-                           Position(
-                               start_line + line_offset,
-                               start_character + match.start(),
+                           start=Position(
+                               line=start_line + line_offset,
+                               character=start_character + match.start(),
                            ),
-                           Position(
-                               start_line + line_offset,
-                               start_character + match.start() +
+                           end=Position(
+                               line=start_line + line_offset,
+                               character=start_character + match.start() +
                                len(match.group()),
                            ),
                        ))
@@ -881,23 +881,36 @@ async def _parse(
       value = v.value
     sections['buildout'][k] = BuildoutOptionDefinition(
         value=value,
-        locations=[Location(uri=uri, range=Range(Position(0), Position(0)))],
+        locations=[
+            Location(uri=uri,
+                     range=Range(start=Position(line=0, character=0),
+                                 end=Position(line=0, character=0)))
+        ],
         implicit_option=True,
     )
   sections['buildout']['directory'] = BuildoutOptionDefinition(
       value='.',
-      locations=[Location(uri=uri, range=Range(Position(0), Position(0)))],
+      locations=[
+          Location(uri=uri,
+                   range=Range(start=Position(line=0, character=0),
+                               end=Position(line=0, character=0)))
+      ],
       implicit_option=True,
   )
   sections.section_header_locations['buildout'] = Location(
       uri="",
-      range=Range(Position(), Position()),
+      range=Range(
+          start=Position(line=0, character=0),
+          end=Position(line=0, character=0),
+      ),
   )
   if slapos_instance_profile_filename_re.match(uri):
     # Add slapos instance generated sections.
     sections.section_header_locations.setdefault(
-        'slap-connection', Location(uri='',
-                                    range=Range(Position(), Position())))
+        'slap-connection',
+        Location(uri='',
+                 range=Range(start=Position(line=0, character=0),
+                             end=Position(line=0, character=0))))
     slap_connection = BuildoutSection()
     for k in (
         'computer-id',
@@ -908,14 +921,20 @@ async def _parse(
         'software-release-url',
     ):
       slap_connection[k] = BuildoutOptionDefinition(
-          locations=[],
           value='',
+          locations=[
+              Location(uri=uri,
+                       range=Range(start=Position(line=0, character=0),
+                                   end=Position(line=0, character=0)))
+          ],
           implicit_option=True,
       )
     sections.setdefault('slap-connection', slap_connection)
     sections.section_header_locations.setdefault(
         'slap-network-information',
-        Location(uri='', range=Range(Position(), Position())))
+        Location(uri='',
+                 range=Range(start=Position(line=0, character=0),
+                             end=Position(line=0, character=0))))
     slap_network_information = BuildoutSection()
     for k in (
         'local-ipv4',
@@ -978,8 +997,8 @@ async def _parse(
         sections.section_header_locations[sectname] = Location(
             uri=uri,
             range=Range(
-                Position(lineno, 0),
-                Position(lineno + 1, 0),
+                start=Position(line=lineno, character=0),
+                end=Position(line=lineno + 1, character=0),
             ))
         if sectname in sections:
           cursect = sections[sectname]
@@ -989,7 +1008,8 @@ async def _parse(
           cursect['_buildout_section_name_'] = BuildoutOptionDefinition(
               locations=[
                   Location(uri=uri,
-                           range=Range(Position(0, 0), Position(0, 0)))
+                           range=Range(start=Position(line=0, character=0),
+                                       end=Position(line=0, character=0)))
               ],
               value=sectname,
               implicit_option=True,
@@ -1001,7 +1021,8 @@ async def _parse(
           cursect['_profile_base_location_'] = BuildoutOptionDefinition(
               locations=[
                   Location(uri=uri,
-                           range=Range(Position(0, 0), Position(0, 0)))
+                           range=Range(start=Position(line=0, character=0),
+                                       end=Position(line=0, character=0)))
               ],
               value=base_location,
               implicit_option=True,

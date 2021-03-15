@@ -60,7 +60,8 @@ async def test_diagnostics_syntax_error(server) -> None:
       [mock.ANY],
   )
   diagnostic, = server.publish_diagnostics.call_args[0][1]
-  assert diagnostic.range == Range(start=Position(2, 0), end=Position(3, 0))
+  assert diagnostic.range == Range(start=Position(line=2, character=0),
+                                   end=Position(line=3, character=0))
   assert diagnostic.message == "ParseError: 'o\\n'"
 
 
@@ -74,7 +75,8 @@ async def test_diagnostics_missing_section_error(server) -> None:
       [mock.ANY],
   )
   diagnostic, = server.publish_diagnostics.call_args[0][1]
-  assert diagnostic.range == Range(start=Position(0, 0), end=Position(1, 0))
+  assert diagnostic.range == Range(start=Position(line=0, character=0),
+                                   end=Position(line=1, character=0))
   assert diagnostic.message == textwrap.dedent("""\
       File contains no section headers.
       file: file:///diagnostics/missing_section_error.cfg, line: 0
@@ -94,12 +96,12 @@ async def test_diagnostics_non_existent_sections(server) -> None:
       key=lambda d: d.range.start,
   )
   assert diagnostics[0].severity == DiagnosticSeverity.Error
-  assert diagnostics[0].range == Range(start=Position(1, 12),
-                                       end=Position(1, 27))
+  assert diagnostics[0].range == Range(start=Position(line=1, character=12),
+                                       end=Position(line=1, character=27))
   assert diagnostics[0].message == \
     "Section `missing_section` does not exist."
-  assert diagnostics[1].range == Range(start=Position(2, 21),
-                                       end=Position(2, 35))
+  assert diagnostics[1].range == Range(start=Position(line=2, character=21),
+                                       end=Position(line=2, character=35))
   assert diagnostics[1].message == \
     "Option `missing_option` does not exist in `section2`."
 
@@ -118,38 +120,38 @@ async def test_diagnostics_non_existent_sections_multiple_references_per_line(
       key=lambda d: d.range.start,
   )
   assert diagnostics[0].severity == DiagnosticSeverity.Error
-  assert diagnostics[0].range == Range(start=Position(1, 55),
-                                       end=Position(1, 70))
+  assert diagnostics[0].range == Range(start=Position(line=1, character=55),
+                                       end=Position(line=1, character=70))
   assert diagnostics[0].message == \
     "Section `missing_section` does not exist."
-  assert diagnostics[1].range == Range(start=Position(1, 86),
-                                       end=Position(1, 101))
+  assert diagnostics[1].range == Range(start=Position(line=1, character=86),
+                                       end=Position(line=1, character=101))
   assert diagnostics[1].message == \
     "Section `missing_section` does not exist."
-  assert diagnostics[2].range == Range(start=Position(1, 117),
-                                       end=Position(1, 132))
+  assert diagnostics[2].range == Range(start=Position(line=1, character=117),
+                                       end=Position(line=1, character=132))
   assert diagnostics[2].message == \
     "Section `missing_section` does not exist."
 
-  assert diagnostics[3].range == Range(start=Position(2, 63),
-                                       end=Position(2, 77))
+  assert diagnostics[3].range == Range(start=Position(line=2, character=63),
+                                       end=Position(line=2, character=77))
   assert diagnostics[3].message == \
     "Option `missing_option` does not exist in `section`."
-  assert diagnostics[4].range == Range(start=Position(2, 92),
-                                       end=Position(2, 106))
+  assert diagnostics[4].range == Range(start=Position(line=2, character=92),
+                                       end=Position(line=2, character=106))
   assert diagnostics[4].message == \
     "Option `missing_option` does not exist in `section`."
-  assert diagnostics[5].range == Range(start=Position(2, 121),
-                                       end=Position(2, 135))
+  assert diagnostics[5].range == Range(start=Position(line=2, character=121),
+                                       end=Position(line=2, character=135))
   assert diagnostics[5].message == \
     "Option `missing_option` does not exist in `section`."
 
-  assert diagnostics[6].range == Range(start=Position(5, 19),
-                                       end=Position(5, 34))
+  assert diagnostics[6].range == Range(start=Position(line=5, character=19),
+                                       end=Position(line=5, character=34))
   assert diagnostics[6].message == \
     "Section `missing_section` does not exist."
-  assert diagnostics[7].range == Range(start=Position(6, 27),
-                                       end=Position(6, 41))
+  assert diagnostics[7].range == Range(start=Position(line=6, character=27),
+                                       end=Position(line=6, character=41))
   assert diagnostics[7].message == \
     "Option `missing_option` does not exist in `section`."
 
@@ -178,8 +180,8 @@ async def test_diagnostics_required_recipe_option(server) -> None:
   assert diagnostics[0].severity == DiagnosticSeverity.Error
   assert diagnostics[0].message == \
     "Missing required options for `plone.recipe.command`: `command`"
-  assert diagnostics[0].range == Range(start=Position(6, 0),
-                                       end=Position(7, 0))
+  assert diagnostics[0].range == Range(start=Position(line=6, character=0),
+                                       end=Position(line=7, character=0))
 
 
 @pytest.mark.asyncio
@@ -191,10 +193,12 @@ async def test_diagnostics_template(server) -> None:
       [mock.ANY, mock.ANY],
   )
   diagnostic1, diagnostic2 = server.publish_diagnostics.call_args[0][1]
-  assert diagnostic1.range == Range(start=Position(4, 25), end=Position(4, 32))
+  assert diagnostic1.range == Range(start=Position(line=4, character=25),
+                                    end=Position(line=4, character=32))
   assert diagnostic1.message == "Section `missing` does not exist."
 
-  assert diagnostic2.range == Range(start=Position(6, 33), end=Position(6, 47))
+  assert diagnostic2.range == Range(start=Position(line=6, character=33),
+                                    end=Position(line=6, character=47))
   assert diagnostic2.message == "Option `missing_option` does not exist in `section5`."
 
 
@@ -210,10 +214,12 @@ async def test_diagnostics_buildout_parts(server) -> None:
       List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
                                     key=lambda d: d.range.start)
   assert diagnostic1.message == "Section `b` has no recipe."
-  assert diagnostic1.range == Range(start=Position(3, 4), end=Position(3, 5))
+  assert diagnostic1.range == Range(start=Position(line=3, character=4),
+                                    end=Position(line=3, character=5))
 
   assert diagnostic2.message == "Section `c` does not exist."
-  assert diagnostic2.range == Range(start=Position(4, 4), end=Position(4, 5))
+  assert diagnostic2.range == Range(start=Position(line=4, character=4),
+                                    end=Position(line=4, character=5))
 
 
 @pytest.mark.asyncio
@@ -227,7 +233,8 @@ async def test_diagnostics_buildout_parts_section_name_with_dot(
       [mock.ANY])
   diagnostic, = server.publish_diagnostics.call_args[0][1]
   assert diagnostic.message == "Section `c.d` has no recipe."
-  assert diagnostic.range == Range(start=Position(1, 12), end=Position(1, 15))
+  assert diagnostic.range == Range(start=Position(line=1, character=12),
+                                   end=Position(line=1, character=15))
 
 
 @pytest.mark.asyncio
@@ -246,8 +253,8 @@ async def test_diagnostics_ok(server) -> None:
 
 @pytest.mark.asyncio
 async def test_symbol(server: LanguageServer):
-  params = DocumentSymbolParams(
-      TextDocumentIdentifier('file:///symbol/buildout.cfg'))
+  params = DocumentSymbolParams(text_document=TextDocumentIdentifier(
+      uri='file:///symbol/buildout.cfg'))
 
   symbols = await lsp_symbols(server, params)
   assert [s.name for s in symbols] == [
@@ -256,9 +263,12 @@ async def test_symbol(server: LanguageServer):
       'section3',
   ]
   assert [s.range for s in symbols] == [
-      Range(Position(0, 0), Position(1, 0)),
-      Range(Position(3, 0), Position(5, 0)),
-      Range(Position(7, 0), Position(12, 0)),
+      Range(start=Position(line=0, character=0),
+            end=Position(line=1, character=0)),
+      Range(start=Position(line=3, character=0),
+            end=Position(line=5, character=0)),
+      Range(start=Position(line=7, character=0),
+            end=Position(line=12, character=0)),
   ]
   assert [s.detail for s in symbols] == [
       '',
@@ -275,8 +285,10 @@ async def test_symbol(server: LanguageServer):
       '${section2:option2} ${section3:option4}',
   ]
   assert [s.range for s in symbols[1].children] == [
-      Range(Position(4, 0), Position(4, 0)),
-      Range(Position(5, 0), Position(5, 0)),
+      Range(start=Position(line=4, character=0),
+            end=Position(line=4, character=0)),
+      Range(start=Position(line=5, character=0),
+            end=Position(line=5, character=0)),
   ]
 
   assert symbols[2].children is not None
@@ -286,20 +298,24 @@ async def test_symbol(server: LanguageServer):
       "command",
   ]
   assert [s.range for s in symbols[2].children] == [
-      Range(Position(8, 0), Position(8, 0)),
-      Range(Position(9, 0), Position(11, 0)),
-      Range(Position(12, 0), Position(12, 0)),
+      Range(start=Position(line=8, character=0),
+            end=Position(line=8, character=0)),
+      Range(start=Position(line=9, character=0),
+            end=Position(line=11, character=0)),
+      Range(start=Position(line=12, character=0),
+            end=Position(line=12, character=0)),
   ]
 
-  params = DocumentSymbolParams(
-      TextDocumentIdentifier('file:///symbol/with_default_section.cfg'))
+  params = DocumentSymbolParams(text_document=TextDocumentIdentifier(
+      uri='file:///symbol/with_default_section.cfg'))
 
   symbols = await lsp_symbols(server, params)
   assert [s.name for s in symbols] == [
       'buildout',
   ]
   assert [s.range for s in symbols] == [
-      Range(Position(0, 0), Position(2, 0)),
+      Range(start=Position(line=0, character=0),
+            end=Position(line=2, character=0)),
   ]
 
   assert symbols[0].children is not None
@@ -308,12 +324,14 @@ async def test_symbol(server: LanguageServer):
       "option2",
   ]
   assert [o.range for o in symbols[0].children] == [
-      Range(Position(1, 0), Position(1, 0)),
-      Range(Position(2, 0), Position(2, 0)),
+      Range(start=Position(line=1, character=0),
+            end=Position(line=1, character=0)),
+      Range(start=Position(line=2, character=0),
+            end=Position(line=2, character=0)),
   ]
 
-  params = DocumentSymbolParams(
-      TextDocumentIdentifier('file:///symbol/broken.cfg'))
+  params = DocumentSymbolParams(text_document=TextDocumentIdentifier(
+      uri='file:///symbol/broken.cfg'))
   symbols = await lsp_symbols(server, params)
   assert symbols[0].children is not None
   assert [s.name for s in symbols] == ['a', 'c']
@@ -327,35 +345,60 @@ async def test_complete_section_reference(server: LanguageServer):
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///completions/sections.cfg"),
-      position=Position(13, 13),
+      position=Position(line=13, character=13),
       context=context,
   )
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.textEdit.range, c.textEdit.newText) for c in completions
                  if c.textEdit is not None]) == [
-                     (Range(Position(13, 10), Position(13, 13)), '${buildout'),
-                     (Range(Position(13, 10), Position(13, 13)), '${section1'),
-                     (Range(Position(13, 10), Position(13, 13)), '${section2'),
-                     (Range(Position(13, 10), Position(13, 13)), '${section3'),
-                     (Range(Position(13, 10), Position(13,
-                                                       13)), '${xsection4'),
+                     (
+                         Range(start=Position(line=13, character=10),
+                               end=Position(line=13, character=13)),
+                         '${buildout',
+                     ),
+                     (
+                         Range(start=Position(line=13, character=10),
+                               end=Position(line=13, character=13)),
+                         '${section1',
+                     ),
+                     (
+                         Range(start=Position(line=13, character=10),
+                               end=Position(line=13, character=13)),
+                         '${section2',
+                     ),
+                     (
+                         Range(start=Position(line=13, character=10),
+                               end=Position(line=13, character=13)),
+                         '${section3',
+                     ),
+                     (
+                         Range(start=Position(line=13, character=10),
+                               end=Position(line=13, character=13)),
+                         '${xsection4',
+                     ),
                  ]
 
   # edge cases: complete section names on a line with a ${section:ref}
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/sections.cfg"),
-                            position=Position(4, 32),
+                            position=Position(line=4, character=32),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.textEdit.range, c.textEdit.newText) for c in completions
                  if c.textEdit is not None]) == [
-                     (Range(Position(4, 30), Position(4, 32)), '${buildout'),
-                     (Range(Position(4, 30), Position(4, 32)), '${section1'),
-                     (Range(Position(4, 30), Position(4, 32)), '${section2'),
-                     (Range(Position(4, 30), Position(4, 32)), '${section3'),
-                     (Range(Position(4, 30), Position(4, 32)), '${xsection4'),
+                     (Range(start=Position(line=4, character=30),
+                            end=Position(line=4, character=32)), '${buildout'),
+                     (Range(start=Position(line=4, character=30),
+                            end=Position(line=4, character=32)), '${section1'),
+                     (Range(start=Position(line=4, character=30),
+                            end=Position(line=4, character=32)), '${section2'),
+                     (Range(start=Position(line=4, character=30),
+                            end=Position(line=4, character=32)), '${section3'),
+                     (Range(start=Position(line=4, character=30),
+                            end=Position(line=4,
+                                         character=32)), '${xsection4'),
                  ]
 
   # in documentation we show the section content
@@ -388,13 +431,27 @@ async def test_complete_section_reference(server: LanguageServer):
 
   # test completions from various positions where all sections are suggested
   for (completion_position, textEditRange) in (
-      (Position(5, 10), Range(Position(5, 10), Position(5, 20))),
-      (Position(5, 17), Range(Position(5, 10), Position(5, 20))),
-      (Position(5, 32), Range(Position(5, 30), Position(5, 40))),
-      (Position(5, 34), Range(Position(5, 30), Position(5, 40))),
-      (Position(5, 40), Range(Position(5, 30), Position(5, 40))),
-      (Position(5, 52), Range(Position(5, 50), Position(5, 60))),
-      (Position(5, 56), Range(Position(5, 50), Position(5, 60))),
+      (Position(line=5, character=10),
+       Range(start=Position(line=5, character=10),
+             end=Position(line=5, character=20))),
+      (Position(line=5, character=17),
+       Range(start=Position(line=5, character=10),
+             end=Position(line=5, character=20))),
+      (Position(line=5, character=32),
+       Range(start=Position(line=5, character=30),
+             end=Position(line=5, character=40))),
+      (Position(line=5, character=34),
+       Range(start=Position(line=5, character=30),
+             end=Position(line=5, character=40))),
+      (Position(line=5, character=40),
+       Range(start=Position(line=5, character=30),
+             end=Position(line=5, character=40))),
+      (Position(line=5, character=52),
+       Range(start=Position(line=5, character=50),
+             end=Position(line=5, character=60))),
+      (Position(line=5, character=56),
+       Range(start=Position(line=5, character=50),
+             end=Position(line=5, character=60))),
   ):
     params = CompletionParams(text_document=TextDocumentIdentifier(
         uri="file:///completions/sections.cfg"),
@@ -421,7 +478,7 @@ async def test_complete_option_reference(server: LanguageServer):
   # complete referenced options
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/options.cfg"),
-                            position=Position(1, 21),
+                            position=Position(line=1, character=21),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -432,7 +489,7 @@ async def test_complete_option_reference(server: LanguageServer):
   # complete referenced options, including recipe generated options
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/recipe.cfg"),
-                            position=Position(8, 41),
+                            position=Position(line=8, character=41),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -444,7 +501,7 @@ async def test_complete_option_reference(server: LanguageServer):
   # complete referenced options from current section
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/options.cfg"),
-                            position=Position(2, 13),
+                            position=Position(line=2, character=13),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -460,23 +517,28 @@ async def test_complete_option_reference(server: LanguageServer):
   assert sorted([(c.textEdit.range, c.textEdit.newText) for c in completions
                  if c.textEdit is not None]) == [
                      (
-                         Range(Position(2, 13), Position(2, 13)),
+                         Range(start=Position(line=2, character=13),
+                               end=Position(line=2, character=13)),
                          '_buildout_section_name_}',
                      ),
                      (
-                         Range(Position(2, 13), Position(2, 13)),
+                         Range(start=Position(line=2, character=13),
+                               end=Position(line=2, character=13)),
                          '_profile_base_location_}',
                      ),
                      (
-                         Range(Position(2, 13), Position(2, 13)),
+                         Range(start=Position(line=2, character=13),
+                               end=Position(line=2, character=13)),
                          'option1}',
                      ),
                      (
-                         Range(Position(2, 13), Position(2, 13)),
+                         Range(start=Position(line=2, character=13),
+                               end=Position(line=2, character=13)),
                          'option2}',
                      ),
                      (
-                         Range(Position(2, 13), Position(2, 13)),
+                         Range(start=Position(line=2, character=13),
+                               end=Position(line=2, character=13)),
                          'option3}',
                      ),
                  ]
@@ -492,60 +554,70 @@ async def test_complete_option_reference(server: LanguageServer):
   # more complex replace text scenarios
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/options.cfg"),
-                            position=Position(13, 53),
+                            position=Position(line=13, character=53),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.textEdit.range, c.textEdit.newText) for c in completions
                  if c.textEdit is not None]) == [
                      (
-                         Range(Position(13, 51), Position(13, 59)),
+                         Range(start=Position(line=13, character=51),
+                               end=Position(line=13, character=59)),
                          '_buildout_section_name_}',
                      ),
                      (
-                         Range(Position(13, 51), Position(13, 59)),
+                         Range(start=Position(line=13, character=51),
+                               end=Position(line=13, character=59)),
                          '_profile_base_location_}',
                      ),
                      (
-                         Range(Position(13, 51), Position(13, 59)),
+                         Range(start=Position(line=13, character=51),
+                               end=Position(line=13, character=59)),
                          'option1}',
                      ),
                      (
-                         Range(Position(13, 51), Position(13, 59)),
+                         Range(start=Position(line=13, character=51),
+                               end=Position(line=13, character=59)),
                          'option2}',
                      ),
                      (
-                         Range(Position(13, 51), Position(13, 59)),
+                         Range(start=Position(line=13, character=51),
+                               end=Position(line=13, character=59)),
                          'option3}',
                      ),
                  ]
 
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/options.cfg"),
-                            position=Position(14, 53),
+                            position=Position(line=14, character=53),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.textEdit.range, c.textEdit.newText) for c in completions
                  if c.textEdit is not None]) == [
                      (
-                         Range(Position(14, 51), Position(14, 58)),
+                         Range(start=Position(line=14, character=51),
+                               end=Position(line=14, character=58)),
                          '_buildout_section_name_}',
                      ),
                      (
-                         Range(Position(14, 51), Position(14, 58)),
+                         Range(start=Position(line=14, character=51),
+                               end=Position(line=14, character=58)),
                          '_profile_base_location_}',
                      ),
                      (
-                         Range(Position(14, 51), Position(14, 58)),
+                         Range(start=Position(line=14, character=51),
+                               end=Position(line=14, character=58)),
                          'option1}',
                      ),
                      (
-                         Range(Position(14, 51), Position(14, 58)),
+                         Range(start=Position(line=14, character=51),
+                               end=Position(line=14, character=58)),
                          'option2}',
                      ),
                      (
-                         Range(Position(14, 51), Position(14, 58)),
+                         Range(start=Position(line=14, character=51),
+                               end=Position(line=14, character=58)),
                          'option3}',
                      ),
                  ]
@@ -557,7 +629,7 @@ async def test_complete_option_name(server: LanguageServer):
   # complete options of a section
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/options.cfg"),
-                            position=Position(8, 0),
+                            position=Position(line=8, character=0),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -567,7 +639,8 @@ async def test_complete_option_name(server: LanguageServer):
   # we insert with the = like: option =
   textEdit, = [c.textEdit for c in completions if c.label == 'command']
   assert textEdit is not None
-  assert textEdit.range == Range(Position(8, 0), Position(8, 0))
+  assert textEdit.range == Range(start=Position(line=8, character=0),
+                                 end=Position(line=8, character=0))
   assert textEdit.newText == 'command = '
   assert [
       c.documentation.value for c in completions
@@ -577,7 +650,7 @@ async def test_complete_option_name(server: LanguageServer):
   # when there's no recipe, at least we try to complete "recipe"
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/options.cfg"),
-                            position=Position(10, 1),
+                            position=Position(line=10, character=1),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -589,7 +662,7 @@ async def test_complete_option_name(server: LanguageServer):
   # Also works when document has invalid syntax
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///diagnostics/syntax_error.cfg"),
-                            position=Position(3, 0),
+                            position=Position(line=3, character=0),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -624,7 +697,7 @@ async def test_complete_recipe_option_value(server: LanguageServer):
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///completions/recipe.cfg"),
-      position=Position(1, 18),
+      position=Position(line=1, character=18),
       context=CompletionContext(trigger_kind=CompletionTriggerKind.Invoked))
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -636,7 +709,10 @@ async def test_complete_recipe_option_value(server: LanguageServer):
   assert [
       c.textEdit.range for c in completions
       if c.textEdit is not None and c.label == 'plone.recipe.command'
-  ] == [Range(Position(1, 9), Position(1, 18))]
+  ] == [
+      Range(start=Position(line=1, character=9),
+            end=Position(line=1, character=18))
+  ]
 
 
 @pytest.mark.asyncio
@@ -645,7 +721,7 @@ async def test_complete_macro_option_value(server: LanguageServer):
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///completions/buildout.cfg"),
-      position=Position(18, 3),
+      position=Position(line=18, character=3),
       context=CompletionContext(trigger_kind=CompletionTriggerKind.Invoked))
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -663,14 +739,16 @@ async def test_complete_insert_text(server: LanguageServer):
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///completions/partial_completions.cfg"),
-      position=Position(1, 24),
+      position=Position(line=1, character=24),
       context=context,
   )
   completions = await lsp_completion(server, params)
   assert completions is not None
   completion, = [c for c in completions if c.label == 'sec-tion-one']
   assert completion.textEdit is not None
-  assert completion.textEdit.range == Range(Position(1, 18), Position(1, 24))
+  assert completion.textEdit.range == Range(start=Position(line=1,
+                                                           character=18),
+                                            end=Position(line=1, character=24))
   assert completion.textEdit.newText == '${sec-tion-one'
   # we set a filter text, because the inserted text is different from the label
   assert completion.filterText == '${sec-tion-one'
@@ -679,27 +757,31 @@ async def test_complete_insert_text(server: LanguageServer):
   params = CompletionParams(
       text_document=TextDocumentIdentifier(
           uri="file:///completions/partial_completions.cfg"),
-      position=Position(2, 24),
+      position=Position(line=2, character=24),
       context=context,
   )
   completions = await lsp_completion(server, params)
   assert completions is not None
   completion, = [c for c in completions if c.label == 'sect.ion.three']
   assert completion.textEdit is not None
-  assert completion.textEdit.range == Range(Position(2, 17), Position(2, 24))
+  assert completion.textEdit.range == Range(start=Position(line=2,
+                                                           character=17),
+                                            end=Position(line=2, character=24))
   assert completion.textEdit.newText == '${sect.ion.three'
 
 
 @pytest.mark.asyncio
 async def test_goto_definition(server: LanguageServer):
   params = TextDocumentPositionParams(
-      TextDocumentIdentifier(uri='file:///extended/with_references.cfg'),
-      Position(5, 23),
+      text_document=TextDocumentIdentifier(
+          uri='file:///extended/with_references.cfg'),
+      position=Position(line=5, character=23),
   )
   definitions = await lsp_definition(server, params)
   assert definitions == [
       Location(uri='file:///buildout.cfg',
-               range=Range(start=Position(5, 9), end=Position(5, 31)))
+               range=Range(start=Position(line=5, character=9),
+                           end=Position(line=5, character=31)))
   ]
 
 
@@ -709,7 +791,7 @@ async def test_complete_buildout_options(server: LanguageServer):
   # complete known buildout options
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/empty_buildout.cfg"),
-                            position=Position(1, 0),
+                            position=Position(line=1, character=0),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -725,7 +807,7 @@ async def test_complete_buildout_parts(server: LanguageServer):
   # complete buildout:parts with existing parts
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/buildout.cfg"),
-                            position=Position(1, 8),
+                            position=Position(line=1, character=8),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -742,7 +824,7 @@ async def test_complete_buildout_extends(server: LanguageServer):
   # complete buildout:extends with local files
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/buildout.cfg"),
-                            position=Position(2, 12),
+                            position=Position(line=2, character=12),
                             context=context)
 
   completions = await lsp_completion(server, params)
@@ -755,7 +837,7 @@ async def test_complete_buildout_extends(server: LanguageServer):
   # multi lines
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/buildout.cfg"),
-                            position=Position(7, 7),
+                            position=Position(line=7, character=7),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -767,7 +849,7 @@ async def test_complete_buildout_extends(server: LanguageServer):
   # multi line on empty line
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/buildout.cfg"),
-                            position=Position(8, 4),
+                            position=Position(line=8, character=4),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -779,7 +861,7 @@ async def test_complete_buildout_extends(server: LanguageServer):
   # multi line with existing text
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/buildout.cfg"),
-                            position=Position(10, 10),
+                            position=Position(line=10, character=10),
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
@@ -791,8 +873,8 @@ async def test_complete_buildout_extends(server: LanguageServer):
   assert completion.textEdit is not None
   assert completion.textEdit.newText == '../symbol/buildout.cfg'
   assert completion.textEdit.range == Range(
-      Position(10, 4),
-      Position(10, 10),
+      start=Position(line=10, character=4),
+      end=Position(line=10, character=10),
   )
 
 
@@ -801,21 +883,24 @@ async def test_goto_definition_unknown_option(server: LanguageServer):
   # location option in ${section1:location} is not explicitly defined,
   # in this case we jump to the section header
   params = TextDocumentPositionParams(
-      TextDocumentIdentifier(uri='file:///extended/with_references.cfg'),
-      Position(6, 35),
+      text_document=TextDocumentIdentifier(
+          uri='file:///extended/with_references.cfg'),
+      position=Position(line=6, character=35),
   )
   definitions = await lsp_definition(server, params)
   assert definitions == [
       Location(uri='file:///buildout.cfg',
-               range=Range(start=Position(3, 0), end=Position(4, 0)))
+               range=Range(start=Position(line=3, character=0),
+                           end=Position(line=4, character=0)))
   ]
 
 
 @pytest.mark.asyncio
 async def test_goto_definition_unknown_section(server: LanguageServer):
   params = TextDocumentPositionParams(
-      TextDocumentIdentifier(uri='file:///diagnostics/reference.cfg'),
-      Position(1, 21),
+      text_document=TextDocumentIdentifier(
+          uri='file:///diagnostics/reference.cfg'),
+      position=Position(line=1, character=21),
   )
   definitions = await lsp_definition(server, params)
   assert definitions == []
@@ -824,26 +909,30 @@ async def test_goto_definition_unknown_section(server: LanguageServer):
 @pytest.mark.asyncio
 async def test_goto_definition_macro(server: LanguageServer):
   params = TextDocumentPositionParams(
-      TextDocumentIdentifier(uri='file:///extended/macros/buildout.cfg'),
-      Position(9, 6),
+      text_document=TextDocumentIdentifier(
+          uri='file:///extended/macros/buildout.cfg'),
+      position=Position(line=9, character=6),
   )
   definitions = await lsp_definition(server, params)
   assert definitions == [
       Location(uri='file:///extended/macros/buildout.cfg',
-               range=Range(start=Position(0, 0), end=Position(1, 0)))
+               range=Range(start=Position(line=0, character=0),
+                           end=Position(line=1, character=0)))
   ]
 
 
 @pytest.mark.asyncio
 async def test_goto_definition_extended_profile(server: LanguageServer):
   params = TextDocumentPositionParams(
-      TextDocumentIdentifier(uri='file:///extended/buildout.cfg'),
-      Position(2, 5),
+      text_document=TextDocumentIdentifier(
+          uri='file:///extended/buildout.cfg'),
+      position=Position(line=2, character=5),
   )
   definitions = await lsp_definition(server, params)
   assert definitions == [
       Location(uri='file:///extended/another/buildout.cfg',
-               range=Range(start=Position(0, 0), end=Position(1, 0)))
+               range=Range(start=Position(line=0, character=0),
+                           end=Position(line=1, character=0)))
   ]
 
 
@@ -857,8 +946,10 @@ async def test_document_link(server: LanguageServer):
       'file:///extended/another/buildout.cfg', 'file:///extended/extended.cfg'
   ]
   assert [l.range for l in links] == [
-      Range(Position(2, 4), Position(2, 26)),
-      Range(Position(3, 4), Position(3, 16)),
+      Range(start=Position(line=2, character=4),
+            end=Position(line=2, character=26)),
+      Range(start=Position(line=3, character=4),
+            end=Position(line=3, character=16)),
   ]
 
   # no links
@@ -880,9 +971,12 @@ async def test_document_link(server: LanguageServer):
       'file:///buildout.cfg',
   ]
   assert [l.range for l in links] == [
-      Range(Position(5, 4), Position(5, 37)),
-      Range(Position(7, 4), Position(7, 36)),
-      Range(Position(9, 4), Position(9, 19)),
+      Range(start=Position(line=5, character=4),
+            end=Position(line=5, character=37)),
+      Range(start=Position(line=7, character=4),
+            end=Position(line=7, character=36)),
+      Range(start=Position(line=9, character=4),
+            end=Position(line=9, character=19)),
   ]
 
 
@@ -893,7 +987,7 @@ async def test_hover(server: LanguageServer):
       server,
       TextDocumentPositionParams(
           text_document=TextDocumentIdentifier(uri="file:///buildout.cfg"),
-          position=Position(13, 25)))
+          position=Position(line=13, character=25)))
   assert hover is not None
   assert hover.contents == '```\necho install section1\n```'
 
@@ -902,7 +996,7 @@ async def test_hover(server: LanguageServer):
       server,
       TextDocumentPositionParams(
           text_document=TextDocumentIdentifier(uri="file:///buildout.cfg"),
-          position=Position(13, 16)))
+          position=Position(line=13, character=16)))
   assert hover is not None
   assert hover.contents == '```\nplone.recipe.command\n```'
 
@@ -911,7 +1005,7 @@ async def test_hover(server: LanguageServer):
       server,
       TextDocumentPositionParams(
           text_document=TextDocumentIdentifier(uri="file:///buildout.cfg"),
-          position=Position(4, 4)))
+          position=Position(line=4, character=4)))
   assert hover is not None
   assert hover.contents == '```\n\n```'
 
@@ -922,15 +1016,17 @@ async def test_references_on_section_header(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///references/referenced.cfg"),
-                                 position=Position(4, 10)))
+                                 position=Position(line=4, character=10)))
 
   reference1, reference2 = sorted(references, key=lambda l: l.range.start)
   assert reference1.uri.endswith('/references/buildout.cfg')
-  assert reference1.range == Range(Position(8, 10), Position(8, 29))
+  assert reference1.range == Range(start=Position(line=8, character=10),
+                                   end=Position(line=8, character=29))
 
   # this one is a <= macro
   assert reference2.uri.endswith('/references/buildout.cfg')
-  assert reference2.range == Range(Position(11, 2), Position(11, 21))
+  assert reference2.range == Range(start=Position(line=11, character=2),
+                                   end=Position(line=11, character=21))
 
 
 @pytest.mark.asyncio
@@ -940,17 +1036,18 @@ async def test_references_on_option_definition(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///references/referenced.cfg"),
-                                 position=Position(1, 2)))
+                                 position=Position(line=1, character=2)))
   reference, = references
   assert reference.uri.endswith('/references/buildout.cfg')
-  assert reference.range == Range(Position(5, 30), Position(5, 36))
+  assert reference.range == Range(start=Position(line=5, character=30),
+                                  end=Position(line=5, character=36))
 
   # ${referenced_section1:value2} is not referenced
   references = await lsp_references(
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///references/referenced.cfg"),
-                                 position=Position(2, 2)))
+                                 position=Position(line=2, character=2)))
   assert references == []
 
 
@@ -960,10 +1057,11 @@ async def test_references_on_option_reference(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///references/buildout.cfg"),
-                                 position=Position(5, 20)))
+                                 position=Position(line=5, character=20)))
   reference, = references
   assert reference.uri.endswith('/references/buildout.cfg')
-  assert reference.range == Range(Position(5, 10), Position(5, 29))
+  assert reference.range == Range(start=Position(line=5, character=10),
+                                  end=Position(line=5, character=29))
 
 
 @pytest.mark.asyncio
@@ -972,10 +1070,11 @@ async def test_references_on_section_reference(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///references/buildout.cfg"),
-                                 position=Position(5, 32)))
+                                 position=Position(line=5, character=32)))
   reference, = references
   assert reference.uri.endswith('/references/buildout.cfg')
-  assert reference.range == Range(Position(5, 30), Position(5, 36))
+  assert reference.range == Range(start=Position(line=5, character=30),
+                                  end=Position(line=5, character=36))
 
 
 @pytest.mark.asyncio
@@ -984,7 +1083,8 @@ async def test_references_from_parts(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///references/parts.cfg"),
-                                 position=Position(5, 4)))
+                                 position=Position(line=5, character=4)))
   reference, = references
   assert reference.uri.endswith('/references/parts.cfg')
-  assert reference.range == Range(Position(2, 4), Position(2, 22))
+  assert reference.range == Range(start=Position(line=2, character=4),
+                                  end=Position(line=2, character=22))

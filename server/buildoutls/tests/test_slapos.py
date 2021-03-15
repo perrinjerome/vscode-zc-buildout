@@ -44,7 +44,7 @@ async def test_complete_slapos_instance_software(server: LanguageServer):
   # complete ${ with software
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-                            position=Position(14, 27),
+                            position=Position(line=14, character=27),
                             context=context)
 
   completions = await lsp_completion(server, params)
@@ -62,12 +62,13 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
   # complete $${ with instance
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-                            position=Position(15, 28),
+                            position=Position(line=15, character=28),
                             context=context)
 
   completions = await lsp_completion(server, params)
   assert completions is not None
-  textEditRange = Range(Position(15, 26), Position(15, 28))
+  textEditRange = Range(start=Position(line=15, character=26),
+                        end=Position(line=15, character=28))
   assert sorted([(c.textEdit.range, c.textEdit.newText, c.filterText, c.label)
                  for c in completions if c.textEdit is not None]) == [
                      (
@@ -115,12 +116,12 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
                  ]
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-                            position=Position(13, 61),
+                            position=Position(line=13, character=61),
                             context=context)
-
   completions = await lsp_completion(server, params)
   assert completions is not None
-  textEditRange = Range(Position(13, 60), Position(13, 71))
+  textEditRange = Range(start=Position(line=13, character=60),
+                        end=Position(line=13, character=71))
   assert sorted([(c.textEdit.range, c.textEdit.newText, c.label)
                  for c in completions if c.textEdit is not None]) == [
                      (
@@ -162,7 +163,7 @@ async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
   # in jinja instance, complete ${ with instance
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///slapos/instance_as_jinja/instance.cfg.in"),
-                            position=Position(18, 27),
+                            position=Position(line=18, character=27),
                             context=context)
 
   completions = await lsp_completion(server, params)
@@ -183,7 +184,7 @@ async def test_hover_slapos_instance(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-                                 position=Position(13, 16)))
+                                 position=Position(line=13, character=16)))
   assert hover is not None
   assert hover.contents == '```\nslapos.recipe.cmmi\n```'
 
@@ -191,7 +192,7 @@ async def test_hover_slapos_instance(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-                                 position=Position(13, 24)))
+                                 position=Position(line=13, character=24)))
   assert hover is not None
   assert hover.contents == '```\n\n```'
 
@@ -199,7 +200,7 @@ async def test_hover_slapos_instance(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-                                 position=Position(13, 42)))
+                                 position=Position(line=13, character=42)))
   assert hover is not None
   assert hover.contents == '```\n\n```'
 
@@ -207,7 +208,7 @@ async def test_hover_slapos_instance(server: LanguageServer):
       server,
       TextDocumentPositionParams(text_document=TextDocumentIdentifier(
           uri="file:///slapos/instance_as_buildout_profile/instance.cfg"),
-                                 position=Position(13, 63)))
+                                 position=Position(line=13, character=63)))
   assert hover is not None
   assert hover.contents == '```\n\n```'
 
@@ -219,7 +220,7 @@ async def test_complete_slapos_instance_template(server: LanguageServer):
   # complete ${ in instance's template with instance
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///slapos/instance_as_buildout_profile/template.in"),
-                            position=Position(0, 75),
+                            position=Position(line=0, character=75),
                             context=context)
 
   completions = await lsp_completion(server, params)
@@ -239,13 +240,14 @@ async def test_goto_definition_slapos_instance_software(
   definitions = await lsp_definition(
       server,
       TextDocumentPositionParams(
-          TextDocumentIdentifier(
+          text_document=TextDocumentIdentifier(
               uri='file:///slapos/instance_as_buildout_profile/instance.cfg'),
-          Position(13, 23),
+          position=Position(line=13, character=23),
       ))
   assert definitions == [
       Location(uri='file:///slapos/instance_as_buildout_profile/software.cfg',
-               range=Range(Position(7, 0), Position(8, 0)))
+               range=Range(start=Position(line=7, character=0),
+                           end=Position(line=8, character=0)))
   ]
 
 
@@ -255,13 +257,14 @@ async def test_goto_definition_slapos_instance_instance(
   definitions = await lsp_definition(
       server,
       TextDocumentPositionParams(
-          TextDocumentIdentifier(
+          text_document=TextDocumentIdentifier(
               uri='file:///slapos/instance_as_buildout_profile/instance.cfg'),
-          Position(12, 26),
+          position=Position(line=12, character=26),
       ))
   assert definitions == [
       Location(uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
-               range=Range(Position(7, 5), Position(7, 20)))
+               range=Range(start=Position(line=7, character=5),
+                           end=Position(line=7, character=20)))
   ]
 
 
@@ -271,13 +274,14 @@ async def test_goto_definition_slapos_instance_software_empty_section(
   definitions = await lsp_definition(
       server,
       TextDocumentPositionParams(
-          TextDocumentIdentifier(
+          text_document=TextDocumentIdentifier(
               uri='file:///slapos/instance_as_buildout_profile/instance.cfg'),
-          Position(7, 12),
+          position=Position(line=7, character=12),
       ))
   assert definitions == [
       Location(uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
-               range=Range(Position(6, 6), Position(6, 29)))
+               range=Range(start=Position(line=6, character=6),
+                           end=Position(line=6, character=29)))
   ]
 
 
@@ -287,13 +291,14 @@ async def test_goto_definition_slapos_instance_template(
   definitions = await lsp_definition(
       server,
       TextDocumentPositionParams(
-          TextDocumentIdentifier(
+          text_document=TextDocumentIdentifier(
               uri='file:///slapos/instance_as_buildout_profile/template.in'),
-          Position(0, 75),
+          position=Position(line=0, character=75),
       ))
   assert definitions == [
       Location(uri='file:///slapos/instance_as_buildout_profile/instance.cfg',
-               range=Range(Position(6, 6), Position(6, 29)))
+               range=Range(start=Position(line=6, character=6),
+                           end=Position(line=6, character=29)))
   ]
 
 
