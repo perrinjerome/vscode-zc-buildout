@@ -238,6 +238,100 @@ async def test_diagnostics_buildout_parts_section_name_with_dot(
 
 
 @pytest.mark.asyncio
+async def test_diagnostics_option_redefinition(server) -> None:
+  await parseAndSendDiagnostics(server,
+                                'file:///diagnostics/option_redefinition.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/option_redefinition.cfg',
+      [mock.ANY],
+  )
+  diagnostic, = cast(List[Diagnostic],
+                     server.publish_diagnostics.call_args[0][1])
+  assert diagnostic.range == Range(start=Position(7, 3), end=Position(7, 11))
+  assert diagnostic.message == "`b` already has value `value b`."
+  assert [
+      (ri.location, ri.message)
+      # XXX this typing is wrong in pygls 0.9.1
+      for ri in diagnostic.relatedInformation  # type:ignore
+  ] == [
+      (
+          Location(
+              uri='file:///diagnostics/option_redefinition.cfg',
+              range=Range(
+                  start=Position(line=2, character=3),
+                  end=Position(line=2, character=11),
+              ),
+          ),
+          'value: `value b`',
+      ),
+      (
+          Location(
+              uri='file:///diagnostics/option_redefinition.cfg',
+              range=Range(
+                  start=Position(line=7, character=3),
+                  end=Position(line=7, character=11),
+              ),
+          ),
+          'value: `value b`',
+      ),
+  ]
+
+
+@pytest.mark.asyncio
+async def test_diagnostics_option_redefinition_extended(server) -> None:
+  await parseAndSendDiagnostics(
+      server, 'file:///diagnostics/extended/option_redefinition.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/extended/option_redefinition.cfg',
+      [mock.ANY],
+  )
+  diagnostic, = cast(List[Diagnostic],
+                     server.publish_diagnostics.call_args[0][1])
+  assert diagnostic.range == Range(start=Position(4, 8), end=Position(4, 10))
+  assert diagnostic.message == "`recipe` already has value `x`."
+
+
+@pytest.mark.asyncio
+async def test_diagnostics_option_redefinition_default_value(server) -> None:
+  await parseAndSendDiagnostics(
+      server, 'file:///diagnostics/option_redefinition_default_value.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/option_redefinition_default_value.cfg',
+      [mock.ANY],
+  )
+  diagnostic, = cast(List[Diagnostic],
+                     server.publish_diagnostics.call_args[0][1])
+  assert diagnostic.range == Range(start=Position(1, 13), end=Position(1, 15))
+  assert diagnostic.message == "`allow-hosts` already has value `*`."
+  assert [
+      (ri.location, ri.message)
+      # XXX this typing is wrong in pygls 0.9.1
+      for ri in diagnostic.relatedInformation  # type:ignore
+  ] == [
+      (
+          Location(
+              uri='file:///diagnostics/option_redefinition_default_value.cfg',
+              range=Range(
+                  start=Position(line=0, character=0),
+                  end=Position(line=0, character=0),
+              ),
+          ),
+          'default value: `*`',
+      ),
+      (
+          Location(
+              uri='file:///diagnostics/option_redefinition_default_value.cfg',
+              range=Range(
+                  start=Position(line=1, character=13),
+                  end=Position(line=1, character=15),
+              ),
+          ),
+          'value: `*`',
+      ),
+  ]
+
+
+@pytest.mark.asyncio
 async def test_diagnostics_ok(server) -> None:
   # no false positives
   for url in (
@@ -245,6 +339,9 @@ async def test_diagnostics_ok(server) -> None:
       'file:///diagnostics/extended.cfg',
       'file:///diagnostics/extended/buildout.cfg',
       'file:///diagnostics/jinja.cfg',
+      'file:///diagnostics/ok_but_problems_in_extended.cfg',
+      'file:///diagnostics/option_redefinition_macro.cfg',
+      'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
   ):
     await parseAndSendDiagnostics(server, url)
     server.publish_diagnostics.assert_called_once_with(url, [])

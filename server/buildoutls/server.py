@@ -33,6 +33,7 @@ from pygls.types import (
     CompletionList,
     CompletionParams,
     Diagnostic,
+    DiagnosticRelatedInformation,
     DiagnosticSeverity,
     DidChangeTextDocumentParams,
     DidChangeWatchedFiles,
@@ -63,6 +64,8 @@ server = LanguageServer()
 reference_start = '${'
 reference_re = re.compile(
     r'\${(?P<section>[-a-zA-Z0-9 ._]*):(?P<option>[-a-zA-Z0-9 ._]+)}')
+_profile_base_location_re = re.compile(
+    r'\$\{([-a-zA-Z0-9 ._]*):_profile_base_location_\}')
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +196,51 @@ async def parseAndSendDiagnostics(
                     source='buildout',
                     severity=DiagnosticSeverity.Error,
                 ), )
+
+      # check for options redefined to same values
+      for option_name, option in section.items():
+        if option.locations[-1].uri != uri:
+          continue
+        # extend ${:_profile_base_location_}, because this option is dynamic
+        # per profile, so redefining an option from another profile with the same
+        # ${:_profile_base_location_} should not be considered as redefining to
+        # same value.
+        if len(option.locations) > 1 and (_profile_base_location_re.sub(
+            option.locations[-1].uri,
+            option.values[-1],
+        ) == _profile_base_location_re.sub(
+            option.locations[-2].uri,
+            option.values[-2],
+        )):
+          related_information = []
+          reported_related_location = set()
+          for other_location, other_value, other_is_default_value in zip(
+              option.locations,
+              option.values,
+              option.default_values,
+          ):
+            hashable_location = (other_location.uri,
+                                 other_location.range.start.line)
+            if hashable_location in reported_related_location:
+              continue
+            reported_related_location.add(hashable_location)
+            related_information.append(
+                DiagnosticRelatedInformation(
+                    location=other_location,
+                    message=f'default value: `{other_value}`'
+                    if other_is_default_value else f'value: `{other_value}`',
+                ))
+
+          diagnostics.append(
+              Diagnostic(
+                  message=
+                  f'`{option_name}` already has value `{option.value}`.',
+                  range=option.locations[-1].range,
+                  source='buildout',
+                  severity=DiagnosticSeverity.Warning,
+                  # XXX this typing is wrong in pygls 0.9.1
+                  related_information=related_information,  # type: ignore
+              ))
 
     if 'parts' in resolved_buildout['buildout']:
       jinja_parser = jinja.JinjaParser()

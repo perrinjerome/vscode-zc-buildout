@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+### Added:
+
+- diagnostic: warn when options are redefining the current value
+
 ### Fixed:
 
 - stop emitting false positives diagnostic with multi line jinja
