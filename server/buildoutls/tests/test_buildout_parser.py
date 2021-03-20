@@ -7,7 +7,7 @@ from typing import List
 import pytest
 
 from pygls.server import LanguageServer
-from pygls.types import (
+from pygls.lsp.types import (
     Location,
     Position,
     Range,
@@ -454,16 +454,16 @@ async def test_open_extends(server: LanguageServer):
           'this is overloaded in extended/extended.cfg')
   assert parsed['overloaded_from_another_buildout']['option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(line=7, character=8),
-                           Position(line=7, character=52))),
+               range=Range(start=Position(line=7, character=8),
+                           end=Position(line=7, character=52))),
       Location(uri='file:///extended/another/buildout.cfg',
-               range=Range(Position(line=8, character=8),
-                           Position(line=8, character=78))),
+               range=Range(start=Position(line=8, character=8),
+                           end=Position(line=8, character=78))),
       # here we have a "cycle", because extended/another/buildout.cfg
       # extends ./extended/buildout.cfg again
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(line=7, character=8),
-                           Position(line=7, character=52))),
+               range=Range(start=Position(line=7, character=8),
+                           end=Position(line=7, character=52))),
   ]
   assert parsed['overloaded_from_another_buildout']['option'].values == [
       'this is overloaded in extended/extended.cfg',
@@ -476,8 +476,8 @@ async def test_open_extends(server: LanguageServer):
       'kept_option'].value == 'this is from extended/another/buildout.cfg'
   assert parsed['merged_section']['kept_option'].locations == [
       Location(uri='file:///extended/another/buildout.cfg',
-               range=Range(Position(line=5, character=13),
-                           Position(line=5, character=56))),
+               range=Range(start=Position(line=5, character=13),
+                           end=Position(line=5, character=56))),
   ]
   assert parsed['merged_section']['kept_option'].values == [
       'this is from extended/another/buildout.cfg',
@@ -487,11 +487,11 @@ async def test_open_extends(server: LanguageServer):
       'overloaded_option'].value == 'from extended/buildout.cfg'
   assert parsed['merged_section']['overloaded_option'].locations == [
       Location(uri='file:///extended/another/buildout.cfg',
-               range=Range(Position(line=4, character=19),
-                           Position(line=4, character=68))),
+               range=Range(start=Position(line=4, character=19),
+                           end=Position(line=4, character=68))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(line=6, character=19),
-                           Position(line=6, character=46)))
+               range=Range(start=Position(line=6, character=19),
+                           end=Position(line=6, character=46)))
   ]
   assert parsed['merged_section']['overloaded_option'].values == [
       'this will be overloaded in extended/buildout.cfg',
@@ -503,11 +503,11 @@ async def test_open_extends(server: LanguageServer):
       'option'].value == 'option from extended/extended.cfg\nthen extended in extended/buildout.cfg'
   assert parsed['extended_option']['option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(line=1, character=8),
-                           Position(line=1, character=42))),
+               range=Range(start=Position(line=1, character=8),
+                           end=Position(line=1, character=42))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(line=9, character=9),
-                           Position(line=9, character=48)))
+               range=Range(start=Position(line=9, character=9),
+                           end=Position(line=9, character=48)))
   ]
   assert parsed['extended_option']['option'].values == [
       'option from extended/extended.cfg',
@@ -520,11 +520,11 @@ async def test_open_extends(server: LanguageServer):
       'mutli_line_option'].value == 'value1\nvalue2\nvalue3'
   assert parsed['extended_option']['mutli_line_option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(line=2, character=19),
-                           Position(line=5, character=0))),
+               range=Range(start=Position(line=2, character=19),
+                           end=Position(line=5, character=0))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(line=10, character=20),
-                           Position(line=12, character=0)))
+               range=Range(start=Position(line=10, character=20),
+                           end=Position(line=12, character=0)))
   ]
   assert parsed['extended_option']['mutli_line_option'].values == [
       'value1\nvalue2', 'value1\nvalue2\nvalue3'
@@ -535,11 +535,11 @@ async def test_open_extends(server: LanguageServer):
   assert parsed['reduced_option']['option'].value == 'value1\nvalue3'
   assert parsed['reduced_option']['option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(line=10, character=8),
-                           Position(line=13, character=9))),
+               range=Range(start=Position(line=10, character=8),
+                           end=Position(line=13, character=9))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(line=14, character=9),
-                           Position(line=15, character=9)))
+               range=Range(start=Position(line=14, character=9),
+                           end=Position(line=15, character=9)))
   ]
   assert parsed['reduced_option']['option'].values == [
       'value1\nvalue2\nvalue3', 'value1\nvalue3'

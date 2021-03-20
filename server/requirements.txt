@@ -1,2 +1,2 @@
-pygls==0.9.1
+pygls==0.10.1
 zc.buildout==2.13.3

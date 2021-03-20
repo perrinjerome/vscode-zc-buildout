@@ -30,7 +30,7 @@ setup(
     packages=['buildoutls'],
     python_requires='>=3.6.*',
     install_requires=[
-        'pygls',
+        'pygls >= 0.10.1',
         'requests',
         'zc.buildout',
     ],

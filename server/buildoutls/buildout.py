@@ -42,7 +42,7 @@ from . import recipes
 from . import jinja
 
 from pygls.server import LanguageServer
-from pygls.types import Position, Range, Location
+from pygls.lsp.types import Position, Range, Location
 
 logger = logging.getLogger(__name__)
 requests_session = requests.Session()
@@ -990,7 +990,9 @@ async def _parse(
     ):
       slap_network_information[k] = BuildoutOptionDefinition(
           value='',
-          location=Location(uri=uri, range=Range(Position(0), Position(0))),
+          location=Location(uri=uri,
+                            range=Range(start=Position(line=0, character=0),
+                                        end=Position(line=0, character=0))),
           default_value=True,
       )
     sections.setdefault('slap-network-information', slap_network_information)

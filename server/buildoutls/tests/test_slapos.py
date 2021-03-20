@@ -1,7 +1,7 @@
 import pytest
 
 from pygls.server import LanguageServer
-from pygls.types import (
+from pygls.lsp.types import (
     CompletionContext,
     CompletionParams,
     CompletionTriggerKind,
@@ -69,8 +69,9 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
   assert completions is not None
   textEditRange = Range(start=Position(line=15, character=26),
                         end=Position(line=15, character=28))
-  assert sorted([(c.textEdit.range, c.textEdit.newText, c.filterText, c.label)
-                 for c in completions if c.textEdit is not None]) == [
+  assert sorted([(c.text_edit.range, c.text_edit.new_text, c.filter_text,
+                  c.label) for c in completions
+                 if c.text_edit is not None]) == [
                      (
                          textEditRange,
                          '${buildout',
@@ -122,8 +123,8 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
   assert completions is not None
   textEditRange = Range(start=Position(line=13, character=60),
                         end=Position(line=13, character=71))
-  assert sorted([(c.textEdit.range, c.textEdit.newText, c.label)
-                 for c in completions if c.textEdit is not None]) == [
+  assert sorted([(c.text_edit.range, c.text_edit.new_text, c.label)
+                 for c in completions if c.text_edit is not None]) == [
                      (
                          textEditRange,
                          'cert-file}',

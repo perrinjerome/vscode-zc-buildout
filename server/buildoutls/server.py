@@ -14,7 +14,7 @@ from zc.buildout import configparser
 from zc.buildout.buildout import Buildout
 from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
-from pygls.features import (
+from pygls.lsp.methods import (
     COMPLETION,
     DEFINITION,
     DOCUMENT_LINK,
@@ -27,16 +27,17 @@ from pygls.features import (
     WORKSPACE_DID_CHANGE_WATCHED_FILES,
 )
 from pygls.server import LanguageServer
-from pygls.types import (
+from pygls.lsp.types import (
     CompletionItem,
     CompletionItemKind,
     CompletionList,
+    CompletionOptions,
     CompletionParams,
     Diagnostic,
     DiagnosticRelatedInformation,
     DiagnosticSeverity,
     DidChangeTextDocumentParams,
-    DidChangeWatchedFiles,
+    DidChangeWatchedFilesParams,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
     DocumentLink,
@@ -238,8 +239,7 @@ async def parseAndSendDiagnostics(
                   range=option.locations[-1].range,
                   source='buildout',
                   severity=DiagnosticSeverity.Warning,
-                  # XXX this typing is wrong in pygls 0.9.1
-                  related_information=related_information,  # type: ignore
+                  related_information=related_information,
               ))
 
     if 'parts' in resolved_buildout['buildout']:
@@ -282,7 +282,7 @@ async def did_open(
     ls: LanguageServer,
     params: DidOpenTextDocumentParams,
 ) -> None:
-  await parseAndSendDiagnostics(ls, params.textDocument.uri)
+  await parseAndSendDiagnostics(ls, params.text_document.uri)
 
 
 @server.feature(TEXT_DOCUMENT_DID_CHANGE)
@@ -290,14 +290,14 @@ async def did_change(
     ls: LanguageServer,
     params: DidChangeTextDocumentParams,
 ) -> None:
-  buildout.clearCache(params.textDocument.uri)
-  await parseAndSendDiagnostics(ls, params.textDocument.uri)
+  buildout.clearCache(params.text_document.uri)
+  await parseAndSendDiagnostics(ls, params.text_document.uri)
 
 
 @server.feature(WORKSPACE_DID_CHANGE_WATCHED_FILES)
 async def did_change_watched_file(
     ls: LanguageServer,
-    params: DidChangeWatchedFiles,
+    params: DidChangeWatchedFilesParams,
 ) -> None:
   for change in params.changes:
     buildout.clearCache(change.uri)
@@ -313,14 +313,14 @@ async def lsp_symbols(
 
   parsed = await buildout.parse(
       ls=ls,
-      uri=params.textDocument.uri,
+      uri=params.text_document.uri,
       allow_errors=True,
   )
 
   for section_name, section_value in parsed.items():
     section_header_location = parsed.section_header_locations[section_name]
     # don't include implicit sections such as [buildout] unless defined in this profile.
-    if section_header_location.uri != params.textDocument.uri:
+    if section_header_location.uri != params.text_document.uri:
       continue
     children: List[DocumentSymbol] = []
     for option_name, option_value in section_value.items():
@@ -365,14 +365,14 @@ async def lsp_symbols(
   return symbols
 
 
-@server.feature(COMPLETION, trigger_characters=["{", ":"])
+@server.feature(COMPLETION, CompletionOptions(trigger_characters=["{", ":"]))
 async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
 ) -> Optional[List[CompletionItem]]:
   await asyncio.sleep(DEBOUNCE_DELAY)
   items: List[CompletionItem] = []
-  doc = ls.workspace.get_document(params.textDocument.uri)
+  doc = ls.workspace.get_document(params.text_document.uri)
 
   def getSectionReferenceCompletionTextEdit(
       doc: Document,
@@ -478,7 +478,7 @@ async def lsp_completion(
         )
       index = max(match.start(), index + 1)
 
-  parsed = await buildout.open(ls, params.textDocument.uri)
+  parsed = await buildout.open(ls, params.text_document.uri)
   if parsed is None:
     return None
   symbol = await parsed.getSymbolAtPosition(params.position)
@@ -690,7 +690,7 @@ async def lsp_definition(
     params: TextDocumentPositionParams,
 ) -> List[Location]:
   await asyncio.sleep(DEBOUNCE_DELAY)
-  parsed = await buildout.open(ls, params.textDocument.uri)
+  parsed = await buildout.open(ls, params.text_document.uri)
   if parsed is None:
     return []
   symbol = await parsed.getSymbolAtPosition(params.position)
@@ -718,7 +718,7 @@ async def lsp_definition(
       elif symbol.current_section_name == 'buildout' and symbol.current_option_name == 'extends':
         extend = symbol.value
         if not buildout._isurl(extend):
-          uri = params.textDocument.uri
+          uri = params.text_document.uri
           base = uri[:uri.rfind('/')] + '/'
           locations.append(
               Location(uri=urllib.parse.urljoin(base, extend),
@@ -733,7 +733,7 @@ async def lsp_references(
     params: TextDocumentPositionParams,
 ) -> List[Location]:
   references: List[Location] = []
-  searched_document = await buildout.parse(server, params.textDocument.uri)
+  searched_document = await buildout.parse(server, params.text_document.uri)
   assert searched_document is not None
   searched_symbol = await searched_document.getSymbolAtPosition(params.position
                                                                 )
@@ -794,7 +794,7 @@ async def lsp_hover(
     params: TextDocumentPositionParams,
 ) -> Optional[Hover]:
   await asyncio.sleep(DEBOUNCE_DELAY)
-  parsed = await buildout.open(ls, params.textDocument.uri)
+  parsed = await buildout.open(ls, params.text_document.uri)
   if parsed is None:
     return None
   symbol = await parsed.getSymbolAtPosition(params.position)
@@ -819,7 +819,7 @@ async def lsp_document_link(
 ) -> List[DocumentLink]:
   await asyncio.sleep(DEBOUNCE_DELAY)
   links: List[DocumentLink] = []
-  uri = params.textDocument.uri
+  uri = params.text_document.uri
   parsed_buildout = await buildout.parse(ls, uri)
   base = uri[:uri.rfind('/')] + '/'
 
