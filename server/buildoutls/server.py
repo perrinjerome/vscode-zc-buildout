@@ -556,24 +556,31 @@ async def lsp_completion(
       #   opt|
       assert isinstance(parsed, buildout.BuildoutProfile)
 
-      # if section is buildout, completes with buildout known options.
+      # complete with existing options from this sections, to override
+      # options and for [buildout]
+      for option_name, option_default_value in symbol.current_section.items():
+        # skip some options that are not supposed to be defined, only referenced
+        if option_name in (
+            '_buildout_section_name_',
+            '_profile_base_location_',
+        ):
+          continue
+        items.append(
+            CompletionItem(label=option_name,
+                           text_edit=getDefaultTextEdit(
+                               doc,
+                               params.position,
+                               option_name + ' = ',
+                           ),
+                           kind=CompletionItemKind.Variable,
+                           documentation=MarkupContent(
+                               kind=MarkupKind.Markdown,
+                               value=f'`{option_default_value.value}`',
+                           )))
+
+      # if section is buildout, completes extends & parts which are usually
+      # multi lines already with an extra \n
       if symbol.current_section_name == 'buildout':
-        # buildout default options
-        for option_name, option_default_value in parsed['buildout'].items():
-          items.append(
-              CompletionItem(label=option_name,
-                             text_edit=getDefaultTextEdit(
-                                 doc,
-                                 params.position,
-                                 option_name + ' = ',
-                             ),
-                             kind=CompletionItemKind.Variable,
-                             documentation=MarkupContent(
-                                 kind=MarkupKind.Markdown,
-                                 value=f'`{option_default_value.value}`',
-                             )))
-        # extra buildout options that are usually defined as multi line
-        # (so we insert a \n)
         for option_name, option_documentation in (
             ('extends', 'Profiles extended by this buildout'),
             ('parts', 'Parts that will be installed'),

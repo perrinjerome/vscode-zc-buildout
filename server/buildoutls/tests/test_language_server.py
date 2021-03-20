@@ -730,9 +730,18 @@ async def test_complete_option_name(server: LanguageServer):
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
+  # completion includes known options of the recipe and already defined
+  # options, for cases where user wants to override an already defined
+  # option
   assert sorted([c.label for c in completions]) == [
-      'command', 'location', 'stop-on-error', 'update-command'
+      'command',
+      'location',
+      'option2',
+      'recipe',
+      'stop-on-error',
+      'update-command',
   ]
+
   # we insert with the = like: option =
   textEdit, = [c.text_edit for c in completions if c.label == 'command']
   assert textEdit is not None
@@ -744,7 +753,7 @@ async def test_complete_option_name(server: LanguageServer):
       if c.label == 'command' and isinstance(c.documentation, MarkupContent)
   ] == ['Command to run when the buildout part is installed.']
 
-  # when there's no recipe, at least we try to complete "recipe"
+  # when there's no recipe we offer completion for "recipe"
   params = CompletionParams(text_document=TextDocumentIdentifier(
       uri="file:///completions/options.cfg"),
                             position=Position(line=10, character=1),
@@ -763,12 +772,10 @@ async def test_complete_option_name(server: LanguageServer):
                             context=context)
   completions = await lsp_completion(server, params)
   assert completions is not None
-  assert sorted([c.label for c in completions]) == [
-      'recipe',
-  ]
+  assert sorted([c.label for c in completions]) == ['option1', 'recipe']
   assert sorted([
       c.text_edit.new_text for c in completions if c.text_edit is not None
-  ]) == ['recipe = ']
+  ]) == ['option1 = ', 'recipe = ']
 
 
 @pytest.mark.asyncio

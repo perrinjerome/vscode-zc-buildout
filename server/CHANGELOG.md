@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Added:
 
 - diagnostic: warn when options are redefining the current value
+- completions: complete existing options of current sections
 
 ### Fixed:
 
