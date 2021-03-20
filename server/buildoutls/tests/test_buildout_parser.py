@@ -454,7 +454,21 @@ async def test_open_extends(server: LanguageServer):
           'this is overloaded in extended/extended.cfg')
   assert parsed['overloaded_from_another_buildout']['option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(7, 8), Position(7, 52)))
+               range=Range(Position(line=7, character=8),
+                           Position(line=7, character=52))),
+      Location(uri='file:///extended/another/buildout.cfg',
+               range=Range(Position(line=8, character=8),
+                           Position(line=8, character=78))),
+      # here we have a "cycle", because extended/another/buildout.cfg
+      # extends ./extended/buildout.cfg again
+      Location(uri='file:///extended/extended.cfg',
+               range=Range(Position(line=7, character=8),
+                           Position(line=7, character=52))),
+  ]
+  assert parsed['overloaded_from_another_buildout']['option'].values == [
+      'this is overloaded in extended/extended.cfg',
+      'this is from extended/another/buildout.cfg but it should be overloaded',
+      'this is overloaded in extended/extended.cfg'
   ]
 
   # options are mixed in the same section
@@ -462,22 +476,42 @@ async def test_open_extends(server: LanguageServer):
       'kept_option'].value == 'this is from extended/another/buildout.cfg'
   assert parsed['merged_section']['kept_option'].locations == [
       Location(uri='file:///extended/another/buildout.cfg',
-               range=Range(Position(5, 13), Position(5, 56)))
+               range=Range(Position(line=5, character=13),
+                           Position(line=5, character=56))),
   ]
+  assert parsed['merged_section']['kept_option'].values == [
+      'this is from extended/another/buildout.cfg',
+  ]
+
   assert parsed['merged_section'][
       'overloaded_option'].value == 'from extended/buildout.cfg'
   assert parsed['merged_section']['overloaded_option'].locations == [
+      Location(uri='file:///extended/another/buildout.cfg',
+               range=Range(Position(line=4, character=19),
+                           Position(line=4, character=68))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(6, 19), Position(6, 46)))
+               range=Range(Position(line=6, character=19),
+                           Position(line=6, character=46)))
   ]
+  assert parsed['merged_section']['overloaded_option'].values == [
+      'this will be overloaded in extended/buildout.cfg',
+      'from extended/buildout.cfg'
+  ]
+
   # options are extended with +=
   assert parsed['extended_option'][
       'option'].value == 'option from extended/extended.cfg\nthen extended in extended/buildout.cfg'
   assert parsed['extended_option']['option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(1, 8), Position(1, 42))),
+               range=Range(Position(line=1, character=8),
+                           Position(line=1, character=42))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(9, 9), Position(9, 48)))
+               range=Range(Position(line=9, character=9),
+                           Position(line=9, character=48)))
+  ]
+  assert parsed['extended_option']['option'].values == [
+      'option from extended/extended.cfg',
+      'option from extended/extended.cfg\nthen extended in extended/buildout.cfg'
   ]
   assert 'option +' not in parsed['extended_option']
 
@@ -486,9 +520,14 @@ async def test_open_extends(server: LanguageServer):
       'mutli_line_option'].value == 'value1\nvalue2\nvalue3'
   assert parsed['extended_option']['mutli_line_option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(2, 19), Position(5, 0))),
+               range=Range(Position(line=2, character=19),
+                           Position(line=5, character=0))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(10, 20), Position(12, 0)))
+               range=Range(Position(line=10, character=20),
+                           Position(line=12, character=0)))
+  ]
+  assert parsed['extended_option']['mutli_line_option'].values == [
+      'value1\nvalue2', 'value1\nvalue2\nvalue3'
   ]
   assert 'mutli_line_option +' not in parsed['extended_option']
 
@@ -496,11 +535,58 @@ async def test_open_extends(server: LanguageServer):
   assert parsed['reduced_option']['option'].value == 'value1\nvalue3'
   assert parsed['reduced_option']['option'].locations == [
       Location(uri='file:///extended/extended.cfg',
-               range=Range(Position(10, 8), Position(13, 9))),
+               range=Range(Position(line=10, character=8),
+                           Position(line=13, character=9))),
       Location(uri='file:///extended/buildout.cfg',
-               range=Range(Position(14, 9), Position(15, 9)))
+               range=Range(Position(line=14, character=9),
+                           Position(line=15, character=9)))
+  ]
+  assert parsed['reduced_option']['option'].values == [
+      'value1\nvalue2\nvalue3', 'value1\nvalue3'
   ]
   assert 'option -' not in parsed['reduced_option']
+
+
+@pytest.mark.asyncio
+async def test_open_extends_buildout_default_options(server: LanguageServer):
+  parsed = await open(
+      ls=server, uri='file:///extended/default_buildout_options/buildout.cfg')
+  assert isinstance(parsed, BuildoutProfile)
+  assert list(parsed.keys()) == ['buildout']
+  assert parsed['buildout']['bin-directory'].value == 'different-default-value'
+  assert parsed['buildout']['bin-directory'].locations == [
+      Location(
+          uri='file:///extended/default_buildout_options/extended.cfg',
+          range=Range(
+              start=Position(line=0, character=0),
+              end=Position(line=0, character=0),
+          ),
+      ),
+      Location(
+          uri='file:///extended/default_buildout_options/extended.cfg',
+          range=Range(
+              start=Position(line=1, character=15),
+              end=Position(line=1, character=39),
+          ),
+      ),
+  ]
+  assert parsed['buildout']['allow-hosts'].value == 'extended-default-value'
+  assert parsed['buildout']['allow-hosts'].locations == [
+      Location(
+          uri='file:///extended/default_buildout_options/buildout.cfg',
+          range=Range(
+              start=Position(line=0, character=0),
+              end=Position(line=0, character=0),
+          ),
+      ),
+      Location(
+          uri='file:///extended/default_buildout_options/buildout.cfg',
+          range=Range(
+              start=Position(line=2, character=14),
+              end=Position(line=2, character=37),
+          ),
+      )
+  ]
 
 
 @pytest.mark.asyncio

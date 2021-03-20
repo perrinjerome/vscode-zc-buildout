@@ -106,20 +106,68 @@ class MissingExtendedSection(ResolveError):
 
 
 class BuildoutOptionDefinition:
+  """Option definition
+
+  Keep track of the current value as `value` and of the
+  `locations` where this value was defined. `values` is
+  a list of intermediate values for each of the locations.
+
+  `default_value` are default values that are not defined
+  in profiles, but are implicit, such as buildout default
+  values or sections added by slapos instance.
+  """
   def __init__(
       self,
-      locations: List[Location],
       value: str,
-      implicit_option: bool = False,
+      location: Location,
+      default_value: bool = False,
   ):
-    self.locations = locations
-    self.value = value
-    self.implicit_option = implicit_option
+    self.locations = [location]
+    self.values = [value]
+    self.default_values = [default_value]
+
+  @property
+  def value(self) -> str:
+    return self.values[-1]
+
+  @property
+  def location(self) -> Location:
+    return self.locations[-1]
+
+  @property
+  def default_value(self) -> bool:
+    return self.default_values[-1]
 
   def __repr__(self) -> str:
     locations = ' '.join(
         ['{} {}'.format(l.uri, l.range) for l in self.locations])
     return '{} ({})'.format(self.value, locations)
+
+  def overrideValue(self, value: str, location: Location) -> None:
+    """Add a value to the list of values."""
+    self.values.append(value)
+    self.locations.append(location)
+    self.default_values.append(False)
+
+  def updateValue(
+      self,
+      value: str,
+      location: Optional[Location] = None,
+  ) -> None:
+    """Replace the current value, used internally to clean up extra whitespaces."""
+    self.values[-1] = value
+    self.default_values[-1] = False
+    if location is not None:
+      self.locations[-1] = location
+
+  @staticmethod
+  def clone(
+      option_def: 'BuildoutOptionDefinition') -> 'BuildoutOptionDefinition':
+    new_option_def = BuildoutOptionDefinition(option_def.value,
+                                              option_def.locations[0])
+    new_option_def.locations = copy.copy(option_def.locations)
+    new_option_def.values = copy.copy(option_def.values)
+    return new_option_def
 
 
 class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
@@ -881,21 +929,17 @@ async def _parse(
       value = v.value
     sections['buildout'][k] = BuildoutOptionDefinition(
         value=value,
-        locations=[
-            Location(uri=uri,
-                     range=Range(start=Position(line=0, character=0),
-                                 end=Position(line=0, character=0)))
-        ],
-        implicit_option=True,
+        location=Location(uri=uri,
+                          range=Range(start=Position(line=0, character=0),
+                                      end=Position(line=0, character=0))),
+        default_value=True,
     )
   sections['buildout']['directory'] = BuildoutOptionDefinition(
       value='.',
-      locations=[
-          Location(uri=uri,
-                   range=Range(start=Position(line=0, character=0),
-                               end=Position(line=0, character=0)))
-      ],
-      implicit_option=True,
+      location=Location(uri=uri,
+                        range=Range(start=Position(line=0, character=0),
+                                    end=Position(line=0, character=0))),
+      default_value=True,
   )
   sections.section_header_locations['buildout'] = Location(
       uri="",
@@ -922,12 +966,10 @@ async def _parse(
     ):
       slap_connection[k] = BuildoutOptionDefinition(
           value='',
-          locations=[
-              Location(uri=uri,
-                       range=Range(start=Position(line=0, character=0),
-                                   end=Position(line=0, character=0)))
-          ],
-          implicit_option=True,
+          location=Location(uri=uri,
+                            range=Range(start=Position(line=0, character=0),
+                                        end=Position(line=0, character=0))),
+          default_value=True,
       )
     sections.setdefault('slap-connection', slap_connection)
     sections.section_header_locations.setdefault(
@@ -947,9 +989,9 @@ async def _parse(
         'global-ipv4-network',
     ):
       slap_network_information[k] = BuildoutOptionDefinition(
-          locations=[],
           value='',
-          implicit_option=True,
+          location=Location(uri=uri, range=Range(Position(0), Position(0))),
+          default_value=True,
       )
     sections.setdefault('slap-network-information', slap_network_information)
 
@@ -985,9 +1027,17 @@ async def _parse(
       assert cursect is not None
       assert optname is not None
       option_def = cursect[optname]
-      option_def.locations[-1].range.end.line = lineno
-      option_def.locations[-1].range.end.character = len(_line) - 1
-      option_def.value = ("%s\n%s" % (option_def.value, line))
+      # update current option in case of multi line option
+      option_def.updateValue(
+          value=("%s\n%s" % (option_def.value, line)),
+          location=Location(
+              uri=option_def.location.uri,
+              range=Range(
+                  start=option_def.location.range.start,
+                  end=Position(line=lineno, character=len(_line) - 1),
+              ),
+          ),
+      )
       cursect[optname] = option_def
 
     else:
@@ -1006,26 +1056,26 @@ async def _parse(
           sections[sectname] = cursect = BuildoutSection()
           # initialize buildout default options
           cursect['_buildout_section_name_'] = BuildoutOptionDefinition(
-              locations=[
-                  Location(uri=uri,
-                           range=Range(start=Position(line=0, character=0),
-                                       end=Position(line=0, character=0)))
-              ],
+              location=Location(uri=uri,
+                                range=Range(start=Position(line=0,
+                                                           character=0),
+                                            end=Position(line=0,
+                                                         character=0))),
               value=sectname,
-              implicit_option=True,
+              default_value=True,
           )
           # _profile_base_location_ is a slapos.buildout extension
           base_location = '.'
           if '/' in uri:
             base_location = uri[:uri.rfind('/')] + '/'
           cursect['_profile_base_location_'] = BuildoutOptionDefinition(
-              locations=[
-                  Location(uri=uri,
-                           range=Range(start=Position(line=0, character=0),
-                                       end=Position(line=0, character=0)))
-              ],
+              location=Location(uri=uri,
+                                range=Range(start=Position(line=0,
+                                                           character=0),
+                                            end=Position(line=0,
+                                                         character=0))),
               value=base_location,
-              implicit_option=True,
+              default_value=True,
           )
 
         # So sections can't start with a continuation line
@@ -1047,18 +1097,25 @@ async def _parse(
           assert optname
           optname = optname.rstrip()
           optval = optval.strip()
-          option_def = cursect.get(
-              optname, BuildoutOptionDefinition(value=optval, locations=[]))
-          option_def.value = optval
-
-          option_def.locations.append(
-              Location(uri=uri,
-                       range=Range(
-                           start=Position(line=lineno,
-                                          character=len(mo.groups()[0]) + 1),
-                           end=Position(line=lineno, character=len(line) - 1),
-                       )))
-          option_def.implicit_option = False
+          optlocation = Location(
+              uri=uri,
+              range=Range(
+                  start=Position(
+                      line=lineno,
+                      character=len(mo.groups()[0]) + 1,
+                  ),
+                  end=Position(
+                      line=lineno,
+                      character=len(line) - 1,
+                  ),
+              ),
+          )
+          if optname in cursect:
+            option_def = cursect[optname]
+            option_def.overrideValue(optval, optlocation)
+          else:
+            option_def = BuildoutOptionDefinition(value=optval,
+                                                  location=optlocation)
           cursect[optname] = option_def
           blockmode = not optval
         elif not (optname or line.strip()):
@@ -1082,8 +1139,8 @@ async def _parse(
     for name in section:
       value = section[name].value
       if value[:1].isspace():
-        section[name].value = leading_blank_lines.sub(
-            '', textwrap.dedent(value.rstrip()))
+        section[name].updateValue(
+            leading_blank_lines.sub('', textwrap.dedent(value.rstrip())))
 
   return sections
 
@@ -1235,27 +1292,37 @@ def _update_section(
   """
   s2 = copy.deepcopy(s2)
   for k, v in s2.items():
+    if k == '_profile_base_location_':
+      continue
     if k.endswith('-'):
       k = k.rstrip(' -')
       # Find v1 in s2 first; it may have been set by a += operation first
       option_def = s2.get(k, s1.get(k, v))
-      # same logic as as SectionKey.removeFromValue
-      option_def.value = '\n'.join(new_v
-                                   for new_v in option_def.value.split('\n')
-                                   if new_v not in v.value.split('\n'))
-      option_def.locations.extend(v.locations)
-      s1[k] = option_def
+      new_option_def = BuildoutOptionDefinition.clone(option_def)
+      new_option_def.overrideValue(
+          # same logic as as SectionKey.removeFromValue
+          value='\n'.join(new_v for new_v in option_def.value.split('\n')
+                          if new_v not in v.value.split('\n')),
+          location=v.locations[-1])
+      s1[k] = new_option_def
     elif k.endswith('+'):
       k = k.rstrip(' +')
       # Find v1 in s2 first; it may have been defined locally too.
       option_def = s2.get(k, s1.get(k, v))
-      # same logic as as SectionKey.addToValue
-      option_def.value = '\n'.join(
-          option_def.value.split('\n') + v.value.split('\n'))
-      option_def.locations.extend(v.locations)
-      s1[k] = option_def
+      option_values = [] if option_def.default_value else option_def.value.split(
+          '\n')
+      new_option_def = BuildoutOptionDefinition.clone(option_def)
+      new_option_def.overrideValue(
+          # same logic as as SectionKey.addToValue
+          value='\n'.join(option_values + v.value.split('\n')),
+          location=v.location)
+      s1[k] = new_option_def
     else:
-      s1[k] = v
+      if k in s1 and (v.location != s1[k].location):
+        if not v.default_value:
+          s1[k].overrideValue(v.value, v.location)
+      else:
+        s1[k] = v
   return s1
 
 
@@ -1307,9 +1374,11 @@ def _do_extend_raw(
       raw = buildout.get(iname)
       if raw is None:
         raise MissingExtendedSection("No section named %r" % iname)
-      result.update(_do_extend_raw(iname, raw, buildout, doing))
-
-    _update_section(result, copy.deepcopy(section))
+      result.update({
+          k: copy.copy(v)
+          for (k, v) in _do_extend_raw(iname, raw, buildout, doing).items()
+      })
+    _update_section(result, section)
     result.pop('<', None)
     return result
   finally:

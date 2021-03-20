@@ -276,7 +276,7 @@ async def lsp_symbols(
       continue
     children: List[DocumentSymbol] = []
     for option_name, option_value in section_value.items():
-      if option_value.implicit_option:
+      if option_value.default_value:
         continue
       option_range = Range(
           start=Position(line=min(r.range.start.line
@@ -441,7 +441,7 @@ async def lsp_completion(
         documentation = '```ini\n{}\n```'.format(
             '\n'.join('{} = {}'.format(k, v.value)
                       for (k, v) in section_items.items()
-                      if v and not v.implicit_option), )
+                      if v and not v.default_value), )
         if section_items.get('recipe'):
           recipe = section_items.getRecipe()
           if recipe:
