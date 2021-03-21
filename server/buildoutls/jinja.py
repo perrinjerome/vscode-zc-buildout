@@ -31,6 +31,8 @@ statement_re = re.compile(r'.*\{%[\-\+\s]*(?P<statement>[\w]+).*%\}')
 expression_re = re.compile(r'\{\{.*?\}\}')
 multiline_expression_start_re = re.compile(r'^\s*\{\{')
 multiline_expression_end_re = re.compile(r'\}\}')
+multiline_statement_start_re = re.compile(r'^\s*\{%')
+multiline_statement_end_re = re.compile(r'%\}')
 
 
 class JinjaParser:
@@ -47,7 +49,8 @@ class JinjaParser:
     self._stack: List[JinjaStatement] = []
     self._current_line_was_in_jinja = False
     self._in_comment = False
-    self._in_multiline_exression = False
+    self._in_multiline_expression = False
+    self._in_multiline_statement = False
     self.line = ""
 
   def feed(self, line: str) -> None:
@@ -64,12 +67,6 @@ class JinjaParser:
       self._current_line_was_in_jinja = True
       self._in_comment = '#}' not in line
 
-    if multiline_expression_start_re.match(
-        line) or self._in_multiline_exression:
-      self._current_line_was_in_jinja = True
-      self._in_multiline_exression = multiline_expression_end_re.search(
-          line) is None
-
     statement_match = statement_re.match(line)
     if statement_match:
       self._current_line_was_in_jinja = True
@@ -81,6 +78,17 @@ class JinjaParser:
         if self._stack:
           popped = self._stack.pop()
           self.is_error = end_block_statement[statement] != popped
+
+    if multiline_expression_start_re.match(
+        line) or self._in_multiline_expression:
+      self._current_line_was_in_jinja = True
+      self._in_multiline_expression = multiline_expression_end_re.search(
+          line) is None
+    if multiline_statement_start_re.match(
+        line) or self._in_multiline_statement:
+      self._current_line_was_in_jinja = True
+      self._in_multiline_statement = multiline_statement_end_re.search(
+          line) is None
 
   @property
   def is_in_jinja(self) -> bool:

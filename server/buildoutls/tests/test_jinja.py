@@ -19,6 +19,13 @@ def test_is_in_jinja() -> None:
       # one line statements
       ('{% set something = True %}', True),
       ('{% do 1 + 1 %}', True),
+      ('{%- do 1 + 1 %}', True),
+      ('{% do 1 + 1 -%}', True),
+
+      # multi line statements
+      ('{% do ', True),
+      (' 1 + 1 ', True),
+      (' %}', True),
 
       # block statements
       # for
