@@ -42,6 +42,7 @@ from . import recipes
 from . import jinja
 
 from pygls.server import LanguageServer
+from pygls.workspace import Document
 from pygls.lsp.types import Position, Range, Location
 
 logger = logging.getLogger(__name__)
@@ -1147,6 +1148,63 @@ async def _parse(
   return sections
 
 
+async def getProfileForTemplate(
+    ls: LanguageServer,
+    document: Document,
+) -> Optional[URI]:
+  """Find the profile for template.
+
+  For example when there's a buildout.cfg containing:
+  
+    [template]
+    recipe = collective.recipe.template
+    input = template.in
+    output = template
+
+  when called with `uri` template.in, this function would return `buildout.cfg`.
+
+  """
+  uri = document.uri
+
+  def getCandidateBuildoutProfiles() -> Iterator[pathlib.Path]:
+    path = pathlib.Path(document.path).parent
+    for _ in range(3):  # look for buildouts up to 3 levels
+      # we sort just to have stable behavior
+      for profile in sorted(path.glob('*.cfg')):
+        yield profile
+      path = path.parent
+
+  if slapos_instance_profile_filename_re.match(
+      uri) or not uri.endswith('.cfg'):
+    for buildout_path in getCandidateBuildoutProfiles():
+      resolved_path = str(buildout_path.resolve())
+      # For paths in workspace, we don't use buildout_path.resolve().as_uri(),
+      # because we have fake uri -> path mapping in tests
+      if resolved_path.startswith(ls.workspace.root_path):
+        buildout_uri = resolved_path.replace(
+            ls.workspace.root_path,
+            ls.workspace.root_uri,
+            1,
+        )
+      else:
+        # but we still need to support the case where the path is outside the workspace
+        buildout_uri = buildout_path.resolve().as_uri()
+      logger.debug("Trying to find templates's buildout with %s -> %s",
+                   buildout_path, buildout_uri)
+      buildout = await _open(
+          ls,
+          '',
+          buildout_uri,
+          [],
+          allow_errors=True,
+      )
+      assert isinstance(buildout, BuildoutProfile)
+      template = await buildout.getTemplate(ls, uri)
+      if template is not None:
+        return buildout_uri
+  return None
+
+
 async def open(
     ls: LanguageServer,
     uri: URI,
@@ -1167,44 +1225,17 @@ async def open(
   document = ls.workspace.get_document(uri)
   logger.debug("open %s", uri)
   if not force_open_as_buildout_profile:
-
-    def getCandidateBuildoutProfiles() -> Iterator[pathlib.Path]:
-      path = pathlib.Path(document.path).parent
-      for _ in range(3):  # look for buildouts up to 3 levels
-        # we sort just to have stable behavior
-        for profile in sorted(path.glob('*.cfg')):
-          yield profile
-        path = path.parent
-
     # First, try to read as a template, because buildout profiles can be templates.
-    if slapos_instance_profile_filename_re.match(
-        uri) or not uri.endswith('.cfg'):
-      for buildout_path in getCandidateBuildoutProfiles():
-        resolved_path = str(buildout_path.resolve())
-        # For paths in workspace, we don't use buildout_path.resolve().as_uri(),
-        # because we have fake uri -> path mapping in tests
-        if resolved_path.startswith(ls.workspace.root_path):
-          buildout_uri = resolved_path.replace(
-              ls.workspace.root_path,
-              ls.workspace.root_uri,
-              1,
-          )
-        else:
-          # but we still need to support the case where the path is outside the workspace
-          buildout_uri = buildout_path.resolve().as_uri()
-        logger.debug("Trying to find templates's buildout with %s -> %s",
-                     buildout_path, buildout_uri)
-        buildout = await _open(
-            ls,
-            '',
-            buildout_uri,
-            [],
-            allow_errors=allow_errors,
-        )
-        assert isinstance(buildout, BuildoutProfile)
-        template = await buildout.getTemplate(ls, uri)
-        if template is not None:
-          return template
+    buildout_uri = await getProfileForTemplate(ls, document)
+    if buildout_uri is not None:
+      buildout = await _open(
+          ls,
+          '',
+          buildout_uri,
+          [],
+          allow_errors=allow_errors,
+      )
+      return await buildout.getTemplate(ls, uri)
 
   if BuildoutProfile.looksLikeBuildoutProfile(
       uri) or force_open_as_buildout_profile:
