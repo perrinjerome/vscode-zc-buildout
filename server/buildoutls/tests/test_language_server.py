@@ -1,5 +1,4 @@
 import textwrap
-import urllib.parse
 from typing import cast, List, Sequence
 from unittest import mock
 
@@ -12,8 +11,6 @@ from pygls.lsp.types import (
     CompletionTriggerKind,
     Diagnostic,
     DiagnosticSeverity,
-    DidCloseTextDocumentParams,
-    DidOpenTextDocumentParams,
     DocumentLinkParams,
     DocumentSymbolParams,
     Location,
@@ -25,7 +22,7 @@ from pygls.lsp.types import (
     TextDocumentItem,
     TextDocumentPositionParams,
 )
-from pygls.workspace import Document, Workspace
+from pygls.workspace import Workspace
 
 from ..server import (
     lsp_completion,

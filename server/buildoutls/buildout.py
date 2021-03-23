@@ -20,7 +20,6 @@ import io
 import logging
 import os
 import re
-import sys
 import textwrap
 import enum
 import urllib.parse
@@ -30,7 +29,6 @@ from typing import TYPE_CHECKING, Dict, List, Iterator, Tuple, Optional, Set, Te
 
 from zc.buildout.buildout import _buildout_default_options
 from zc.buildout.configparser import (
-    Error,
     MissingSectionHeaderError,
     ParsingError,
     leading_blank_lines,
@@ -1239,7 +1237,6 @@ async def open(
 
   if BuildoutProfile.looksLikeBuildoutProfile(
       uri) or force_open_as_buildout_profile:
-    fp = io.StringIO(document.source)
     return await _open(ls, '', uri, [], allow_errors=allow_errors)
 
   return None
@@ -1273,10 +1270,9 @@ async def _open(
       return ResolvedBuildout(uri, '')
     raise RecursiveIncludeError("Recursive file include", seen, uri)
 
-  root_config_file = not seen
   seen.append(uri)
 
-  non_extended = result = await parse(ls, uri, allow_errors=allow_errors)
+  result = await parse(ls, uri, allow_errors=allow_errors)
 
   extends_option = result['buildout'].pop(
       'extends', None) if 'buildout' in result else None
@@ -1397,7 +1393,6 @@ def _do_extend_raw(
     to_do = section.get('<', None)
     if to_do is None:
       return section
-    __doing__ = 'Loading input sections for %r', name
 
     result = BuildoutSection()
     for iname in to_do.value.split('\n'):

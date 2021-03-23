@@ -3,12 +3,11 @@ import re
 from typing import AsyncIterable, Set
 
 from pygls.lsp.types import (Diagnostic, DiagnosticRelatedInformation,
-                             DiagnosticSeverity, Location, Position, Range)
+                             DiagnosticSeverity, Position, Range)
 from pygls.server import LanguageServer
-from pygls.workspace import Document
 from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
-from . import buildout, jinja, recipes
+from . import buildout, jinja
 
 logger = logging.getLogger(__name__)
 _profile_base_location_re = re.compile(
@@ -20,14 +19,12 @@ async def getDiagnostics(
     uri: str,
 ) -> AsyncIterable[Diagnostic]:
 
-  parsed = None
-
   looks_like_profile = buildout.BuildoutProfile.looksLikeBuildoutProfile(uri)
 
   if looks_like_profile:
     # parse errors
     try:
-      parsed = await buildout.parse(
+      await buildout.parse(
           ls=ls,
           uri=uri,
           allow_errors=False,

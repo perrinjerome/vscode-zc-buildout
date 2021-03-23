@@ -5,29 +5,17 @@ from pygls.lsp.types import (
     CompletionContext,
     CompletionParams,
     CompletionTriggerKind,
-    Diagnostic,
-    DiagnosticSeverity,
-    DidCloseTextDocumentParams,
-    DidOpenTextDocumentParams,
-    DocumentLinkParams,
-    DocumentSymbolParams,
     Location,
-    MarkupContent,
-    MarkupKind,
     Position,
     Range,
     TextDocumentIdentifier,
-    TextDocumentItem,
     TextDocumentPositionParams,
 )
 
 from ..server import (
     lsp_completion,
     lsp_definition,
-    lsp_document_link,
     lsp_hover,
-    lsp_references,
-    lsp_symbols,
     parseAndSendDiagnostics,
 )
 
@@ -35,7 +23,6 @@ from ..buildout import (
     BuildoutProfile,
     open,
 )
-from unittest import mock
 
 
 @pytest.mark.asyncio

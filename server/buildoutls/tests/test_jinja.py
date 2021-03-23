@@ -1,5 +1,3 @@
-import textwrap
-
 from ..jinja import JinjaParser
 
 

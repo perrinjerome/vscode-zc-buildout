@@ -1,18 +1,11 @@
 import asyncio
-import contextlib
-import io
 import itertools
 import logging
 import os
 import pathlib
 import re
-import tempfile
 import urllib.parse
-from typing import Any, Iterable, List, Optional, Sequence, Set, Tuple, Union
-
-from zc.buildout import configparser
-from zc.buildout.buildout import Buildout
-from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
+from typing import Iterable, List, Optional, Tuple, Union
 
 from pygls.lsp.methods import (
     COMPLETION,
@@ -23,23 +16,17 @@ from pygls.lsp.methods import (
     REFERENCES,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
-    TEXT_DOCUMENT_DID_SAVE,
     WORKSPACE_DID_CHANGE_WATCHED_FILES,
 )
 from pygls.server import LanguageServer
 from pygls.lsp.types import (
     CompletionItem,
     CompletionItemKind,
-    CompletionList,
     CompletionOptions,
     CompletionParams,
-    Diagnostic,
-    DiagnosticRelatedInformation,
-    DiagnosticSeverity,
     DidChangeTextDocumentParams,
     DidChangeWatchedFilesParams,
     DidOpenTextDocumentParams,
-    DidSaveTextDocumentParams,
     DocumentLink,
     DocumentLinkParams,
     DocumentSymbol,
@@ -48,17 +35,15 @@ from pygls.lsp.types import (
     Location,
     MarkupContent,
     MarkupKind,
-    MessageType,
     Position,
     Range,
     SymbolKind,
     TextDocumentPositionParams,
     TextEdit,
-    WorkspaceEdit,
 )
 from pygls.workspace import Document
 
-from . import buildout, jinja, recipes, diagnostic
+from . import buildout, diagnostic, recipes
 
 server = LanguageServer()
 
@@ -599,7 +584,7 @@ async def lsp_references(
 
         if searched_option is None:
           # find references in <= macros
-          for section, options in profile.items():
+          for options in profile.values():
             for option_key, option_value in options.items():
               if option_key == '<':
                 if option_value.value == searched_section:

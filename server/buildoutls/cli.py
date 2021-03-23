@@ -1,9 +1,6 @@
 import argparse
-import io
-import ipaddress
 import logging
 import sys
-import urllib.parse
 
 from .server import server
 

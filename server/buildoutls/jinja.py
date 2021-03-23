@@ -4,7 +4,7 @@
 import re
 import enum
 
-from typing import List, Dict
+from typing import List
 
 
 # https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-control-structures
