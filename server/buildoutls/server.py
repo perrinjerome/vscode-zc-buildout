@@ -58,16 +58,13 @@ from pygls.lsp.types import (
 )
 from pygls.workspace import Document
 
-from . import buildout, jinja, recipes
+from . import buildout, jinja, recipes, diagnostic
 
 server = LanguageServer()
 
 reference_start = '${'
 reference_re = re.compile(
     r'\${(?P<section>[-a-zA-Z0-9 ._]*):(?P<option>[-a-zA-Z0-9 ._]+)}')
-_profile_base_location_re = re.compile(
-    r'\$\{([-a-zA-Z0-9 ._]*):_profile_base_location_\}')
-
 logger = logging.getLogger(__name__)
 
 DEBOUNCE_DELAY = 0.3
@@ -88,199 +85,10 @@ async def parseAndSendDiagnostics(
     uri: str,
 ) -> None:
   await asyncio.sleep(DEBOUNCE_DELAY)
-  diagnostics: List[Diagnostic] = []
-  parsed = None
-
-  looks_like_profile = buildout.BuildoutProfile.looksLikeBuildoutProfile(uri)
-
-  if looks_like_profile:
-    # parse errors
-    try:
-      parsed = await buildout.parse(
-          ls=ls,
-          uri=uri,
-          allow_errors=False,
-      )
-    except ParsingError as e:
-      if e.filename != uri:
-        logger.debug("skipping error in external file %s", e.filename)
-      elif isinstance(e, MissingSectionHeaderError):
-        if looks_like_profile:
-          diagnostics.append(
-              Diagnostic(
-                  message=e.message,
-                  range=Range(
-                      start=Position(line=e.lineno, character=0),
-                      end=Position(line=e.lineno + 1, character=0),
-                  ),
-                  source='buildout',
-                  severity=DiagnosticSeverity.Error,
-              ))
-      else:
-        if looks_like_profile:
-          for (lineno, _), msg in zip(e.errors, e.message.splitlines()[1:]):
-            msg = msg.split(':', 1)[1].strip()
-            diagnostics.append(
-                Diagnostic(
-                    message=f'ParseError: {msg}',
-                    range=Range(
-                        start=Position(line=lineno, character=0),
-                        end=Position(line=lineno + 1, character=0),
-                    ),
-                    source='buildout',
-                    severity=DiagnosticSeverity.Error,
-                ))
-
-  resolved_buildout = await buildout.open(
-      ls=ls,
-      uri=uri,
-  )
-  assert resolved_buildout is not None
-
-  # all these checks can not be performed on a buildout profile
-  # extending jinja, we don't know what it's in the generated jinja.
-  extends_jinja = isinstance(
-      resolved_buildout,
-      buildout.BuildoutProfile) and resolved_buildout.extends_jinja
-  if not extends_jinja:
-    installed_parts: Set[str] = set([])
-    if isinstance(resolved_buildout, buildout.BuildoutProfile):
-      if 'parts' in resolved_buildout['buildout']:
-        installed_parts = set(
-            (v[0]
-             for v in resolved_buildout.getOptionValues('buildout', 'parts')))
-
-    async for symbol in resolved_buildout.getAllOptionReferenceSymbols():
-      if symbol.referenced_section is None:
-        diagnostics.append(
-            Diagnostic(
-                message=
-                f'Section `{symbol.referenced_section_name}` does not exist.',
-                range=symbol.section_range,
-                source='buildout',
-                severity=DiagnosticSeverity.Error,
-            ))
-      elif symbol.referenced_option is None:
-        # if we have a recipe, either it's a known recipe where we know
-        # all options that this recipe can generate, or it's an unknown
-        # recipe and in this case we assume it's OK.
-        if (symbol.referenced_section_recipe_name is not None
-            and symbol.referenced_section_recipe is None) or (
-                symbol.referenced_section_recipe is not None
-                and symbol.referenced_option_name
-                in symbol.referenced_section_recipe.generated_options):
-          continue
-        # if a section is a macro, it's OK to self reference ${:missing}
-        if symbol.is_same_section_reference and symbol.current_section_name not in installed_parts:
-          continue
-        diagnostics.append(
-            Diagnostic(
-                message=
-                f'Option `{symbol.referenced_option_name}` does not exist in `{symbol.referenced_section_name}`.',
-                range=symbol.option_range,
-                source='buildout',
-                severity=DiagnosticSeverity.Warning,
-            ))
-
-    if isinstance(resolved_buildout, buildout.BuildoutProfile):
-      for section_name, section in resolved_buildout.items():
-        if section_name in installed_parts and resolved_buildout.section_header_locations[
-            section_name].uri == uri:
-          # check for required options
-          recipe = section.getRecipe()
-          if recipe:
-            missing_required_options = recipe.required_options.difference(
-                section.keys())
-            if missing_required_options:
-              missing_required_options_text = ', '.join(
-                  ['`{}`'.format(o) for o in missing_required_options])
-              diagnostics.append(
-                  Diagnostic(
-                      message=
-                      f'Missing required options for `{recipe.name}`: {missing_required_options_text}',
-                      range=resolved_buildout.
-                      section_header_locations[section_name].range,
-                      source='buildout',
-                      severity=DiagnosticSeverity.Error,
-                  ), )
-
-        # check for options redefined to same values
-        for option_name, option in section.items():
-          if option.locations[-1].uri != uri:
-            continue
-          # extend ${:_profile_base_location_}, because this option is dynamic
-          # per profile, so redefining an option from another profile with the same
-          # ${:_profile_base_location_} should not be considered as redefining to
-          # same value.
-          if len(option.locations) > 1 and (_profile_base_location_re.sub(
-              option.locations[-1].uri,
-              option.values[-1],
-          ) == _profile_base_location_re.sub(
-              option.locations[-2].uri,
-              option.values[-2],
-          )):
-            related_information = []
-            reported_related_location = set()
-            for other_location, other_value, other_is_default_value in zip(
-                option.locations,
-                option.values,
-                option.default_values,
-            ):
-              hashable_location = (other_location.uri,
-                                   other_location.range.start.line)
-              if hashable_location in reported_related_location:
-                continue
-              reported_related_location.add(hashable_location)
-              related_information.append(
-                  DiagnosticRelatedInformation(
-                      location=other_location,
-                      message=f'default value: `{other_value}`'
-                      if other_is_default_value else f'value: `{other_value}`',
-                  ))
-
-            diagnostics.append(
-                Diagnostic(
-                    message=
-                    f'`{option_name}` already has value `{option.value}`.',
-                    range=option.locations[-1].range,
-                    source='buildout',
-                    severity=DiagnosticSeverity.Warning,
-                    related_information=related_information,
-                ))
-
-      if 'parts' in resolved_buildout['buildout']:
-        jinja_parser = jinja.JinjaParser()
-        for part_name, part_range in resolved_buildout.getOptionValues(
-            'buildout', 'parts'):
-          if part_name:
-            if part_name.startswith('${'):
-              continue  # assume substitutions are OK
-            jinja_parser.feed(part_name)
-            if jinja_parser.is_in_jinja:
-              continue  # ignore anything in jinja context
-
-            if part_name not in resolved_buildout:
-              if not resolved_buildout.extends_jinja:
-                diagnostics.append(
-                    Diagnostic(
-                        message=f'Section `{part_name}` does not exist.',
-                        range=part_range,
-                        source='buildout',
-                        severity=DiagnosticSeverity.Error,
-                    ), )
-            elif 'recipe' not in resolved_buildout[part_name]:
-              diagnostics.append(
-                  Diagnostic(
-                      message=f'Section `{part_name}` has no recipe.',
-                      range=part_range,
-                      source='buildout',
-                      severity=DiagnosticSeverity.Error,
-                  ), )
-
-  ls.publish_diagnostics(
-      uri,
-      diagnostics,
-  )
+  diagnostics = []
+  async for diag in diagnostic.getDiagnostics(ls, uri):
+    diagnostics.append(diag)
+  ls.publish_diagnostics(uri, diagnostics)
 
 
 @server.feature(TEXT_DOCUMENT_DID_OPEN)
