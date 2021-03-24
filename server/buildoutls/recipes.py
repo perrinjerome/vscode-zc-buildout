@@ -212,8 +212,15 @@ These will be removed when buildout (re)installs or removes this part.''', ),
 Recipe(
     name='slapos.recipe.build',
     description=
-    'Deprectated, prefer slapos.recipe.cmmi which supports shared parts.',
+    '''Generally deprecated in favor slapos.recipe.cmmi, which supports shared parts,
+    but useful for corner cases as it allows inline python code.
+    ''',
     url='https://pypi.org/project/slapos.recipe.build/',
+    options={
+        'init': RecipeOption('python code executed at initialization step', ),
+        'install': RecipeOption('python code executed at install step', ),
+        'update': RecipeOption('python code executed when updating', ),
+    },
     generated_options={
         'location': RecipeOption('', ),
     },
