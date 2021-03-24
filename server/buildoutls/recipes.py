@@ -32,6 +32,7 @@ class Recipe:
       generated_options: Optional[Dict[str, RecipeOption]] = None,
       required_options: Sequence[str] = (),
       template_options: Sequence[str] = (),
+      any_options: bool = False,
   ):
     self.name = name
     self.description = description
@@ -41,6 +42,9 @@ class Recipe:
     self.required_options: Set[str] = set(required_options)
     # Template options are filenames which are using buildout substitution.
     self.template_options: Set[str] = set(template_options)
+    # Flag for recipe which can generates arbitrary options. If true, we can
+    # not know if referenced options exist or not during diagnostics.
+    self.any_options = any_options
     registry[self.name] = self
 
   @property
@@ -224,6 +228,7 @@ Recipe(
     generated_options={
         'location': RecipeOption('', ),
     },
+    any_options=True,
 )
 
 Recipe(

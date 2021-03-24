@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 - diagnostic: warn when options are redefining the current value
 - completions: complete existing options of current sections
+- diagnostic: support recipes with arbitrary options (like slapos.recipe.build)
 
 ### Fixed:
 

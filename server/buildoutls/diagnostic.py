@@ -87,9 +87,10 @@ async def getDiagnostics(
         # recipe and in this case we assume it's OK.
         if (symbol.referenced_section_recipe_name is not None
             and symbol.referenced_section_recipe is None) or (
-                symbol.referenced_section_recipe is not None
-                and symbol.referenced_option_name
-                in symbol.referenced_section_recipe.generated_options):
+                symbol.referenced_section_recipe is not None and
+                (symbol.referenced_section_recipe.any_options
+                 or symbol.referenced_option_name
+                 in symbol.referenced_section_recipe.generated_options)):
           continue
         # if a section is a macro, it's OK to self reference ${:missing}
         if (symbol.is_same_section_reference

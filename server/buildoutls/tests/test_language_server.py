@@ -339,6 +339,7 @@ async def test_diagnostics_ok(server) -> None:
       'file:///diagnostics/ok_but_problems_in_extended.cfg',
       'file:///diagnostics/option_redefinition_macro.cfg',
       'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
+      'file:///diagnostics/recipe_any_option.cfg',
   ):
     await parseAndSendDiagnostics(server, url)
     server.publish_diagnostics.assert_called_once_with(url, [])
