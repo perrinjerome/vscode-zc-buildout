@@ -19,9 +19,7 @@ async def getDiagnostics(
     uri: str,
 ) -> AsyncIterable[Diagnostic]:
 
-  looks_like_profile = buildout.BuildoutProfile.looksLikeBuildoutProfile(uri)
-
-  if looks_like_profile:
+  if buildout.BuildoutProfile.looksLikeBuildoutProfile(uri):
     # parse errors
     try:
       await buildout.parse(
@@ -33,29 +31,27 @@ async def getDiagnostics(
       if e.filename != uri:
         logger.debug("skipping error in external file %s", e.filename)
       elif isinstance(e, MissingSectionHeaderError):
-        if looks_like_profile:
+        yield Diagnostic(
+            message=e.message,
+            range=Range(
+                start=Position(line=e.lineno, character=0),
+                end=Position(line=e.lineno + 1, character=0),
+            ),
+            source="buildout",
+            severity=DiagnosticSeverity.Error,
+        )
+      else:
+        for (lineno, _), msg in zip(e.errors, e.message.splitlines()[1:]):
+          msg = msg.split(":", 1)[1].strip()
           yield Diagnostic(
-              message=e.message,
+              message=f"ParseError: {msg}",
               range=Range(
-                  start=Position(line=e.lineno, character=0),
-                  end=Position(line=e.lineno + 1, character=0),
+                  start=Position(line=lineno, character=0),
+                  end=Position(line=lineno + 1, character=0),
               ),
               source="buildout",
               severity=DiagnosticSeverity.Error,
           )
-      else:
-        if looks_like_profile:
-          for (lineno, _), msg in zip(e.errors, e.message.splitlines()[1:]):
-            msg = msg.split(":", 1)[1].strip()
-            yield Diagnostic(
-                message=f"ParseError: {msg}",
-                range=Range(
-                    start=Position(line=lineno, character=0),
-                    end=Position(line=lineno + 1, character=0),
-                ),
-                source="buildout",
-                severity=DiagnosticSeverity.Error,
-            )
 
   resolved_buildout = await buildout.open(
       ls=ls,
