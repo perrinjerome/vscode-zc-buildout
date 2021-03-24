@@ -483,8 +483,9 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
                                         Location] = collections.OrderedDict()
     """The locations for each section, keyed by section names.
     """
-    self.extends_jinja = False
-    """Flag true if this resolved buildout had extends defined by jinja expressions.
+    self.has_dynamic_extends = False
+    """Flag true if this resolved buildout had extends defined dynamically.
+    This only happens with SlapOS instance buildout which are templates of profiles.
     """
 
   async def getTemplate(
@@ -1276,15 +1277,17 @@ async def _open(
 
   extends_option = result['buildout'].pop(
       'extends', None) if 'buildout' in result else None
-  extends_jinja = False
+  has_dynamic_extends = False
   if extends_option:
     extends = extends_option.value.split()
-    extends_jinja = (jinja.JinjaParser.jinja_value in extends)
+    has_dynamic_extends = (jinja.JinjaParser.jinja_value in extends) or any(
+        option_reference_re.match(extended_profile)
+        for extended_profile in extends)
     if extends:
       # extends, as absolute URI that we can use as cache key
       absolute_extends = tuple(urllib.parse.urljoin(base, x) for x in extends)
       eresult = await _open(ls, base, extends.pop(0), seen, allow_errors)
-      extends_jinja = extends_jinja or eresult.extends_jinja
+      has_dynamic_extends = has_dynamic_extends or eresult.has_dynamic_extends
       for fname in extends:
         _update(eresult, await _open(ls, base, fname, seen, allow_errors))
       for absolute_extend in absolute_extends:
@@ -1307,7 +1310,7 @@ async def _open(
         # this happens with non top-level buildout
         pass
 
-  result.extends_jinja = extends_jinja
+  result.has_dynamic_extends = has_dynamic_extends
   resolved = cast(ResolvedBuildout, result)
   _resolved_buildout_cache[uri] = resolved
   return copy.deepcopy(resolved)

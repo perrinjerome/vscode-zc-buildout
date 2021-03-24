@@ -60,10 +60,11 @@ async def getDiagnostics(
   assert resolved_buildout is not None
 
   # all these checks can not be performed on a buildout profile
-  # extending jinja, we don't know what it's in the generated jinja.
-  extends_jinja = (isinstance(resolved_buildout, buildout.BuildoutProfile)
-                   and resolved_buildout.extends_jinja)
-  if not extends_jinja:
+  # with dynamic extends, we don't know what it's in the dynamic profile.
+  has_dynamic_extends = (isinstance(resolved_buildout,
+                                    buildout.BuildoutProfile)
+                         and resolved_buildout.has_dynamic_extends)
+  if not has_dynamic_extends:
     installed_parts: Set[str] = set([])
     if isinstance(resolved_buildout, buildout.BuildoutProfile):
       if "parts" in resolved_buildout["buildout"]:
@@ -182,7 +183,7 @@ async def getDiagnostics(
               continue  # ignore anything in jinja context
 
             if part_name not in resolved_buildout:
-              if not resolved_buildout.extends_jinja:
+              if not resolved_buildout.has_dynamic_extends:
                 yield Diagnostic(
                     message=f"Section `{part_name}` does not exist.",
                     range=part_range,

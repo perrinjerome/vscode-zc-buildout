@@ -160,6 +160,13 @@ async def test_diagnostics_non_existent_sections_unknown_extends(
       server, 'file:///diagnostics/non_existant_sections_unknown_extends.cfg')
   server.publish_diagnostics.assert_called_once_with(
       'file:///diagnostics/non_existant_sections_unknown_extends.cfg', [])
+  server.publish_diagnostics.reset_mock()
+  await parseAndSendDiagnostics(
+      server,
+      'file:///diagnostics/non_existant_sections_unknown_extends_jinja.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/non_existant_sections_unknown_extends_jinja.cfg',
+      [])
 
 
 @pytest.mark.asyncio

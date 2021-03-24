@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed:
 
 - stop emitting false positives diagnostics with multi line jinja
-- stop emitting false positives diagnostics for missing sections/options when extending a jinja profile
+- stop emitting false positives diagnostics for missing sections/options when extending dynamic profile
 - fixed "add line comment" action
 
 ## [0.4.0] - 2020-10-08
