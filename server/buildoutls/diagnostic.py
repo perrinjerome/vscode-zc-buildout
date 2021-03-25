@@ -131,6 +131,8 @@ async def getDiagnostics(
         for option_name, option in section.items():
           if option.locations[-1].uri != uri:
             continue
+          if jinja.JinjaParser.jinja_value in (option_name, option.value):
+            continue
           # extend ${:_profile_base_location_}, because this option is dynamic
           # per profile, so redefining an option from another profile with the same
           # ${:_profile_base_location_} should not be considered as redefining to

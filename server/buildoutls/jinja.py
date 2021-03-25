@@ -58,8 +58,13 @@ class JinjaParser:
     """
     self._current_line_was_in_jinja = False
     self.has_expression = bool(expression_re.search(line))
-    if expression_re.search(line):
-      line = expression_re.sub(self.jinja_value, line)
+    expression_re_match = expression_re.search(line)
+    if expression_re_match:
+      if expression_re_match.start() == 0 \
+         and expression_re_match.end() == len(line.strip()):
+        line = f'{self.jinja_value} = {self.jinja_value}'
+      else:
+        line = expression_re.sub(self.jinja_value, line)
     self.line = line
     self.is_error = False
 
