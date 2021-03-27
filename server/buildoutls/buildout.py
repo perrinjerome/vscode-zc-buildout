@@ -121,9 +121,9 @@ class BuildoutOptionDefinition:
       location: Location,
       default_value: bool = False,
   ):
-    self.locations = [location]
-    self.values = [value]
-    self.default_values = [default_value]
+    self.locations: Tuple[Location, ...] = (location, )
+    self.values: Tuple[str, ...] = (value, )
+    self.default_values: Tuple[bool, ...] = (default_value, )
 
   @property
   def value(self) -> str:
@@ -144,9 +144,9 @@ class BuildoutOptionDefinition:
 
   def overrideValue(self, value: str, location: Location) -> None:
     """Add a value to the list of values."""
-    self.values.append(value)
-    self.locations.append(location)
-    self.default_values.append(False)
+    self.values = self.values + (value, )
+    self.locations = self.locations + (location, )
+    self.default_values = self.default_values + (False, )
 
   def updateValue(
       self,
@@ -154,18 +154,18 @@ class BuildoutOptionDefinition:
       location: Optional[Location] = None,
   ) -> None:
     """Replace the current value, used internally to clean up extra whitespaces."""
-    self.values[-1] = value
-    self.default_values[-1] = False
+    self.values = self.values[:-1] + (value, )
+    self.default_values = self.default_values[:-1] + (False, )
     if location is not None:
-      self.locations[-1] = location
+      self.locations = self.locations[:-1] + (location, )
 
   @staticmethod
   def clone(
       option_def: 'BuildoutOptionDefinition') -> 'BuildoutOptionDefinition':
     new_option_def = BuildoutOptionDefinition(option_def.value,
                                               option_def.locations[0])
-    new_option_def.locations = copy.copy(option_def.locations)
-    new_option_def.values = copy.copy(option_def.values)
+    new_option_def.locations = option_def.locations
+    new_option_def.values = option_def.values
     return new_option_def
 
 
@@ -1322,7 +1322,7 @@ def _update_section(
 ) -> BuildoutSection:
   """Update s1 with values from s2.
   """
-  s2 = copy.deepcopy(s2)
+  s2 = copy.copy(s2)
   for k, v in s2.items():
     if k == '_profile_base_location_':
       continue
