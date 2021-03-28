@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Added:
 
+### Fixed:
+
+## [0.5.0] - 2021-03-28
+
+### Added:
+
 - diagnostic: warn when options are redefining the current value
 - completions: complete existing options of current sections
 - diagnostic: support recipes with arbitrary options (like slapos.recipe.build)
@@ -77,4 +83,5 @@ and this project adheres to [Semantic Versioning][semver].
 [0.2.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.2.0...v0.2.1
 [0.3.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.2.1...v0.3.0
 [0.4.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.3.0...v0.4.0
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.4.0...master
+[0.5.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.4.0...v0.5.0
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.5.0...master
