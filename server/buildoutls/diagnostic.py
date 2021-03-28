@@ -1,5 +1,6 @@
 import logging
 import re
+import urllib.parse
 from typing import AsyncIterable, Set
 
 from pygls.lsp.types import (Diagnostic, DiagnosticRelatedInformation,
@@ -13,16 +14,20 @@ logger = logging.getLogger(__name__)
 _profile_base_location_re = re.compile(
     r'\$\{([-a-zA-Z0-9 ._]*):_profile_base_location_\}')
 
+# this is a function to be patched in unittest
+from os.path import exists as os_path_exists
+
 
 async def getDiagnostics(
     ls: LanguageServer,
     uri: str,
 ) -> AsyncIterable[Diagnostic]:
 
+  parsed = None
   if buildout.BuildoutProfile.looksLikeBuildoutProfile(uri):
     # parse errors
     try:
-      await buildout.parse(
+      parsed = await buildout.parse(
           ls=ls,
           uri=uri,
           allow_errors=False,
@@ -173,8 +178,29 @@ async def getDiagnostics(
                 related_information=related_information,
             )
 
+      jinja_parser = jinja.JinjaParser()
+      if parsed is not None and "extends" in parsed["buildout"]:
+        for extend_filename, extend_range in parsed.getOptionValues(
+            "buildout", "extends"):
+          if extend_filename.startswith("${"):
+            continue  # assume substitutions are OK
+          jinja_parser.feed(extend_filename)
+          if jinja_parser.is_in_jinja:
+            continue  # ignore anything in jinja context
+          if buildout._isurl(extend_filename):
+            continue
+          base = uri[:uri.rfind('/')] + '/'
+          if not os_path_exists(
+              urllib.parse.urlparse(urllib.parse.urljoin(
+                  base, extend_filename)).path):
+            yield Diagnostic(
+                message=f"Extended profile `{extend_filename}` does not exist.",
+                range=extend_range,
+                source="buildout",
+                severity=DiagnosticSeverity.Error,
+            )
+
       if "parts" in resolved_buildout["buildout"]:
-        jinja_parser = jinja.JinjaParser()
         for part_name, part_range in resolved_buildout.getOptionValues(
             "buildout", "parts"):
           if part_name:

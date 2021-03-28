@@ -189,6 +189,25 @@ async def test_diagnostics_required_recipe_option(server) -> None:
 
 
 @pytest.mark.asyncio
+async def test_diagnostics_extends_does_not_exist(server) -> None:
+  await parseAndSendDiagnostics(
+      server, 'file:///diagnostics/extends_does_not_exist.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/extends_does_not_exist.cfg',
+      [mock.ANY],
+  )
+  diagnostics = sorted(
+      cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
+      key=lambda d: d.range.start,
+  )
+  assert diagnostics[0].severity == DiagnosticSeverity.Error
+  assert diagnostics[0].message == \
+    "Extended profile `does/not/exists.cfg` does not exist."
+  assert diagnostics[0].range == Range(start=Position(line=2, character=4),
+                                       end=Position(line=2, character=23))
+
+
+@pytest.mark.asyncio
 async def test_diagnostics_template(server) -> None:
   # syntax error
   await parseAndSendDiagnostics(server, 'file:///template.in')

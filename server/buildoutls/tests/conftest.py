@@ -54,6 +54,14 @@ def server() -> Any:
 
   server.workspace.get_document = mock.Mock(side_effect=get_document)
 
+  def os_path_exists(path: str) -> bool:
+    if path.startswith('/'):
+      path = path.replace('/', root_path + '/', 1)
+    return os.path.exists(path)
+
+  os_path_exists_patcher = mock.patch('buildoutls.diagnostic.os_path_exists',
+                                      side_effect=os_path_exists)
+
   def clearCaches() -> None:
     _resolved_buildout_cache.clear()
     _parse_cache.clear()
@@ -62,12 +70,14 @@ def server() -> Any:
   clearCaches()
   old_debounce_delay = _server_module.DEBOUNCE_DELAY
   _server_module.DEBOUNCE_DELAY = 0
-  yield server
+  with os_path_exists_patcher:
+    yield server
   _server_module.DEBOUNCE_DELAY = old_debounce_delay
   server.publish_diagnostics.reset_mock()
   server.show_message.reset_mock()
   server.show_message_log.reset_mock()
   server.workspace.get_document.reset_mock()
+
   clearCaches()
 
 
