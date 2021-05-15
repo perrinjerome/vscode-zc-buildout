@@ -63,6 +63,9 @@ section_reference_re = re.compile(r'.*\$\{(?P<section>[-a-zA-Z0-9 ._]*)[^:]*$')
 option_definition_re = re.compile(
     r'^(?P<option>[^=]*)\s*=\s*(?P<option_value>.*)$')
 
+# Matches a comment
+comment_re = re.compile(r'.*[#;].*')
+
 # Filenames of slapos instances, that might be a buildout profile as a buildout template
 slapos_instance_profile_filename_re = re.compile(
     r'.*\/instance[^\/]*\.cfg[^\/]*')
@@ -214,6 +217,7 @@ class SymbolKind(enum.Enum):
        the position is on ``section`` from ``${section:option}``.
     * ``OptionReference``: a specialised version of ``BuildoutOptionValue`` where
        the position is on ``option`` from ``${section:option}``.
+    * ``Comment``: when inside a comment
 
   """
   SectionDefinition = 0
@@ -221,6 +225,7 @@ class SymbolKind(enum.Enum):
   BuildoutOptionValue = 2
   SectionReference = 3
   OptionReference = 4
+  Comment = 5
 
 
 class Symbol:
@@ -338,6 +343,9 @@ class BuildoutTemplate:
     line = ''
     if position.line < len(lines):
       line = lines[position.line]
+
+    if comment_re.match(line[:position.character]):
+      return Symbol(kind=SymbolKind.Comment, buildout=self.buildout, value='')
 
     line_offset = 0
     remaining_line = line

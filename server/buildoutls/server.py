@@ -283,6 +283,8 @@ async def lsp_completion(
   symbol = await parsed.getSymbolAtPosition(params.position)
   logger.debug("getting completions on %s", symbol)
   if symbol:
+    if symbol.kind == buildout.SymbolKind.Comment:
+      return None
     if symbol.kind == buildout.SymbolKind.SectionReference:
       for buildout_section_name, section_items in symbol._buildout.items():
         documentation = '```ini\n{}\n```'.format(

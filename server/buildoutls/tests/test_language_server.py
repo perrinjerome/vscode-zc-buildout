@@ -1009,6 +1009,39 @@ async def test_complete_buildout_extends(server: LanguageServer):
 
 
 @pytest.mark.asyncio
+async def test_complete_comments(server: LanguageServer):
+  # no completions happens in comments
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
+  for position in (
+      Position(line=3, character=6),
+      Position(line=4, character=2),
+      Position(line=5, character=1),
+      Position(line=6, character=7),
+      Position(line=7, character=8),
+  ):
+    params = CompletionParams(
+        text_document=TextDocumentIdentifier(
+            uri="file:///completions/comments.cfg"),
+        position=position,
+        context=context,
+    )
+
+    completions = await lsp_completion(server, params)
+    assert completions is None
+
+  # but completions should happen normally if there's a comment after the cursor
+  for position in (Position(line=10, character=28), ):
+    params = CompletionParams(
+        text_document=TextDocumentIdentifier(
+            uri="file:///completions/comments.cfg"),
+        position=position,
+        context=context,
+    )
+    completions = await lsp_completion(server, params)
+    assert completions is not None
+
+
+@pytest.mark.asyncio
 async def test_goto_definition_unknown_option(server: LanguageServer):
   # location option in ${section1:location} is not explicitly defined,
   # in this case we jump to the section header

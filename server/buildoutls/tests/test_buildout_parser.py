@@ -297,6 +297,36 @@ async def test_BuildoutProfile_getSymbolAtPosition_SectionDefinition(
 
 
 @pytest.mark.asyncio
+async def test_BuildoutProfile_getSymbolAtPosition_Comment(
+    buildout: BuildoutProfile, ) -> None:
+  for pos in (
+      Position(line=34, character=2),
+      Position(line=34, character=10),
+      Position(line=34, character=21),
+      Position(line=34, character=28),
+      Position(line=35, character=17),
+      Position(line=35, character=20),
+  ):
+    symbol = await buildout.getSymbolAtPosition(pos)
+    assert symbol is not None
+    assert symbol.kind == SymbolKind.Comment
+    assert symbol.referenced_section is None
+    assert symbol.referenced_option_name is None
+    assert symbol.referenced_option is None
+
+  # symbols with comments on same line
+  symbol = await buildout.getSymbolAtPosition(Position(line=35, character=2))
+  assert symbol is not None
+  assert symbol.kind == SymbolKind.BuildoutOptionKey
+  assert symbol.value == 'option'
+
+  symbol = await buildout.getSymbolAtPosition(Position(line=35, character=11))
+  assert symbol is not None
+  assert symbol.kind == SymbolKind.BuildoutOptionValue
+  assert symbol.value == 'value # we can have comments after options'
+
+
+@pytest.mark.asyncio
 async def test_BuildoutProfile_getAllOptionReferenceSymbols(
     buildout: BuildoutProfile) -> None:
   symbols: List[Symbol] = []

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Added:
 
 ### Fixed:
+- completions: don't offer completions in comments
 
 ## [0.5.0] - 2021-03-28
 
