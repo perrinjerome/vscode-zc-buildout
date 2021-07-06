@@ -1,5 +1,5 @@
 import zc.buildout.download
-from collections import MutableMapping as DictMixin
+from collections.abc import MutableMapping as DictMixin
 from typing import Any, Optional, Dict, Tuple, Union
 from zc.buildout.rmtree import rmtree as rmtree
 

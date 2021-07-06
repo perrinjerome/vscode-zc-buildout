@@ -18,6 +18,7 @@ from pygls.lsp.types import (
     MarkupKind,
     Position,
     Range,
+    TextEdit,
     TextDocumentIdentifier,
     TextDocumentItem,
     TextDocumentPositionParams,
@@ -472,7 +473,7 @@ async def test_complete_section_reference(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.text_edit.range, c.text_edit.new_text) for c in completions
-                 if c.text_edit is not None]) == [
+                 if isinstance(c.text_edit, TextEdit)]) == [
                      (
                          Range(start=Position(line=13, character=10),
                                end=Position(line=13, character=13)),
@@ -508,7 +509,7 @@ async def test_complete_section_reference(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.text_edit.range, c.text_edit.new_text) for c in completions
-                 if c.text_edit is not None]) == [
+                 if isinstance(c.text_edit, TextEdit)]) == [
                      (Range(start=Position(line=4, character=30),
                             end=Position(line=4, character=32)), '${buildout'),
                      (Range(start=Position(line=4, character=30),
@@ -582,7 +583,7 @@ async def test_complete_section_reference(server: LanguageServer):
     assert completions is not None
     assert sorted([
         (c.text_edit.range, c.text_edit.new_text, c.filter_text, c.label)
-        for c in completions if c.text_edit is not None
+        for c in completions if isinstance(c.text_edit, TextEdit)
     ]) == [
         (textEditRange, '${buildout', '${buildout', 'buildout'),
         (textEditRange, '${section1', '${section1', 'section1'),
@@ -636,7 +637,7 @@ async def test_complete_option_reference(server: LanguageServer):
   ]
 
   assert sorted([(c.text_edit.range, c.text_edit.new_text) for c in completions
-                 if c.text_edit is not None]) == [
+                 if isinstance(c.text_edit, TextEdit)]) == [
                      (
                          Range(start=Position(line=2, character=13),
                                end=Position(line=2, character=13)),
@@ -680,7 +681,7 @@ async def test_complete_option_reference(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.text_edit.range, c.text_edit.new_text) for c in completions
-                 if c.text_edit is not None]) == [
+                 if isinstance(c.text_edit, TextEdit)]) == [
                      (
                          Range(start=Position(line=13, character=51),
                                end=Position(line=13, character=59)),
@@ -715,7 +716,7 @@ async def test_complete_option_reference(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([(c.text_edit.range, c.text_edit.new_text) for c in completions
-                 if c.text_edit is not None]) == [
+                 if isinstance(c.text_edit, TextEdit)]) == [
                      (
                          Range(start=Position(line=14, character=51),
                                end=Position(line=14, character=58)),
@@ -768,7 +769,7 @@ async def test_complete_option_name(server: LanguageServer):
 
   # we insert with the = like: option =
   textEdit, = [c.text_edit for c in completions if c.label == 'command']
-  assert textEdit is not None
+  assert isinstance(textEdit, TextEdit)
   assert textEdit.range == Range(start=Position(line=8, character=0),
                                  end=Position(line=8, character=0))
   assert textEdit.new_text == 'command = '
@@ -786,7 +787,8 @@ async def test_complete_option_name(server: LanguageServer):
   assert completions is not None
   assert sorted([c.label for c in completions]) == ['recipe']
   assert sorted([
-      c.text_edit.new_text for c in completions if c.text_edit is not None
+      c.text_edit.new_text for c in completions
+      if isinstance(c.text_edit, TextEdit)
   ]) == ['recipe = ']
 
   # Also works when document has invalid syntax
@@ -798,7 +800,8 @@ async def test_complete_option_name(server: LanguageServer):
   assert completions is not None
   assert sorted([c.label for c in completions]) == ['option1', 'recipe']
   assert sorted([
-      c.text_edit.new_text for c in completions if c.text_edit is not None
+      c.text_edit.new_text for c in completions
+      if isinstance(c.text_edit, TextEdit)
   ]) == ['option1 = ', 'recipe = ']
 
 
@@ -815,7 +818,8 @@ async def test_complete_referenced_option_recipe_valid_values(
   assert completions is not None
   assert sorted([c.label for c in completions]) == ['true', 'yes']
   assert sorted([
-      c.text_edit.new_text for c in completions if c.text_edit is not None
+      c.text_edit.new_text for c in completions
+      if isinstance(c.text_edit, TextEdit)
   ]) == ['true', 'yes']
 
 
@@ -831,12 +835,12 @@ async def test_complete_recipe_option_value(server: LanguageServer):
   assert completions is not None
   assert 'plone.recipe.command' in [c.label for c in completions]
   assert [
-      c.text_edit.new_text for c in completions
-      if c.text_edit is not None and c.label == 'plone.recipe.command'
+      c.text_edit.new_text for c in completions if
+      isinstance(c.text_edit, TextEdit) and c.label == 'plone.recipe.command'
   ] == ['plone.recipe.command']
   assert [
-      c.text_edit.range for c in completions
-      if c.text_edit is not None and c.label == 'plone.recipe.command'
+      c.text_edit.range for c in completions if
+      isinstance(c.text_edit, TextEdit) and c.label == 'plone.recipe.command'
   ] == [
       Range(start=Position(line=1, character=9),
             end=Position(line=1, character=18))
@@ -873,7 +877,7 @@ async def test_complete_insert_text(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   completion, = [c for c in completions if c.label == 'sec-tion-one']
-  assert completion.text_edit is not None
+  assert isinstance(completion.text_edit, TextEdit)
   assert completion.text_edit.range == Range(start=Position(line=1,
                                                             character=18),
                                              end=Position(line=1,
@@ -892,7 +896,7 @@ async def test_complete_insert_text(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   completion, = [c for c in completions if c.label == 'sect.ion.three']
-  assert completion.text_edit is not None
+  assert isinstance(completion.text_edit, TextEdit)
   assert completion.text_edit.range == Range(start=Position(line=2,
                                                             character=17),
                                              end=Position(line=2,
@@ -1000,7 +1004,7 @@ async def test_complete_buildout_extends(server: LanguageServer):
   assert "../buildout.cfg" in [c.label for c in completions]
   assert "../symbol/buildout.cfg" in [c.label for c in completions]
   completion, = [c for c in completions if c.label == '../symbol/buildout.cfg']
-  assert completion.text_edit is not None
+  assert isinstance(completion.text_edit, TextEdit)
   assert completion.text_edit.new_text == '../symbol/buildout.cfg'
   assert completion.text_edit.range == Range(
       start=Position(line=10, character=4),

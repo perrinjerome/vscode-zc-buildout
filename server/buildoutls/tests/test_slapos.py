@@ -10,6 +10,7 @@ from pygls.lsp.types import (
     Range,
     TextDocumentIdentifier,
     TextDocumentPositionParams,
+    TextEdit,
 )
 
 from ..server import (
@@ -58,7 +59,7 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
                         end=Position(line=15, character=28))
   assert sorted([(c.text_edit.range, c.text_edit.new_text, c.filter_text,
                   c.label) for c in completions
-                 if c.text_edit is not None]) == [
+                 if isinstance(c.text_edit, TextEdit)]) == [
                      (
                          textEditRange,
                          '${buildout',
@@ -111,7 +112,8 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
   textEditRange = Range(start=Position(line=13, character=60),
                         end=Position(line=13, character=71))
   assert sorted([(c.text_edit.range, c.text_edit.new_text, c.label)
-                 for c in completions if c.text_edit is not None]) == [
+                 for c in completions
+                 if isinstance(c.text_edit, TextEdit)]) == [
                      (
                          textEditRange,
                          'cert-file}',

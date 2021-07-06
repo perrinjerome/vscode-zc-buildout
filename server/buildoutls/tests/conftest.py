@@ -2,7 +2,7 @@ import os
 import urllib.parse
 from unittest import mock
 import pytest
-import responses  # type:ignore
+import responses
 
 from typing import Any
 from pygls.workspace import Document, Workspace

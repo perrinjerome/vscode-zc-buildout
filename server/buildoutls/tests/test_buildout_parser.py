@@ -1,7 +1,7 @@
 import io
 
 import textwrap
-import responses  # type: ignore
+import responses
 from typing import List
 
 import pytest
