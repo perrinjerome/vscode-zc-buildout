@@ -169,6 +169,27 @@ async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
 
 
 @pytest.mark.asyncio
+async def XXXXtest_complete_slapos_instance_with_unknown_extends(
+    server: LanguageServer):
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///slapos/instance_with_unknown_extends/instance.cfg.in"),
+                            position=Position(line=9, character=12),
+                            context=context)
+
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted([c.label for c in completions]) == [
+      'buildout',
+      'directory',
+      'publish',
+      'service',
+      'slap-connection',
+      'slap-network-information',
+  ]
+
+
+@pytest.mark.asyncio
 async def test_hover_slapos_instance(server: LanguageServer):
   hover = await lsp_hover(
       server,

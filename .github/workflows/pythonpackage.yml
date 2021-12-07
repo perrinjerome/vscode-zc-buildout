@@ -55,3 +55,8 @@ jobs:
         env:
           TOXENV: py310-buildout_current
         if: matrix.python-version == '3.10'
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: server/coverage.xml
+        if: matrix.python-version == '3.10'

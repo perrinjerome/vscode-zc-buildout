@@ -2,6 +2,7 @@ astroid==2.6.2
 attrs==21.2.0
 certifi==2021.5.30
 chardet==4.0.0
+coverage==6.2
 idna==2.10
 iniconfig==1.1.1
 isort==5.9.1
@@ -16,6 +17,7 @@ pylint==2.9.3
 pyparsing==2.4.7
 pytest==6.2.4
 pytest-asyncio==0.15.1
+pytest-cov==3.0.0
 requests==2.25.1
 responses==0.13.3
 six==1.16.0
