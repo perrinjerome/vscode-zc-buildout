@@ -20,16 +20,16 @@ describe("Completions", () => {
         { label: "section1", kind: vscode.CompletionItemKind.Class },
         { label: "section2", kind: vscode.CompletionItemKind.Class },
         { label: "section3", kind: vscode.CompletionItemKind.Class },
-        { label: "xsection4", kind: vscode.CompletionItemKind.Class }
-      ]
+        { label: "xsection4", kind: vscode.CompletionItemKind.Class },
+      ],
     });
 
     it("Completes other sections options", async () => {
       await testCompletion(docUri, new vscode.Position(14, 21), {
         items: [
           { label: "recipe", kind: vscode.CompletionItemKind.Interface },
-          { label: "option4", kind: vscode.CompletionItemKind.Interface }
-        ]
+          { label: "option4", kind: vscode.CompletionItemKind.Interface },
+        ],
       });
     });
   });

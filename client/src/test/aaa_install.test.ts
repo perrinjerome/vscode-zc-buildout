@@ -28,14 +28,13 @@ describe("Installation", () => {
         "pip",
         "uninstall",
         "-y",
-        "zc.buildout.languageserver"
+        "zc.buildout.languageserver",
       ]);
     } catch {}
 
-    vscode.window.showQuickPick = showQuickPickMock = (sinon.stub(
-      vscode.window,
-      "showQuickPick"
-    ) as any).resolves("Yes");
+    vscode.window.showQuickPick = showQuickPickMock = (
+      sinon.stub(vscode.window, "showQuickPick") as any
+    ).resolves("Yes");
 
     showErrorMessageMock = sinon.stub(vscode.window, "showErrorMessage");
 
@@ -77,7 +76,7 @@ describe("Installation", () => {
     child_process.execFileSync("python3", [
       "-m",
       "buildoutls",
-      "--check-install"
+      "--check-install",
     ]);
   });
 });

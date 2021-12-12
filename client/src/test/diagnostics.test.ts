@@ -19,14 +19,14 @@ describe("Diagnostics", () => {
         message: "Section `missing_section` does not exist.",
         range: toRange(1, 12, 1, 27),
         severity: vscode.DiagnosticSeverity.Error,
-        source: "buildout"
+        source: "buildout",
       },
       {
         message: "Option `missing_option` does not exist in `section2`.",
         range: toRange(2, 21, 2, 35),
         severity: vscode.DiagnosticSeverity.Warning,
-        source: "buildout"
-      }
+        source: "buildout",
+      },
     ]);
   });
 });

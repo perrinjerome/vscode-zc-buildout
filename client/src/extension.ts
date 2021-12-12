@@ -12,8 +12,8 @@ import { workspace } from "vscode";
 import {
   LanguageClient,
   LanguageClientOptions,
-  Executable
-} from "vscode-languageclient";
+  Executable,
+} from "vscode-languageclient/node";
 
 let client: LanguageClient;
 
@@ -45,7 +45,7 @@ function isPythonVersionCompatible(python: string): boolean {
   try {
     child_process.execFileSync(python, [
       "-c",
-      "import sys; sys.exit(sys.version_info[:2] < (3, 6))"
+      "import sys; sys.exit(sys.version_info[:2] < (3, 6))",
     ]);
     return true;
   } catch {
@@ -54,7 +54,7 @@ function isPythonVersionCompatible(python: string): boolean {
 }
 
 async function shortDelay() {
-  return new Promise(resolve => setTimeout(resolve, 1000));
+  return new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
 export async function activate() {
@@ -62,10 +62,10 @@ export async function activate() {
     python: {
       executable: vscode.workspace
         .getConfiguration()
-        .get("zc-buildout.python.executable")
-    }
+        .get("zc-buildout.python.executable"),
+    },
   };
-  vscode.workspace.onDidChangeConfiguration(e => {
+  vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("zc-buildout.python.executable")) {
       vscode.window.showInformationMessage(
         "New python selected (" +
@@ -83,7 +83,7 @@ export async function activate() {
       vscode.workspace
         .getConfiguration()
         .get("zc-buildout.language.server.arguments")
-    )
+    ),
   };
 
   // Options to control the language client
@@ -91,8 +91,8 @@ export async function activate() {
     // Register the server for buildout files
     documentSelector: [{ language: "zc-buildout" }],
     synchronize: {
-      fileEvents: workspace.createFileSystemWatcher("**/*.{cfg,in,j2}")
-    }
+      fileEvents: workspace.createFileSystemWatcher("**/*.{cfg,in,j2}"),
+    },
   };
 
   client = new LanguageClient(
@@ -113,7 +113,7 @@ export async function activate() {
   let installationOK = isExtensionInstalled(settings.python.executable);
   if (!installationOK) {
     let answer = await vscode.window.showQuickPick(["Yes", "No"], {
-      placeHolder: `buildout-language-server is not installed on ${settings.python.executable}. Do you want to install it now ?`
+      placeHolder: `buildout-language-server is not installed on ${settings.python.executable}. Do you want to install it now ?`,
     });
     if (answer !== "Yes") {
       return false;
