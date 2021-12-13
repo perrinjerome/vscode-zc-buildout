@@ -1,17 +1,15 @@
 import io
-
 import textwrap
-import responses
 from typing import List
+from unittest import mock
 
 import pytest
-
+import requests
+import responses
+from pygls.lsp.types import Location, Position, Range
 from pygls.server import LanguageServer
-from pygls.lsp.types import (
-    Location,
-    Position,
-    Range,
-)
+
+from buildoutls.buildout import clearCache
 
 from ..buildout import (
     BuildoutProfile,
@@ -22,9 +20,6 @@ from ..buildout import (
     _parse,
     open,
 )
-from buildoutls.buildout import clearCache
-from unittest import mock
-import requests
 
 
 ## parse tests

@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Added:
 
+- diagnostic: report versions with known vulnerabilities
+- code action: update a python package listed in `versions` to latest version
+- code action: view a python package page on pypi
+
 ### Fixed:
+
 - completions: don't offer completions in comments
 
 ## [0.5.0] - 2021-03-28

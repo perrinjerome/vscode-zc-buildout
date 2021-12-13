@@ -8,6 +8,7 @@ import urllib.parse
 from typing import Iterable, List, Optional, Tuple, Union
 
 from pygls.lsp.methods import (
+    CODE_ACTION,
     COMPLETION,
     DEFINITION,
     DOCUMENT_LINK,
@@ -18,8 +19,12 @@ from pygls.lsp.methods import (
     TEXT_DOCUMENT_DID_OPEN,
     WORKSPACE_DID_CHANGE_WATCHED_FILES,
 )
-from pygls.server import LanguageServer
 from pygls.lsp.types import (
+    CodeAction,
+    CodeActionKind,
+    CodeActionOptions,
+    CodeActionParams,
+    Command,
     CompletionItem,
     CompletionItemKind,
     CompletionOptions,
@@ -41,9 +46,11 @@ from pygls.lsp.types import (
     TextDocumentPositionParams,
     TextEdit,
 )
+from pygls.lsp.types.window import ShowDocumentParams
+from pygls.server import LanguageServer
 from pygls.workspace import Document
 
-from . import buildout, diagnostic, recipes
+from . import buildout, code_actions, commands, diagnostic, recipes, types
 
 server = LanguageServer()
 
@@ -74,6 +81,32 @@ async def parseAndSendDiagnostics(
   async for diag in diagnostic.getDiagnostics(ls, uri):
     diagnostics.append(diag)
   ls.publish_diagnostics(uri, diagnostics)
+
+
+@server.command(commands.COMMAND_OPEN_PYPI_PAGE)
+async def command_open_pypi_page(
+    ls: LanguageServer,
+    args: List[types.OpenPypiPageCommandParams],
+) -> None:
+  await ls.show_document_async(
+      ShowDocumentParams(
+          uri=args[0].url,
+          external=True,
+      ))
+
+
+@server.feature(
+    CODE_ACTION,
+    CodeActionOptions(resolve_provider=False,
+                      code_action_kinds=[
+                          CodeActionKind.QuickFix,
+                          CodeActionKind.SourceOrganizeImports,
+                      ]),
+)
+async def lsp_code_action(
+    ls: LanguageServer,
+    params: CodeActionParams) -> Optional[List[Union[Command, CodeAction]]]:
+  return await code_actions.getCodeActions(ls, params)
 
 
 @server.feature(TEXT_DOCUMENT_DID_OPEN)

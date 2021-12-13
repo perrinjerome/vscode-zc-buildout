@@ -1,11 +1,10 @@
 import pytest
-
-from pygls.server import LanguageServer
 from pygls.lsp.types import (
     Position,
     TextDocumentIdentifier,
     TextDocumentPositionParams,
 )
+from pygls.server import LanguageServer
 
 from ..server import lsp_hover
 

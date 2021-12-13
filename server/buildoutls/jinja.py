@@ -1,9 +1,8 @@
 """Support of jinja context
 """
 
-import re
 import enum
-
+import re
 from typing import List
 
 

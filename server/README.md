@@ -33,6 +33,7 @@ The automatic installation does not seem to work with theia and the python egg h
 
 - non existant section and options in `${section:option}` references.
 - required options not defined for a a few "known recipes".
+- python package listed in `[versions]` with known vulnerabilities
 
 ## Symbols
 
@@ -55,6 +56,10 @@ The automatic installation does not seem to work with theia and the python egg h
 ## Find references
 
 - Find references of the current symbol. A bit simple, it only look for references and does not check if profiles really `extends` each other. It does not look in templates either.
+
+## Code actions
+
+- update a python package from `[versions]` to its latest version on pypi
 
 ## Template support
 

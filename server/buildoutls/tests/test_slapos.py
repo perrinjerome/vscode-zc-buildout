@@ -1,6 +1,4 @@
 import pytest
-
-from pygls.server import LanguageServer
 from pygls.lsp.types import (
     CompletionContext,
     CompletionParams,
@@ -12,17 +10,14 @@ from pygls.lsp.types import (
     TextDocumentPositionParams,
     TextEdit,
 )
+from pygls.server import LanguageServer
 
+from ..buildout import BuildoutProfile, open
 from ..server import (
     lsp_completion,
     lsp_definition,
     lsp_hover,
     parseAndSendDiagnostics,
-)
-
-from ..buildout import (
-    BuildoutProfile,
-    open,
 )
 
 

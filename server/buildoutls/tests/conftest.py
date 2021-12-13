@@ -1,15 +1,19 @@
 import os
 import urllib.parse
+from typing import Any
 from unittest import mock
+
 import pytest
 import responses
-
-from typing import Any
 from pygls.workspace import Document, Workspace
 
-from ..buildout import _resolved_buildout_cache, _parse_cache, _extends_dependency_graph, parse
-
 from .. import server as _server_module
+from ..buildout import (
+    _extends_dependency_graph,
+    _parse_cache,
+    _resolved_buildout_cache,
+    parse,
+)
 
 
 @pytest.fixture
@@ -36,6 +40,10 @@ def server() -> Any:
       self.workspace._root_path = (root_path if root_path.endswith('/') else
                                    root_path + '/')
       self.workspace._root_uri = 'file:///'
+
+    # BBB AsyncMock needs python3.8 , for now we don't assert the actual call args
+    async def show_document_async(self, *args, **kw):
+      pass
 
     publish_diagnostics = mock.Mock()
     show_message = mock.Mock()

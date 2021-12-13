@@ -1,8 +1,6 @@
 import textwrap
 
 import pytest
-
-from pygls.server import LanguageServer
 from pygls.lsp.types import (
     CompletionContext,
     CompletionParams,
@@ -11,9 +9,10 @@ from pygls.lsp.types import (
     MarkupKind,
     Position,
     Range,
-    TextEdit,
     TextDocumentIdentifier,
+    TextEdit,
 )
+from pygls.server import LanguageServer
 
 from ..server import lsp_completion
 

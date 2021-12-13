@@ -16,17 +16,33 @@
 
 import collections
 import copy
+import enum
 import io
 import logging
 import os
+import pathlib
 import re
 import textwrap
-import enum
 import urllib.parse
-import pathlib
+from typing import (
+    TYPE_CHECKING,
+    AsyncIterator,
+    Dict,
+    Iterator,
+    List,
+    Match,
+    Optional,
+    Set,
+    TextIO,
+    Tuple,
+    Union,
+    cast,
+)
 
-from typing import TYPE_CHECKING, Dict, List, Iterator, Tuple, Optional, Set, TextIO, Union, Match, cast, AsyncIterator
-
+import requests
+from pygls.lsp.types import Location, Position, Range
+from pygls.server import LanguageServer
+from pygls.workspace import Document
 from zc.buildout.buildout import _buildout_default_options
 from zc.buildout.configparser import (
     MissingSectionHeaderError,
@@ -35,13 +51,8 @@ from zc.buildout.configparser import (
     option_start,
     section_header,
 )
-import requests
-from . import recipes
-from . import jinja
 
-from pygls.server import LanguageServer
-from pygls.workspace import Document
-from pygls.lsp.types import Position, Range, Location
+from . import jinja, recipes
 
 logger = logging.getLogger(__name__)
 requests_session = requests.Session()

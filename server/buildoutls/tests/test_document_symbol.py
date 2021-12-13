@@ -1,12 +1,11 @@
 import pytest
-
-from pygls.server import LanguageServer
 from pygls.lsp.types import (
     DocumentSymbolParams,
     Position,
     Range,
     TextDocumentIdentifier,
 )
+from pygls.server import LanguageServer
 
 from ..server import lsp_symbols
 
