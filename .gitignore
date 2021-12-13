@@ -13,3 +13,7 @@ server/.pytype/
 **/.env/
 **/.*cache/
 **/.tox/
+**/.coverage
+**/coverage.xml
+**/*.vsix
+**/*.vsix.asc
