@@ -30,8 +30,10 @@ setup(
     packages=['buildoutls'],
     python_requires='>=3.6.*',
     install_requires=[
+        'cachetools',
         'pygls >= 0.10.1',
         'requests',
+        'packaging',
         'zc.buildout',
     ],
     extras_require={

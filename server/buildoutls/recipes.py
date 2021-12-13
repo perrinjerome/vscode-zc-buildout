@@ -2,7 +2,7 @@
 
 """
 
-from typing import Sequence, Dict, Set, Optional
+from typing import Dict, Optional, Sequence, Set
 
 
 class RecipeOption:

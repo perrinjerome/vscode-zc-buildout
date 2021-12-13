@@ -3,12 +3,17 @@ import re
 import urllib.parse
 from typing import AsyncIterable, Set
 
-from pygls.lsp.types import (Diagnostic, DiagnosticRelatedInformation,
-                             DiagnosticSeverity, Position, Range)
+from pygls.lsp.types import (
+    Diagnostic,
+    DiagnosticRelatedInformation,
+    DiagnosticSeverity,
+    Position,
+    Range,
+)
 from pygls.server import LanguageServer
 from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
-from . import buildout, jinja
+from . import buildout, jinja, pypi, types
 
 logger = logging.getLogger(__name__)
 _profile_base_location_re = re.compile(
@@ -16,6 +21,8 @@ _profile_base_location_re = re.compile(
 
 # this is a function to be patched in unittest
 from os.path import exists as os_path_exists
+
+pypi_client = pypi.PyPIClient()
 
 
 async def getDiagnostics(
@@ -225,3 +232,59 @@ async def getDiagnostics(
                   source="buildout",
                   severity=DiagnosticSeverity.Error,
               )
+
+      if resolved_buildout.get('versions'):
+        for package_name, option in resolved_buildout['versions'].items():
+          if option.location.uri != uri:
+            continue
+          if package_name in (
+              '_buildout_section_name_',
+              '_profile_base_location_',
+          ):
+            continue
+
+          package_version = option.value
+
+          # handle some slapos markers in versions
+          if package_version.endswith(':whl'):
+            package_version = package_version[:-4]
+          if "+slapos" in package_version.lower():
+            continue
+
+          logger.debug(
+              'Found package %s at version %s @ %s',
+              package_name,
+              package_version,
+              option.location,
+          )
+
+          known_vulnerabilities = tuple(
+              pypi_client.get_known_vulnerabilities(
+                  package_name,
+                  package_version,
+              ))
+          newer_version = pypi_client.get_latest_version(
+              package_name, package_version)
+          if newer_version:
+            severity = DiagnosticSeverity.Hint
+            message = f"Newer version available ({newer_version})"
+            if known_vulnerabilities:
+              message = f'{package_name} {package_version} has some known vunerabilities:\n' + '\n\n'.join(
+                  f"{v.id}\n{v.details}\n{v.link}"
+                  for v in known_vulnerabilities)
+              severity = DiagnosticSeverity.Warning
+
+            yield Diagnostic(
+                message=message,
+                range=option.location.range,
+                source="buildout",
+                severity=severity,
+                data=types.PyPIPackageInfo(
+                    latest_version=str(newer_version),
+                    url=pypi_client.get_home_page_url(
+                        package_name,
+                        package_version,
+                    ),
+                    known_vulnerabilities=known_vulnerabilities,
+                ),
+            )
