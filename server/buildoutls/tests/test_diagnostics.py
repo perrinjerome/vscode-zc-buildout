@@ -320,19 +320,18 @@ async def test_diagnostics_option_redefinition_default_value(server) -> None:
   ]
 
 
+@pytest.mark.parametrize('url', (
+    'file:///ok.cfg',
+    'file:///diagnostics/extended.cfg',
+    'file:///diagnostics/extended/buildout.cfg',
+    'file:///diagnostics/jinja.cfg',
+    'file:///diagnostics/ok_but_problems_in_extended.cfg',
+    'file:///diagnostics/option_redefinition_macro.cfg',
+    'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
+    'file:///diagnostics/recipe_any_option.cfg',
+))
 @pytest.mark.asyncio
-async def test_diagnostics_ok(server) -> None:
+async def test_diagnostics_ok(server, url) -> None:
   # no false positives
-  for url in (
-      'file:///ok.cfg',
-      'file:///diagnostics/extended.cfg',
-      'file:///diagnostics/extended/buildout.cfg',
-      'file:///diagnostics/jinja.cfg',
-      'file:///diagnostics/ok_but_problems_in_extended.cfg',
-      'file:///diagnostics/option_redefinition_macro.cfg',
-      'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
-      'file:///diagnostics/recipe_any_option.cfg',
-  ):
-    await parseAndSendDiagnostics(server, url)
-    server.publish_diagnostics.assert_called_once_with(url, [])
-    server.publish_diagnostics.reset_mock()
+  await parseAndSendDiagnostics(server, url)
+  server.publish_diagnostics.assert_called_once_with(url, [])
