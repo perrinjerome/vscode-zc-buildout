@@ -327,21 +327,22 @@ async def test_BuildoutProfile_getAllOptionReferenceSymbols(
   symbols: List[Symbol] = []
   async for symbol in buildout.getAllOptionReferenceSymbols():
     symbols.append(symbol)
-  assert [(s.referenced_section_name, s.referenced_option_name)
+  assert [(s.referenced_section_name, s.referenced_option_name,
+           s.referenced_section is not None, s.referenced_option is not None)
           for s in symbols] == [
-              ('section1', 'command'),
-              ('section2', 'command'),
-              ('section1', 'command'),
+              ('section1', 'command', True, True),
+              ('section2', 'command', True, True),
+              ('section1', 'command', True, True),
               # this is ${:command} in the source, but this had been expanded
-              ('section5', 'command'),
+              ('section5', 'command', True, True),
+              ('section7', 'circular2', True, True),
+              ('section7', 'circular1', True, True),
+              ('section8', 'recursive2', True, True),
+              ('section8', 'recursive3', True, True),
+              ('not-exists', 'not-exists', False, False),
+              ('section10', 'not-exists', True, False),
           ]
-  assert [(s.referenced_section is not None, s.referenced_option is not None)
-          for s in symbols] == [
-              (True, True),
-              (True, True),
-              (True, True),
-              (True, True),
-          ]
+
   assert {s.current_section_name for s in symbols} == {None}
   assert {s.kind for s in symbols} == {SymbolKind.OptionReference}
 
@@ -787,3 +788,30 @@ async def test_open_extends_network_fail(server: LanguageServer,
 
   assert isinstance(parsed, BuildoutProfile)
   assert list(parsed.keys()) == ['buildout']
+
+
+@pytest.mark.asyncio
+async def test_BuildoutProfile_resolve_value(
+    buildout: BuildoutProfile) -> None:
+  assert buildout.resolve_value('section5',
+                                'option') == "echo install section5"
+  assert buildout.resolve_value('section3', 'command') \
+    == "echo install section1 echo install section2"
+  assert buildout.resolve_value('section7', 'recursive1') \
+    == "recursive value"
+  assert buildout.resolve_value('section9', 'option') \
+    == "echo install section9"
+
+  # error cases
+  assert buildout.resolve_value('section3', 'option_with_section_reference') \
+    == "${section1"
+  assert buildout.resolve_value('section7', 'circular1') \
+    == "${section7:circular2}"
+  assert buildout.resolve_value('section10', 'section-not-exists') \
+    == "${not-exists:not-exists}"
+  assert buildout.resolve_value('section10', 'option-not-exists') \
+    ==  "${:not-exists}"
+  with pytest.raises(KeyError):
+    buildout.resolve_value('section1', 'option-not-exists')
+  with pytest.raises(KeyError):
+    buildout.resolve_value('section-not-exists', 'option')

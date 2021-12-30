@@ -546,31 +546,8 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
         for template_option_name in recipe.template_options:
           template_option_value = section_value.get(template_option_name)
           if template_option_value is not None:
-            template_option_value_uri = template_option_value.value
-            # expand substitutions
-            if '${' in template_option_value_uri:
-              section_value_dict = dict(section_value)
-              if '<' in section_value:
-                section_value_dict = dict(self[section_value['<'].value])
-                section_value_dict.update(dict(section_value))
-              logger.debug("We have a section reference %s in %s",
-                           template_option_value_uri, section_value_dict)
-
-              def expand_section_reference(match: Match[str]) -> str:
-                referenced_section_name = match.group(
-                    'section') or section_name
-                if referenced_section_name in self:
-                  referenced_section = self[referenced_section_name]
-                  if match.group('option') in referenced_section:
-                    return referenced_section[match.group('option')].value
-                return '\0'  # won't likely match a filename
-
-              template_option_value_uri = option_reference_strict_re.sub(
-                  expand_section_reference,
-                  template_option_value_uri,
-              )
-              logger.debug("Section reference expanded to: %s",
-                           template_option_value_uri)
+            template_option_value_uri = self.resolve_value(
+                section_name, template_option_name)
 
             # Normalize URI path, in case it contain double slashes, ./ or ..
             template_option_value_parsed = urllib.parse.urlparse(
@@ -820,6 +797,52 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     """
     return (uri.endswith('.cfg') or uri.endswith('.cfg.in')
             or uri.endswith('.cfg.j2') or uri.endswith('.cfg.jinja2'))
+
+  def resolve_value(self, section_name: str, option_name: str) -> str:
+    """Get the value of an option, after substituting references.
+
+    If substitution is not possible, the original value is returned.
+    """
+    def _get_section(section_name: str) -> BuildoutSection:
+      section = self[section_name]
+      if '<' in section:
+        macro = copy.copy(self[section['<'].value])
+        macro.update(**section)
+        return macro
+      return section
+
+    def _resolve_value(
+        section_name: str,
+        option_name: str,
+        value: str,
+        seen: Set[Tuple[str, str]],
+    ) -> str:
+      if (section_name, option_name) in seen:
+        return value
+      seen.add((section_name, option_name))
+
+      def _sub(match: Match[str]) -> str:
+        referenced_section_name = match.group('section') or section_name
+        if referenced_section_name in self:
+          referenced_section = _get_section(referenced_section_name)
+          referenced_option = match.group('option')
+          if referenced_option in referenced_section:
+            return _resolve_value(
+                referenced_section_name,
+                referenced_option,
+                referenced_section[referenced_option].value,
+                seen,
+            )
+        return value
+
+      return option_reference_strict_re.sub(_sub, value)
+
+    return _resolve_value(
+        section_name,
+        option_name,
+        _get_section(section_name)[option_name].value,
+        set(),
+    )
 
 
 class ResolvedBuildout(BuildoutProfile):
