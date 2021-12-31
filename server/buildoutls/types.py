@@ -1,5 +1,7 @@
 from typing import List
 
+from pygls.lsp.types import TextDocumentIdentifier
+
 import pydantic
 
 
@@ -20,3 +22,8 @@ class PyPIPackageInfo(pydantic.BaseModel):
 
 class OpenPypiPageCommandParams(pydantic.BaseModel):
   url: str
+
+
+class UpdateMD5SumCommandParams(pydantic.BaseModel):
+  document: TextDocumentIdentifier
+  section_name: str

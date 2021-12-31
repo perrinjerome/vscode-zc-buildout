@@ -50,7 +50,7 @@ from pygls.lsp.types.window import ShowDocumentParams
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 
-from . import buildout, code_actions, commands, diagnostic, recipes, types
+from . import buildout, code_actions, commands, diagnostic, recipes, types, md5sum
 
 server = LanguageServer()
 
@@ -95,12 +95,19 @@ async def command_open_pypi_page(
       ))
 
 
+@server.command(commands.COMMAND_UPDATE_MD5SUM)
+async def command_update_md5sum(
+    ls: LanguageServer,
+    args: List[types.UpdateMD5SumCommandParams],
+) -> None:
+  await md5sum.update_md5sum(ls, args[0])
+
+
 @server.feature(
     CODE_ACTION,
     CodeActionOptions(resolve_provider=False,
                       code_action_kinds=[
                           CodeActionKind.QuickFix,
-                          CodeActionKind.SourceOrganizeImports,
                       ]),
 )
 async def lsp_code_action(

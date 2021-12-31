@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning][semver].
 - diagnostic: report versions with known vulnerabilities
 - code action: update a python package listed in `versions` to latest version
 - code action: view a python package page on pypi
+- code action: compute md5sum of an url
 
 ### Fixed:
 

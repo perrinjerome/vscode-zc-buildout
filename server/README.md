@@ -60,6 +60,7 @@ The automatic installation does not seem to work with theia and the python egg h
 ## Code actions
 
 - update a python package from `[versions]` to its latest version on pypi
+- compute the `md5sum` of an url
 
 ## Template support
 
