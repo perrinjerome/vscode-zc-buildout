@@ -48,6 +48,7 @@ def server() -> Any:
     publish_diagnostics = mock.Mock()
     show_message = mock.Mock()
     show_message_log = mock.Mock()
+    apply_edit = mock.Mock()
 
   server = FakeServer()
 

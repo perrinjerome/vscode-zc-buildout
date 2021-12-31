@@ -21,9 +21,9 @@ from pygls.lsp.types import (
 )
 from pygls.protocol import default_serializer
 
-from ..commands import COMMAND_OPEN_PYPI_PAGE
-from ..server import command_open_pypi_page, lsp_code_action, parseAndSendDiagnostics
-from ..types import OpenPypiPageCommandParams
+from ..commands import COMMAND_OPEN_PYPI_PAGE, COMMAND_UPDATE_MD5SUM
+from ..server import command_open_pypi_page, command_update_md5sum, lsp_code_action, parseAndSendDiagnostics
+from ..types import OpenPypiPageCommandParams, UpdateMD5SumCommandParams
 
 
 @pytest.fixture
@@ -255,3 +255,256 @@ async def test_diagnostic_and_versions_code_action_latest_version(
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
   await command_open_pypi_page(server, code_actions[0].command.arguments)
+
+
+@pytest.fixture
+def example_com_response(mocked_responses: responses.RequestsMock) -> None:
+  mocked_responses.add(
+      responses.GET,
+      'https://example.com',
+      b"hello",
+  )
+
+
+@pytest.mark.parametrize(
+    'range_',
+    [
+        # on `url` value
+        Range(start=Position(line=1, character=11),
+              end=Position(line=1, character=12)),
+        Range(start=Position(line=1, character=12),
+              end=Position(line=1, character=26)),
+        # on `md5sum` value
+        Range(start=Position(line=2, character=10),
+              end=Position(line=2, character=14)),
+        Range(start=Position(line=2, character=14),
+              end=Position(line=2, character=14)),
+    ])
+@pytest.mark.asyncio
+async def test_update_md5sum_code_action(
+    range_,
+    server,
+    example_com_response,
+) -> None:
+
+  code_action_params = CodeActionParams(
+      textDocument=TextDocumentIdentifier(
+          uri='file:///code_actions/update_md5sum.cfg'),
+      range=range_,
+      context=CodeActionContext(diagnostics=()))
+
+  code_actions = await lsp_code_action(
+      server,
+      _dump_and_load(code_action_params),
+  )
+  assert isinstance(code_actions, list)
+  assert code_actions == [
+      CodeAction(
+          title='Update md5sum',
+          kind=CodeActionKind.QuickFix,
+          command=Command(
+              title='Update md5sum',
+              command=COMMAND_UPDATE_MD5SUM,
+              arguments=[
+                  UpdateMD5SumCommandParams(
+                      document=TextDocumentIdentifier(
+                          uri='file:///code_actions/update_md5sum.cfg'),
+                      section_name='section',
+                  ),
+              ],
+          ),
+      )
+  ]
+  assert isinstance(code_actions[0].command, Command)
+  assert code_actions[0].command.arguments
+  await command_update_md5sum(server, code_actions[0].command.arguments)
+  server.apply_edit.assert_called_once_with(
+      WorkspaceEdit(changes={
+          'file:///code_actions/update_md5sum.cfg': [
+              TextEdit(
+                  range=Range(
+                      start=Position(
+                          line=2,
+                          character=8,
+                      ),
+                      end=Position(
+                          line=2,
+                          character=14,
+                      ),
+                  ),
+                  new_text=' 5d41402abc4b2a76b9719d911017c592',
+              ),
+          ],
+      }, ), )
+
+
+@pytest.mark.asyncio
+async def test_update_md5sum_code_action_without_md5sum_option(
+    server,
+    example_com_response,
+) -> None:
+
+  code_action_params = CodeActionParams(
+      textDocument=TextDocumentIdentifier(
+          uri='file:///code_actions/update_md5sum_without_md5sum_option.cfg'),
+      range=Range(start=Position(line=1, character=11),
+                  end=Position(line=1, character=12)),
+      context=CodeActionContext(diagnostics=()))
+
+  code_actions = await lsp_code_action(
+      server,
+      _dump_and_load(code_action_params),
+  )
+  assert isinstance(code_actions, list)
+  assert code_actions == [
+      CodeAction(
+          title='Update md5sum',
+          kind=CodeActionKind.QuickFix,
+          command=Command(
+              title='Update md5sum',
+              command=COMMAND_UPDATE_MD5SUM,
+              arguments=[
+                  UpdateMD5SumCommandParams(
+                      document=TextDocumentIdentifier(
+                          uri=
+                          'file:///code_actions/update_md5sum_without_md5sum_option.cfg'
+                      ),
+                      section_name='section',
+                  ),
+              ],
+          ),
+      )
+  ]
+  assert isinstance(code_actions[0].command, Command)
+  assert code_actions[0].command.arguments
+  await command_update_md5sum(server, code_actions[0].command.arguments)
+  server.apply_edit.assert_called_once_with(
+      WorkspaceEdit(changes={
+          'file:///code_actions/update_md5sum_without_md5sum_option.cfg': [
+              TextEdit(
+                  range=Range(
+                      start=Position(
+                          line=2,
+                          character=0,
+                      ),
+                      end=Position(
+                          line=2,
+                          character=0,
+                      ),
+                  ),
+                  new_text='md5sum = 5d41402abc4b2a76b9719d911017c592\n',
+              ),
+          ],
+      }, ), )
+
+
+@pytest.mark.parametrize(
+    'range_',
+    [
+        # option key ( url = )
+        Range(
+            start=Position(
+                line=2,
+                character=1,
+            ),
+            end=Position(
+                line=2,
+                character=2,
+            ),
+        ),
+        # option value
+        Range(
+            start=Position(
+                line=2,
+                character=25,
+            ),
+            end=Position(
+                line=2,
+                character=26,
+            ),
+        ),
+        # section reference, but in option value
+        Range(
+            start=Position(
+                line=2,
+                character=12,
+            ),
+            end=Position(
+                line=2,
+                character=13,
+            ),
+        ),
+        # option reference, but in option value
+        Range(
+            start=Position(
+                line=2,
+                character=33,
+            ),
+            end=Position(
+                line=2,
+                character=24,
+            ),
+        ),
+    ])
+@pytest.mark.asyncio
+async def test_update_md5sum_code_action_with_substitutions(
+    server,
+    range_,
+    example_com_response,
+) -> None:
+
+  code_action_params = CodeActionParams(
+      textDocument=TextDocumentIdentifier(
+          uri=
+          'file:///code_actions/update_md5sum_code_action_with_substitutions.cfg'
+      ),
+      range=range_,
+      context=CodeActionContext(diagnostics=(), ),
+  )
+
+  code_actions = await lsp_code_action(
+      server,
+      _dump_and_load(code_action_params),
+  )
+  assert isinstance(code_actions, list)
+  assert code_actions == [
+      CodeAction(
+          title='Update md5sum',
+          kind=CodeActionKind.QuickFix,
+          command=Command(
+              title='Update md5sum',
+              command=COMMAND_UPDATE_MD5SUM,
+              arguments=[
+                  UpdateMD5SumCommandParams(
+                      document=TextDocumentIdentifier(
+                          uri=
+                          'file:///code_actions/update_md5sum_code_action_with_substitutions.cfg'
+                      ),
+                      section_name='section',
+                  ),
+              ],
+          ),
+      )
+  ]
+  assert isinstance(code_actions[0].command, Command)
+  assert code_actions[0].command.arguments
+  await command_update_md5sum(server, code_actions[0].command.arguments)
+  server.apply_edit.assert_called_once_with(
+      WorkspaceEdit(changes={
+          'file:///code_actions/update_md5sum_code_action_with_substitutions.cfg':
+          [
+              TextEdit(
+                  range=Range(
+                      start=Position(
+                          line=3,
+                          character=8,
+                      ),
+                      end=Position(
+                          line=4,
+                          character=0,
+                      ),
+                  ),
+                  new_text=' 5d41402abc4b2a76b9719d911017c592',
+              ),
+          ],
+      }, ), )
