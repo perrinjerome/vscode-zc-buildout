@@ -50,7 +50,7 @@
           "scope": "application",
           "type": "string",
           "default": "python3",
-          "description": "Path of python installation to use language server. This needs to be python >= 3.6"
+          "description": "Path of python installation to use language server. This needs to be python >= 3.7"
         },
         "zc-buildout.language.server.arguments": {
           "scope": "application",

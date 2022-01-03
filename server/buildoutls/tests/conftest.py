@@ -7,7 +7,6 @@ import pytest
 import responses
 from pygls.workspace import Document, Workspace
 
-from .. import server as _server_module
 from ..buildout import (
     _extends_dependency_graph,
     _parse_cache,
@@ -77,11 +76,8 @@ def server() -> Any:
     _extends_dependency_graph.clear()
 
   clearCaches()
-  old_debounce_delay = _server_module.DEBOUNCE_DELAY
-  _server_module.DEBOUNCE_DELAY = 0
   with os_path_exists_patcher:
     yield server
-  _server_module.DEBOUNCE_DELAY = old_debounce_delay
   server.publish_diagnostics.reset_mock()
   server.show_message.reset_mock()
   server.show_message_log.reset_mock()

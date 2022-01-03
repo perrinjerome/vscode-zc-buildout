@@ -1,4 +1,3 @@
-import asyncio
 import itertools
 import logging
 import os
@@ -50,7 +49,7 @@ from pygls.lsp.types.window import ShowDocumentParams
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 
-from . import buildout, code_actions, commands, diagnostic, recipes, types, md5sum
+from . import buildout, code_actions, commands, diagnostic, recipes, types, md5sum, utils
 
 server = LanguageServer()
 
@@ -58,8 +57,6 @@ reference_start = '${'
 reference_re = re.compile(
     r'\${(?P<section>[-a-zA-Z0-9 ._]*):(?P<option>[-a-zA-Z0-9 ._]+)}')
 logger = logging.getLogger(__name__)
-
-DEBOUNCE_DELAY = 0.3
 
 
 def getOptionValue(
@@ -72,11 +69,11 @@ def getOptionValue(
   return option.value
 
 
+@utils.singleton_task
 async def parseAndSendDiagnostics(
     ls: LanguageServer,
     uri: str,
 ) -> None:
-  await asyncio.sleep(DEBOUNCE_DELAY)
   diagnostics = []
   async for diag in diagnostic.getDiagnostics(ls, uri):
     diagnostics.append(diag)
@@ -103,6 +100,7 @@ async def command_update_md5sum(
   await md5sum.update_md5sum(ls, args[0])
 
 
+@utils.singleton_task
 @server.feature(
     CODE_ACTION,
     CodeActionOptions(resolve_provider=False,
@@ -142,12 +140,12 @@ async def did_change_watched_file(
     buildout.clearCache(change.uri)
 
 
+@utils.singleton_task
 @server.feature(DOCUMENT_SYMBOL)
 async def lsp_symbols(
     ls: LanguageServer,
     params: DocumentSymbolParams,
 ) -> List[DocumentSymbol]:
-  await asyncio.sleep(DEBOUNCE_DELAY)
   symbols: List[DocumentSymbol] = []
 
   parsed = await buildout.parse(
@@ -204,12 +202,12 @@ async def lsp_symbols(
   return symbols
 
 
+@utils.singleton_task
 @server.feature(COMPLETION, CompletionOptions(trigger_characters=["{", ":"]))
 async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
 ) -> Optional[List[CompletionItem]]:
-  await asyncio.sleep(DEBOUNCE_DELAY)
   items: List[CompletionItem] = []
   doc = ls.workspace.get_document(params.text_document.uri)
 
@@ -532,12 +530,12 @@ async def lsp_completion(
   return items
 
 
+@utils.singleton_task
 @server.feature(DEFINITION)
 async def lsp_definition(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
 ) -> List[Location]:
-  await asyncio.sleep(DEBOUNCE_DELAY)
   parsed = await buildout.open(ls, params.text_document.uri)
   if parsed is None:
     return []
@@ -575,6 +573,7 @@ async def lsp_definition(
   return locations
 
 
+@utils.singleton_task
 @server.feature(REFERENCES)
 async def lsp_references(
     server: LanguageServer,
@@ -636,12 +635,12 @@ async def lsp_references(
   return references
 
 
+@utils.singleton_task
 @server.feature(HOVER)
 async def lsp_hover(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
 ) -> Optional[Hover]:
-  await asyncio.sleep(DEBOUNCE_DELAY)
   parsed = await buildout.open(ls, params.text_document.uri)
   if parsed is None:
     return None
@@ -660,12 +659,12 @@ async def lsp_hover(
   return Hover(contents=f'```\n{hover_text}\n```')
 
 
+@utils.singleton_task
 @server.feature(DOCUMENT_LINK)
 async def lsp_document_link(
     ls: LanguageServer,
     params: DocumentLinkParams,
 ) -> List[DocumentLink]:
-  await asyncio.sleep(DEBOUNCE_DELAY)
   links: List[DocumentLink] = []
   uri = params.text_document.uri
   parsed_buildout = await buildout.parse(ls, uri)

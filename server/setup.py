@@ -3,7 +3,7 @@
 
 from os import path
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 here = path.abspath(path.dirname(__file__))
 
@@ -28,13 +28,14 @@ setup(
     ],
     keywords='zc.buildout languageserver',
     packages=['buildoutls'],
-    python_requires='>=3.6.*',
+    python_requires='>=3.7.*',
     install_requires=[
         'cachetools',
         'pygls >= 0.10.1',
         'requests',
         'packaging',
         'zc.buildout',
+        'typing-extensions',
     ],
     extras_require={
         'test': [
