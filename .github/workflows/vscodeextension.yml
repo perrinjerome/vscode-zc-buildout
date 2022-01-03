@@ -35,3 +35,16 @@ jobs:
         run: xvfb-run npm run test
       - name: build extension package
         run: npm run build package
+      - name: List files in extension
+        run: npx vsce ls
+      - name: sanity check extension content
+        run: |
+          npx vsce ls | grep package.json
+          npx vsce ls | grep out/extension.js
+          npx vsce ls | grep server/buildoutls/buildout.py
+      - name: Upload extension as a github action artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: extension-vsix
+          path: "*.vsix"
+          if-no-files-found: error
