@@ -14,9 +14,14 @@ and this project adheres to [Semantic Versioning][semver].
 - code action: view a python package page on pypi
 - code action: compute md5sum of an url
 
+### Removed
+
+- support for python 3.6, minimal supported version is now 3.7
+
 ### Fixed:
 
 - completions: don't offer completions in comments
+- fix performance issues by cancelling pending tasks
 
 ## [0.5.0] - 2021-03-28
 
