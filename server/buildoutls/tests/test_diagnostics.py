@@ -326,9 +326,12 @@ async def test_diagnostics_option_redefinition_default_value(server) -> None:
     'file:///diagnostics/extended/buildout.cfg',
     'file:///diagnostics/jinja.cfg',
     'file:///diagnostics/ok_but_problems_in_extended.cfg',
+    'file:///diagnostics/ok_extends_with_substitutions.cfg',
+    'file:///diagnostics/ok_extends_from_url.cfg',
     'file:///diagnostics/option_redefinition_macro.cfg',
     'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
     'file:///diagnostics/recipe_any_option.cfg',
+    'file:///diagnostics/ok_parts_with_substitutions.cfg',
 ))
 @pytest.mark.asyncio
 async def test_diagnostics_ok(server, url) -> None:
