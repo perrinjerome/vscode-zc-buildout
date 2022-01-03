@@ -56,7 +56,7 @@ describe("Installation", () => {
 
     await activateExtension(docUri);
 
-    for (let retries = 0; retries < 10; retries++) {
+    for (let retries = 0; retries < 30; retries++) {
       if (showQuickPickMock.called) break;
 
       sleep(1000);
