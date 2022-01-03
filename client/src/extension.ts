@@ -128,7 +128,7 @@ export async function activate() {
       `${settings.python.executable} -m pip install --user -e "${__dirname}/../../server/"
 `
     );
-    for (let retries = 0; retries < 5; retries++) {
+    for (let retries = 0; retries < 60; retries++) {
       await shortDelay();
       installationOK = isExtensionInstalled(settings.python.executable);
     }
