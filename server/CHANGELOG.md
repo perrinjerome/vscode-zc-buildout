@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Added:
 
+### Fixed:
+
+## [0.6.0] - 2022-01-04
+
+### Added:
+
 - diagnostic: report versions with known vulnerabilities
 - code action: update a python package listed in `versions` to latest version
 - code action: view a python package page on pypi
@@ -96,4 +102,5 @@ and this project adheres to [Semantic Versioning][semver].
 [0.3.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.2.1...v0.3.0
 [0.4.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.3.0...v0.4.0
 [0.5.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.4.0...v0.5.0
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.5.0...master
+[0.6.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.5.0...v0.6.0
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.0...master
