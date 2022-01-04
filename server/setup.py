@@ -32,7 +32,7 @@ setup(
     install_requires=[
         'cachetools',
         'pygls >= 0.10.1',
-        'requests',
+        'aiohttp',
         'packaging',
         'zc.buildout',
         'typing-extensions',
@@ -42,7 +42,7 @@ setup(
             'coverage',
             'pytest',
             'pytest-asyncio',
-            'responses',
+            'aioresponses',
         ],
     },
     entry_points={

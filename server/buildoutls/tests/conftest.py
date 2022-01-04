@@ -4,7 +4,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
-import responses
+import aioresponses  # type: ignore
 from pygls.workspace import Document, Workspace
 
 from ..buildout import (
@@ -17,8 +17,8 @@ from ..buildout import (
 
 @pytest.fixture
 def mocked_responses():
-  with responses.RequestsMock() as rsps:
-    yield rsps
+  with aioresponses.aioresponses() as m:
+    yield m
 
 
 @pytest.fixture
