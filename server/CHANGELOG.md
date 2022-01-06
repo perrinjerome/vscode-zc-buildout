@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Fixed:
 
+## [0.6.2] - 2022-01-06
+
+### Fixed:
+
+- fix a packaging mistake with the vscode extension
+
 ## [0.6.1] - 2022-01-04
 
 ### Fixed:
@@ -110,4 +116,5 @@ and this project adheres to [Semantic Versioning][semver].
 [0.5.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.4.0...v0.5.0
 [0.6.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.5.0...v0.6.0
 [0.6.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.0...v0.6.1
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.1...master
+[0.6.2]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.1...v0.6.2
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.2...master

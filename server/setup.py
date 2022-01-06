@@ -15,7 +15,7 @@ with open(path.join(here, 'CHANGELOG.md'), encoding='utf-8') as f:
 
 setup(
     name='zc.buildout.languageserver',
-    version='0.6.1',
+    version='0.6.2',
     description='A language server for zc.buildout',
     long_description=long_description,
     long_description_content_type='text/markdown',
