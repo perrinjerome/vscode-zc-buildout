@@ -100,7 +100,6 @@ async def command_update_md5sum(
   await md5sum.update_md5sum(ls, args[0])
 
 
-@utils.singleton_task
 @server.feature(
     CODE_ACTION,
     CodeActionOptions(resolve_provider=False,
@@ -108,6 +107,7 @@ async def command_update_md5sum(
                           CodeActionKind.QuickFix,
                       ]),
 )
+@utils.singleton_task
 async def lsp_code_action(
     ls: LanguageServer,
     params: CodeActionParams) -> Optional[List[Union[Command, CodeAction]]]:
@@ -140,8 +140,8 @@ async def did_change_watched_file(
     buildout.clearCache(change.uri)
 
 
-@utils.singleton_task
 @server.feature(DOCUMENT_SYMBOL)
+@utils.singleton_task
 async def lsp_symbols(
     ls: LanguageServer,
     params: DocumentSymbolParams,
@@ -202,8 +202,8 @@ async def lsp_symbols(
   return symbols
 
 
-@utils.singleton_task
 @server.feature(COMPLETION, CompletionOptions(trigger_characters=["{", ":"]))
+@utils.singleton_task
 async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
@@ -530,8 +530,8 @@ async def lsp_completion(
   return items
 
 
-@utils.singleton_task
 @server.feature(DEFINITION)
+@utils.singleton_task
 async def lsp_definition(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -573,8 +573,8 @@ async def lsp_definition(
   return locations
 
 
-@utils.singleton_task
 @server.feature(REFERENCES)
+@utils.singleton_task
 async def lsp_references(
     server: LanguageServer,
     params: TextDocumentPositionParams,
@@ -635,8 +635,8 @@ async def lsp_references(
   return references
 
 
-@utils.singleton_task
 @server.feature(HOVER)
+@utils.singleton_task
 async def lsp_hover(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -659,8 +659,8 @@ async def lsp_hover(
   return Hover(contents=f'```\n{hover_text}\n```')
 
 
-@utils.singleton_task
 @server.feature(DOCUMENT_LINK)
+@utils.singleton_task
 async def lsp_document_link(
     ls: LanguageServer,
     params: DocumentLinkParams,

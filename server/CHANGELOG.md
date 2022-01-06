@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed:
 
 - completions: don't offer completions in comments
-- fix performance issues by cancelling pending tasks
+- ~~fix performance issues by cancelling pending tasks~~ actually the fix was wrong
 
 ## [0.5.0] - 2021-03-28
 
