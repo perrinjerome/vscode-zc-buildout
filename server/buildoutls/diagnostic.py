@@ -258,10 +258,11 @@ async def getDiagnostics(
               option.location,
           )
 
-          known_vulnerabilities = await pypi_client.get_known_vulnerabilities(
-              package_name,
-              package_version,
-          )
+          known_vulnerabilities = tuple(
+              pypi_client.get_known_vulnerabilities(
+                  package_name,
+                  package_version,
+              ))
           newer_version = pypi_client.get_latest_version(
               package_name, package_version)
           if newer_version:

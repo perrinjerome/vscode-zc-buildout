@@ -2,9 +2,10 @@ import io
 import textwrap
 from typing import List
 from unittest import mock
-import aiohttp
 
 import pytest
+import requests
+import responses
 from pygls.lsp.types import Location, Position, Range
 from pygls.server import LanguageServer
 
@@ -747,12 +748,14 @@ async def test_open_macro(server: LanguageServer):
 
 @pytest.mark.asyncio
 async def test_open_extends_network(server: LanguageServer, mocked_responses):
-  mocked_responses.get('https://example.com/profiles/buildout.cfg',
+  mocked_responses.add(responses.GET,
+                       'https://example.com/profiles/buildout.cfg',
                        body=textwrap.dedent('''\
         [buildout]
         extends = ./other.cfg
         '''))
-  mocked_responses.get('https://example.com/profiles/other.cfg',
+  mocked_responses.add(responses.GET,
+                       'https://example.com/profiles/other.cfg',
                        body=textwrap.dedent('''\
         [section]
         option = value
@@ -772,9 +775,10 @@ async def test_open_extends_network(server: LanguageServer, mocked_responses):
 @pytest.mark.asyncio
 async def test_open_extends_network_fail(server: LanguageServer,
                                          mocked_responses):
-  # TODO
-  mocked_responses.get('https://example.com/profiles/buildout.cfg',
-                       body=aiohttp.ClientError('random network error'))
+  mocked_responses.add(
+      responses.GET,
+      'https://example.com/profiles/buildout.cfg',
+      body=requests.exceptions.ConnectionError('random network error'))
 
   parsed = await open(
       ls=server,

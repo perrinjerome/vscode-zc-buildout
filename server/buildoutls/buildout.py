@@ -39,7 +39,7 @@ from typing import (
     cast,
 )
 
-import aiohttp
+import requests
 from pygls.lsp.types import Location, Position, Range
 from pygls.server import LanguageServer
 from pygls.workspace import Document
@@ -55,7 +55,7 @@ from zc.buildout.configparser import (
 from . import jinja, recipes
 
 logger = logging.getLogger(__name__)
-session = aiohttp.ClientSession()
+requests_session = requests.Session()
 
 # Matches a reference like ${section:option}
 # We also tolerate ${section: without option or the ending } to generate completions.
@@ -917,10 +917,8 @@ async def parse(
       'https',
   ):
     try:
-      async with session:
-        resp = await session.get(uri)
-        fp = io.StringIO(await resp.text())
-    except aiohttp.ClientError:
+      fp = io.StringIO(requests_session.get(uri).text)
+    except requests.exceptions.ConnectionError:
       fp = io.StringIO('')
   else:
     document = ls.workspace.get_document(uri)

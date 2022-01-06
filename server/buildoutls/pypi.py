@@ -1,15 +1,11 @@
 import datetime
 import logging
-from typing import AsyncIterable, Iterable, List, Optional, TYPE_CHECKING
+from typing import Iterable, Optional
 
 import cachetools
-if TYPE_CHECKING:
-  import cachetools as asyncache
-else:
-  import asyncache
 import packaging.version
 import pkg_resources
-import aiohttp
+import requests
 
 from .types import KnownVulnerability
 
@@ -19,25 +15,23 @@ logger = logging.getLogger(__name__)
 class PyPIClient:
   def __init__(self, package_index_url: str = 'https://pypi.org'):
     self._package_index_url = package_index_url
-    self._session = aiohttp.ClientSession()
+    self._session = requests.Session()
 
-  @asyncache.cached(
+  @cachetools.cached(
       cachetools.TTLCache(
           maxsize=2 << 10,
           ttl=datetime.timedelta(hours=2).total_seconds(),
       ))
-  async def get_latest_version(
+  def get_latest_version(
       self,
       project: str,
       version: str,
   ) -> Optional[packaging.version.Version]:
     try:
       # https://warehouse.pypa.io/api-reference/json.html#project
-      async with self._session as session:
-        resp = await session.get(
-            f'{self._package_index_url}/pypi/{project}/json')
-        project_data = await resp.json()
-    except (aiohttp.ClientError, ValueError):
+      project_data = self._session.get(
+          f'{self._package_index_url}/pypi/{project}/json').json()
+    except (requests.RequestException, ValueError):
       logger.warning(
           'Error fetching latest version for %s',
           project,
@@ -50,33 +44,28 @@ class PyPIClient:
       return latest
     return None
 
-  @asyncache.cached(
+  @cachetools.cached(
       cachetools.TTLCache(
           maxsize=2 << 10,
           ttl=datetime.timedelta(hours=2).total_seconds(),
       ))
-  async def get_known_vulnerabilities(
+  def get_known_vulnerabilities(
       self,
       project: str,
       version: str,
   ) -> Iterable[KnownVulnerability]:
-    kvs: List[KnownVulnerability] = []
-    async for kv in self.__get_known_vulnerabilities(project, version):
-      kvs.append(kv)
-    return tuple(kvs)
+    return tuple(self.__get_known_vulnerabilities(project, version))
 
-  async def __get_known_vulnerabilities(
+  def __get_known_vulnerabilities(
       self,
       project: str,
       version: str,
-  ) -> AsyncIterable[KnownVulnerability]:
+  ) -> Iterable[KnownVulnerability]:
     try:
       # https://warehouse.pypa.io/api-reference/json.html#release
-      async with self._session as session:
-        resp = await session.get(
-            f'{self._package_index_url}/pypi/{project}/{version}/json')
-        project_data = await resp.json()
-    except (aiohttp.ClientError, ValueError):
+      project_data = self._session.get(
+          f'{self._package_index_url}/pypi/{project}/{version}/json').json()
+    except (requests.RequestException, ValueError):
       logger.warning(
           'Error fetching project release %s %s',
           project,
