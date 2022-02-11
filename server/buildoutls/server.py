@@ -1,11 +1,15 @@
+import asyncio
+import datetime
 import itertools
+import json
 import logging
 import os
 import pathlib
 import re
 import urllib.parse
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
+import pygls.protocol
 from pygls.lsp.methods import (
     CODE_ACTION,
     COMPLETION,
@@ -49,9 +53,101 @@ from pygls.lsp.types.window import ShowDocumentParams
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 
-from . import buildout, code_actions, commands, diagnostic, recipes, types, md5sum, utils
+from . import (
+    buildout,
+    code_actions,
+    commands,
+    diagnostic,
+    md5sum,
+    protocol_recorder,
+    recipes,
+    types,
+    utils,
+)
 
-server = LanguageServer()
+import uuid
+from asyncio import Future
+
+
+class RecordedLanguageServerProtocol(pygls.protocol.LanguageServerProtocol):
+  protocol_recorder = protocol_recorder.ProtocolRecorder(
+      '/Users/jerome/Documents/nexedi/vscode-buildout-extension/server/buildoutls/procol_recorder.fs',
+      str(datetime.datetime.now()))
+
+  # XXX methods to override:
+  # _send_data
+  # data_received
+
+  def notify(self, method: str, params: Any = None) -> Any:
+    message = protocol_recorder.Message(
+        id='notification',
+        kind=protocol_recorder.MessageKind.Notification,
+        payload=json.dumps(params))
+    self.protocol_recorder.store_message(message)
+    return super().notify(method, params)
+
+  def _send_response(
+      self,
+      msg_id: str,
+      result: Any = None,
+      error: Any = None,
+  ) -> None:
+    message = protocol_recorder.Message(
+        id=msg_id,
+        kind=protocol_recorder.MessageKind.Response,
+        payload=json.dumps(dict(result=result, error=error)))
+    self.protocol_recorder.store_message(message)
+    super()._send_response(msg_id, result,
+                           error)  # type:ignore[no-untyped-call]
+
+  def send_request(
+      self,
+      method: str,
+      params: Any = None,
+      callback: Any = None,
+  ) -> Any:
+    msg_id = str(uuid.uuid4())
+    message = protocol_recorder.Message(
+        id=msg_id,
+        kind=protocol_recorder.MessageKind.Request,
+        payload=json.dumps(params))
+    self.protocol_recorder.store_message(message)
+
+    pygls.protocol.logger.debug('Sending request with id "%s": %s %s', msg_id,
+                                method, params)
+
+    request = pygls.protocol.JsonRPCRequestMessage(
+        id=msg_id,
+        jsonrpc=pygls.protocol.JsonRPCProtocol.VERSION,
+        method=method,
+        params=params)
+
+    future: Future[Any] = Future()
+    # If callback function is given, call it when result is received
+    if callback:
+
+      def wrapper(future: Future[Any]) -> None:
+        result = future.result()
+        pygls.protocol.logger.info('Client response for %s received: %s',
+                                   params, result)
+        callback(result)
+
+      future.add_done_callback(wrapper)
+
+    self._server_request_futures[msg_id] = future
+    self._send_data(request)  # type: ignore[no-untyped-call]
+
+    message = protocol_recorder.Message(
+        id=msg_id,
+        kind=protocol_recorder.MessageKind.Response,
+        payload=json.dumps(dict(method=method, params=params)))
+    self.protocol_recorder.store_message(message)
+
+    return future
+
+
+server = LanguageServer(max_workers=10, )
+#                        protocol_cls=RecordedLanguageServerProtocol)
 
 reference_start = '${'
 reference_re = re.compile(
@@ -75,6 +171,7 @@ async def parseAndSendDiagnostics(
     uri: str,
 ) -> None:
   diagnostics = []
+  await asyncio.sleep(0.001)
   async for diag in diagnostic.getDiagnostics(ls, uri):
     diagnostics.append(diag)
   ls.publish_diagnostics(uri, diagnostics)
@@ -210,6 +307,7 @@ async def lsp_completion(
 ) -> Optional[List[CompletionItem]]:
   items: List[CompletionItem] = []
   doc = ls.workspace.get_document(params.text_document.uri)
+  await asyncio.sleep(0)
 
   def getSectionReferenceCompletionTextEdit(
       doc: Document,
@@ -635,7 +733,7 @@ async def lsp_references(
   return references
 
 
-@server.feature(HOVER)
+#@server.feature(HOVER)
 @utils.singleton_task
 async def lsp_hover(
     ls: LanguageServer,
