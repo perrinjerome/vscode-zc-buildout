@@ -14,6 +14,7 @@
 #
 ##############################################################################
 
+import asyncio
 import collections
 import copy
 import enum
@@ -911,6 +912,7 @@ async def parse(
   if uri in _parse_cache:
     return copy.deepcopy(_parse_cache[uri])
 
+  await asyncio.sleep(0)
   parsed_uri = urllib.parse.urlparse(uri)
   if parsed_uri.scheme in (
       'http',
@@ -1298,13 +1300,13 @@ async def _open(
 
   This is equivalent of zc.buildout.buildout._open
   """
-  logger.debug("_open %r %r", base, uri)
+  #logger.debug("_open %r %r", base, uri)
 
   if not _isurl(uri):
     assert base
     uri = urllib.parse.urljoin(base, uri)
   if uri in _resolved_buildout_cache:
-    logger.debug("_open %r was in cache", uri)
+    #logger.debug("_open %r was in cache", uri)
     return copy.deepcopy(_resolved_buildout_cache[uri])
   base = uri[:uri.rfind('/')] + '/'
 
