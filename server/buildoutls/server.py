@@ -6,24 +6,49 @@ import os
 import pathlib
 import re
 import urllib.parse
-from asyncio import Future
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 import pydantic
 import pygls.protocol
-from pygls.lsp.methods import (CODE_ACTION, COMPLETION, DEFINITION,
-                               DOCUMENT_LINK, DOCUMENT_SYMBOL, HOVER,
-                               REFERENCES, TEXT_DOCUMENT_DID_CHANGE,
-                               TEXT_DOCUMENT_DID_OPEN,
-                               WORKSPACE_DID_CHANGE_WATCHED_FILES)
+from pygls.lsp.methods import (
+    CODE_ACTION,
+    COMPLETION,
+    DEFINITION,
+    DOCUMENT_LINK,
+    DOCUMENT_SYMBOL,
+    HOVER,
+    REFERENCES,
+    TEXT_DOCUMENT_DID_CHANGE,
+    TEXT_DOCUMENT_DID_OPEN,
+    WORKSPACE_DID_CHANGE_WATCHED_FILES,
+)
 from pygls.lsp.types import (
-    CodeAction, CodeActionKind, CodeActionOptions, CodeActionParams, Command,
-    CompletionItem, CompletionItemKind, CompletionOptions, CompletionParams,
-    DidChangeTextDocumentParams, DidChangeWatchedFilesParams,
-    DidOpenTextDocumentParams, DocumentLink, DocumentLinkParams,
-    DocumentSymbol, DocumentSymbolParams, Hover, Location, MarkupContent,
-    MarkupKind, Position, Range, SymbolKind, TextDocumentPositionParams,
-    TextEdit)
+    CodeAction,
+    CodeActionKind,
+    CodeActionOptions,
+    CodeActionParams,
+    Command,
+    CompletionItem,
+    CompletionItemKind,
+    CompletionOptions,
+    CompletionParams,
+    DidChangeTextDocumentParams,
+    DidChangeWatchedFilesParams,
+    DidOpenTextDocumentParams,
+    DocumentLink,
+    DocumentLinkParams,
+    DocumentSymbol,
+    DocumentSymbolParams,
+    Hover,
+    Location,
+    MarkupContent,
+    MarkupKind,
+    Position,
+    Range,
+    SymbolKind,
+    TextDocumentPositionParams,
+    TextEdit,
+)
 from pygls.lsp.types.window import ShowDocumentParams
 from pygls.server import LanguageServer
 from pygls.workspace import Document
@@ -34,6 +59,7 @@ from . import (
     commands,
     diagnostic,
     md5sum,
+    protocol,
     recipes,
     types,
     utils,
@@ -54,115 +80,8 @@ class StatsCollectingLanguageServerProtocol(
     super().__init__(server)
 
 
-# https://microsoft.github.io/language-server-protocol/specifications/specification-current/#cancelRequest
-# A request that got canceled still needs to return from the server and send a
-# response back. It can not be left open / hanging. This is in line with the
-# JSON RPC protocol that requires that every request sends a response back.
-# In addition it allows for returning partial results on cancel. If the request
-# returns an error response on cancellation it is advised to set the error code
-# to ErrorCodes.RequestCancelled.
-
-from pygls.lsp.types.basic_structures import (JsonRpcMessage,
-                                              JsonRPCNotification,
-                                              JsonRPCRequestMessage,
-                                              JsonRPCResponseMessage)
-
-JsonRPCMessageType = Union[JsonRPCNotification, JsonRPCRequestMessage,
-                           JsonRPCResponseMessage]
-
-class CancelledJsonRPCRequestMessage(JsonRpcMessage):
-  """A request that was cancelled"""
-  id: Union[int, str]
-  method: str
-
-
-CancellableQueueItemType = Union[JsonRPCMessageType,
-                                           CancelledJsonRPCRequestMessage]
-class CancellableQueue(asyncio.Queue[CancellableQueueItemType]):
-  """LIFO queue 
-  """
-  _queue: List[CancellableQueueItemType]
-
-  def cancel(self, msg_id: Union[int, str]) -> None:
-    """Mark a message in the queue as cancelled.
-    """
-    for i, item in enumerate(self._queue):
-      if isinstance(item, JsonRPCRequestMessage) and item.id == msg_id:
-        self._queue[i] = CancelledJsonRPCRequestMessage(
-            jsonrpc=item.jsonrpc,
-            id=msg_id,
-            method=item.method,
-        )
-        logger.debug('Cancelled pending request %s', msg_id)
-        break
-    else:
-      logger.debug(
-          'Warning: received cancellation for request %s not in the queue',
-          msg_id)
-
-  def _init(self, maxsize: int) -> None:
-    self._queue = []
-
-  def _put(self, item: CancellableQueueItemType) -> None:
-    self._queue.append(item)
-
-  def _get(self) -> CancellableQueueItemType:
-    return self._queue.pop()
-
-
-class CancellableQueueLanguageServerProtocol(
-    pygls.protocol.LanguageServerProtocol):
-  """Extension to pygls default LanguageServerProtocol with better support for
-  request cancelled by the client.
-  
-  The general approach is that we use a LIFO queue of messages and a worker
-  coroutine to process the messages.
-  When a new request, notification or response message is received, instead
-  of processing it directly, we put it in the queue and keep reading next
-  messages.
-
-  If the notification is a cancel notification, we go through the queue to
-  mark the message as cancelled before it get processed.
-  """
-  _server: LanguageServer
-
-  def __init__(self, server: LanguageServer):
-    super().__init__(server)
-    self._job_queue = CancellableQueue()
-    self._server.loop.create_task(self.worker())
-
-  def _procedure_handler(
-      self,
-      message: Union[JsonRPCNotification, JsonRPCRequestMessage,
-                     JsonRPCResponseMessage],
-  ) -> None:
-    self._job_queue.put_nowait(message)
-
-  def _handle_cancel_notification(self, msg_id: Union[int, str]) -> None:
-    self._job_queue.cancel(msg_id)
-    super()._handle_cancel_notification(msg_id) # type: ignore
-
-  async def worker(self) -> None:
-    # TODO: cleanup
-    import concurrent.futures
-    while not self._shutdown:
-      with concurrent.futures.ProcessPoolExecutor() as pool:
-
-        job = await self._job_queue.get()
-        await asyncio.sleep(0.01)
-        if isinstance(job, CancelledJsonRPCRequestMessage):
-          self._send_response(  # type: ignore
-              job.id,
-              result=None,
-              error=pygls.exceptions.JsonRpcRequestCancelled(), # xxxtype: ignore
-          )
-        else:
-          super()._procedure_handler(job)  # type: ignore
-        self._job_queue.task_done()
-
-
 server = LanguageServer(max_workers=10,
-                        protocol_cls=CancellableQueueLanguageServerProtocol)
+                        protocol_cls=protocol.CancellableQueueLanguageServerProtocol)
 
 
 @server.command('dumpDebugStats')
@@ -321,7 +240,6 @@ async def lsp_symbols(
 
 
 @server.feature(COMPLETION, CompletionOptions(trigger_characters=["{", ":"]))
-#@utils.singleton_task
 async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
