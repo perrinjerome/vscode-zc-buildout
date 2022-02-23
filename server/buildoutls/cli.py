@@ -48,12 +48,24 @@ def main() -> None:
     )
     logging.getLogger().propagate = False
 
+  trace_file = options.tracefile
+  if trace_file:
+    from viztracer import VizTracer  # type: ignore
+
+    tracer = VizTracer()
+    tracer.start()
+    import atexit
+    def save_trace() -> None:
+      tracer.stop()
+      tracer.save(trace_file)
+    atexit.register(save_trace)
+
   if options.tcp:
     host = 'localhost'
     port = options.tcp
     if ':' in options.tcp:
       host, port = options.tcp.split(':')
     print('Listening on {}:{}'.format(host, port))
-    server.start_tcp(host, int(port))  # type: ignore
+    server.start_tcp(host, int(port))
   else:
-    server.start_io()  # type: ignore
+    server.start_io()
