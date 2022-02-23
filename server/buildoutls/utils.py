@@ -54,8 +54,7 @@ def singleton_task(
           time.perf_counter() - start,
          # exc_info=True,
       )
-      return []
-            #raise
+      raise
     finally:
       pass
       if 0:
