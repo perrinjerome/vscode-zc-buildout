@@ -70,7 +70,8 @@ from asyncio import Future
 
 
 class RecordedLanguageServerProtocol(pygls.protocol.LanguageServerProtocol):
-  protocol_recorder = protocol_recorder.ProtocolRecorder(
+  if 0:
+    protocol_recorder = protocol_recorder.ProtocolRecorder(
       '/Users/jerome/Documents/nexedi/vscode-buildout-extension/server/buildoutls/procol_recorder.fs',
       str(datetime.datetime.now()))
 
@@ -149,6 +150,12 @@ class RecordedLanguageServerProtocol(pygls.protocol.LanguageServerProtocol):
 server = LanguageServer(max_workers=10, )
 #                        protocol_cls=RecordedLanguageServerProtocol)
 
+
+@server.command('dumpDebugStats')
+def dump_debug_stats(ls:LanguageServer, *args):
+  ls.dump_debug_stats()
+
+
 reference_start = '${'
 reference_re = re.compile(
     r'\${(?P<section>[-a-zA-Z0-9 ._]*):(?P<option>[-a-zA-Z0-9 ._]+)}')
@@ -171,7 +178,7 @@ async def parseAndSendDiagnostics(
     uri: str,
 ) -> None:
   diagnostics = []
-  await asyncio.sleep(0.001)
+  await asyncio.sleep(0.1)
   async for diag in diagnostic.getDiagnostics(ls, uri):
     diagnostics.append(diag)
   ls.publish_diagnostics(uri, diagnostics)
@@ -204,7 +211,7 @@ async def command_update_md5sum(
                           CodeActionKind.QuickFix,
                       ]),
 )
-@utils.singleton_task
+#@utils.singleton_task
 async def lsp_code_action(
     ls: LanguageServer,
     params: CodeActionParams) -> Optional[List[Union[Command, CodeAction]]]:
@@ -238,7 +245,7 @@ async def did_change_watched_file(
 
 
 @server.feature(DOCUMENT_SYMBOL)
-@utils.singleton_task
+#@utils.singleton_task
 async def lsp_symbols(
     ls: LanguageServer,
     params: DocumentSymbolParams,
@@ -300,14 +307,14 @@ async def lsp_symbols(
 
 
 @server.feature(COMPLETION, CompletionOptions(trigger_characters=["{", ":"]))
-@utils.singleton_task
+#@utils.singleton_task
 async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
 ) -> Optional[List[CompletionItem]]:
   items: List[CompletionItem] = []
   doc = ls.workspace.get_document(params.text_document.uri)
-  await asyncio.sleep(0)
+  await asyncio.sleep(0.02)
 
   def getSectionReferenceCompletionTextEdit(
       doc: Document,
@@ -629,7 +636,7 @@ async def lsp_completion(
 
 
 @server.feature(DEFINITION)
-@utils.singleton_task
+#@utils.singleton_task
 async def lsp_definition(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -672,7 +679,7 @@ async def lsp_definition(
 
 
 @server.feature(REFERENCES)
-@utils.singleton_task
+#@utils.singleton_task
 async def lsp_references(
     server: LanguageServer,
     params: TextDocumentPositionParams,
@@ -733,8 +740,8 @@ async def lsp_references(
   return references
 
 
-#@server.feature(HOVER)
-@utils.singleton_task
+@server.feature(HOVER)
+#@utils.singleton_task
 async def lsp_hover(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -758,7 +765,7 @@ async def lsp_hover(
 
 
 @server.feature(DOCUMENT_LINK)
-@utils.singleton_task
+#@utils.singleton_task
 async def lsp_document_link(
     ls: LanguageServer,
     params: DocumentLinkParams,

@@ -16,8 +16,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-logging.getLogger('pygls.protocol').setLevel(logging.CRITICAL)
+#logging.getLogger('pygls.protocol').setLevel(logging.CRITICAL)
 logging.getLogger('pygls.server').setLevel(logging.CRITICAL)
+logging.getLogger('buildoutls.server').setLevel(logging.CRITICAL)
+logging.getLogger('buildoutls.buildout').setLevel(logging.CRITICAL)
 
 # TODO:
 # complete on ${}|  cause match error
@@ -37,7 +39,8 @@ def singleton_task(
     nonlocal _previous_singleton_task
     if _previous_singleton_task is not None:
       _previous_singleton_task.cancel()
-    logger.critical("executing %r [_previous_singleton_task=%r]", f,
+    if 0:
+      logger.critical("executing %r [_previous_singleton_task=%r]", f,
                     _previous_singleton_task)
 
     _previous_singleton_task = asyncio.create_task(f(*args, **kw))
@@ -49,14 +52,17 @@ def singleton_task(
           "cancelled %r in %0.3f",
           f,
           time.perf_counter() - start,
-          exc_info=True,
+         # exc_info=True,
       )
-      raise
+      return []
+            #raise
     finally:
-      logger.critical(
+      pass
+      if 0:
+        logger.critical(
           "executed %r in %0.3f",
           f,
           time.perf_counter() - start,
       )
-
+  #return f
   return wrapped

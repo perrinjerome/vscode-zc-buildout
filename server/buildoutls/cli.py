@@ -24,6 +24,11 @@ def main() -> None:
       type=str,
   )
   parser.add_argument(
+      '--tracefile',
+      help='Save a trace file when server is terminated. This uses https://viztracer.readthedocs.io/',
+      type=str,
+  )
+  parser.add_argument(
       '--tcp',
       help='listen on tcp port or hostname:port on IPv4.',
       type=str,
