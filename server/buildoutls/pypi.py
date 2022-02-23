@@ -27,6 +27,7 @@ class PyPIClient:
       project: str,
       version: str,
   ) -> Optional[packaging.version.Version]:
+    return None # XXX
     try:
       # https://warehouse.pypa.io/api-reference/json.html#project
       project_data = self._session.get(
@@ -54,6 +55,7 @@ class PyPIClient:
       project: str,
       version: str,
   ) -> Iterable[KnownVulnerability]:
+    return () # XXX
     return tuple(self.__get_known_vulnerabilities(project, version))
 
   def __get_known_vulnerabilities(
