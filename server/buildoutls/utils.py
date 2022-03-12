@@ -25,6 +25,7 @@ logging.getLogger('buildoutls.buildout').setLevel(logging.CRITICAL)
 # complete on ${}|  cause match error
 # at least on   A=BC ${}d de e e e e ezdzdze ${}|
 
+from .protocol import logger as protocol_logger
 
 def singleton_task(
     f: Callable[P, Coroutine[None, None, T]]
@@ -38,15 +39,21 @@ def singleton_task(
   async def wrapped(*args: P.args, **kw: P.kwargs) -> T:
     nonlocal _previous_singleton_task
     if _previous_singleton_task is not None:
+      protocol_logger.warn("cancelling %s", _previous_singleton_task.get_name())
       _previous_singleton_task.cancel()
     if 0:
       logger.critical("executing %r [_previous_singleton_task=%r]", f,
                     _previous_singleton_task)
 
     _previous_singleton_task = asyncio.create_task(f(*args, **kw))
+    if 0:
+      await asyncio.sleep(0.5)
     start = time.perf_counter()
     try:
-      return await _previous_singleton_task
+      if 1:
+        ret = await _previous_singleton_task
+        protocol_logger.warn("executing %s", _previous_singleton_task.get_name())
+        return ret
     except asyncio.CancelledError:
       logger.critical(
           "cancelled %r in %0.3f",
@@ -63,5 +70,4 @@ def singleton_task(
           f,
           time.perf_counter() - start,
       )
-  #return f
   return wrapped

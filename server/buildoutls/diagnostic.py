@@ -251,7 +251,8 @@ async def getDiagnostics(
           if "+slapos" in package_version.lower():
             continue
 
-          logger.debug(
+          if 0:
+            logger.debug(
               'Found package %s at version %s @ %s',
               package_name,
               package_version,

@@ -39,6 +39,7 @@ from typing import (
     Union,
     cast,
 )
+from typing_extensions import TypeAlias
 
 import requests
 from pygls.lsp.types import Location, Position, Range
@@ -83,7 +84,7 @@ slapos_instance_profile_filename_re = re.compile(
     r'.*\/instance[^\/]*\.cfg[^\/]*')
 
 ### type definitions ###
-URI = str  # type alias
+URI: TypeAlias = str
 
 
 class ResolveError(Exception):
@@ -935,6 +936,7 @@ async def parse(
       uri,
       allow_errors,
   )
+  # XXX copy ???
   _parse_cache[uri] = copy.deepcopy(parsed)
   return parsed
 

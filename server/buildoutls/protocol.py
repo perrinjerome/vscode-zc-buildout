@@ -1,8 +1,11 @@
 import asyncio
+import collections
 import logging
-from typing import List, Union
+import time
+from typing import Any, Deque, Union
 from typing_extensions import TypeAlias
 from pygls.exceptions import JsonRpcRequestCancelled
+from pygls.lsp.methods import CANCEL_REQUEST
 from pygls.protocol import LanguageServerProtocol
 from pygls.lsp.types import (JsonRpcMessage, JsonRPCNotification,
                              JsonRPCRequestMessage, JsonRPCResponseMessage)
@@ -10,6 +13,9 @@ from pygls.server import LanguageServer
 
 logger = logging.getLogger(__name__)
 
+handler = logging.FileHandler('/tmp/cancellations.log')
+handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+logger.addHandler(handler)
 
 class CancelledJsonRPCRequestMessage(JsonRpcMessage):
   """A request that was cancelled"""
@@ -27,9 +33,7 @@ CancellableQueueItemType: TypeAlias = Union[JsonRPCMessageType,
 
 
 class CancellableQueue(asyncio.Queue[CancellableQueueItemType]):
-  """LIFO queue 
-  """
-  _queue: List[CancellableQueueItemType]
+  _queue: Deque[CancellableQueueItemType]
 
   def cancel(self, msg_id: Union[int, str]) -> None:
     """Mark a message in the queue as cancelled.
@@ -41,21 +45,22 @@ class CancellableQueue(asyncio.Queue[CancellableQueueItemType]):
             id=msg_id,
             method=item.method,
         )
-        logger.debug('Cancelled pending request %s', msg_id)
+        #logger.debug('👍 Cancelled pending request %s', msg_id)
         break
     else:
       logger.debug(
-          'Warning: received cancellation for request %s not in the queue',
-          msg_id)
+          'Received cancellation for request %s not found in the queue (queue len: %s)',
+          msg_id, len(self._queue))
 
   def _init(self, maxsize: int) -> None:
-    self._queue = []
-
-  def _put(self, item: CancellableQueueItemType) -> None:
-    self._queue.append(item)
+    self._queue = collections.deque()
 
   def _get(self) -> CancellableQueueItemType:
-    return self._queue.pop()
+    return self._queue.popleft()
+
+  def _put(self, item: CancellableQueueItemType) -> None:
+    # logger.info("put %s", item)
+    self._queue.append(item)
 
 
 class CancellableQueueLanguageServerProtocol(LanguageServerProtocol):
@@ -76,42 +81,80 @@ class CancellableQueueLanguageServerProtocol(LanguageServerProtocol):
   def __init__(self, server: LanguageServer):
     super().__init__(server)
     self._job_queue = CancellableQueue()
-    self._server.loop.create_task(self.worker())
+    self._server.loop.create_task(self._worker())
+    def handler(exc, *args, **kw):
+      logger.critical((exc, args, kw))
+    self._server.loop.set_exception_handler(handler)
+
 
   def _procedure_handler(
       self,
       message: Union[JsonRPCNotification, JsonRPCRequestMessage,
                      JsonRPCResponseMessage],
   ) -> None:
+    if isinstance(message, JsonRPCNotification) and message.method == CANCEL_REQUEST:
+      self._job_queue.cancel(message.params.id)
     self._job_queue.put_nowait(message)
 
-  def _handle_cancel_notification(self, msg_id: Union[int, str]) -> None:
-    self._job_queue.cancel(msg_id)
-    super()._handle_cancel_notification(msg_id)  # type: ignore
+  # def X_handle_cancel_notification(self, msg_id: Union[int, str]) -> None:
+  #   self._job_queue.cancel(msg_id)
+  #   super()._handle_cancel_notification(msg_id)  # type: ignore
 
-  async def worker(self) -> None:
+  async def _worker(self) -> None:
     # TODO: cleanup
     import concurrent.futures
-    with concurrent.futures.ProcessPoolExecutor() as pool:
+    def job_desc(job:CancellableQueueItemType) -> str:
+      job_id = getattr(job, 'id', '-')
+      return f'{job_id:>3} {job.method}'
+    if 1:
+      # with concurrent.futures.ProcessPoolExecutor() as pool:
       while not self._shutdown:
+        # process protocol messages first
+        while True:
+          await asyncio.sleep(0.01)
+          start = time.perf_counter_ns()
+          try:
+            job = await asyncio.wait_for(self._job_queue.get(), 0.3)
+          except asyncio.TimeoutError:
+            # logger.info("timeout getting a job in in %0.4f", (time.perf_counter_ns() - start) / 1e9)
+            break
+          logger.info(
+              "got %s in in %0.4f %s",
+              "cancelled 👍 job" if isinstance(job, CancelledJsonRPCRequestMessage) else "job", 
+              (time.perf_counter_ns() - start) / 1e9,
+              job_desc(job),
+           )
 
-        job = await self._job_queue.get()
-        await asyncio.sleep(0.01)
+          start = time.perf_counter_ns()
+          if isinstance(job, CancelledJsonRPCRequestMessage):
+            # according to https://microsoft.github.io/language-server-protocol/specifications/specification-current/#cancelRequest
+            # A request that got canceled still needs to return from the server
+            # and send a response back. It can not be left open / hanging. This
+            # is in line with the JSON RPC protocol that requires that every
+            # request sends a response back. In addition it allows for returning
+            # partial results on cancel. If the request returns an error response
+            # on cancellation it is advised to set the error code to
+            # ErrorCodes.RequestCancelled.
+            self._send_response(  # type: ignore
+                job.id,
+                result=None,
+                error=JsonRpcRequestCancelled(),
+            )
+          else:
+            super()._procedure_handler(job)  # type: ignore
+          self._job_queue.task_done()
 
-        if isinstance(job, CancelledJsonRPCRequestMessage):
-          # according to https://microsoft.github.io/language-server-protocol/specifications/specification-current/#cancelRequest
-          # A request that got canceled still needs to return from the server
-          # and send a response back. It can not be left open / hanging. This
-          # is in line with the JSON RPC protocol that requires that every
-          # request sends a response back. In addition it allows for returning
-          # partial results on cancel. If the request returns an error response
-          # on cancellation it is advised to set the error code to
-          # ErrorCodes.RequestCancelled.
-          self._send_response(  # type: ignore
-              job.id,
-              result=None,
-              error=JsonRpcRequestCancelled(),
-          )
-        else:
-          super()._procedure_handler(job)  # type: ignore
-        self._job_queue.task_done()
+          logger.info("done in %0.4f %s", (time.perf_counter_ns() - start) / 1e9, job_desc(job))
+        
+
+        # once all protocol messages are done, process the tasks from notifications
+        while True:
+          start = time.perf_counter_ns()
+          try:
+            uri = self._diagnostic_queue.get_nowait()
+          except asyncio.QueueEmpty:
+            # logger.info("no diagnostic to do")
+            break
+          d = await self._server.do_diagnostic(uri)
+          self._diagnostic_queue.task_done()
+          logger.info("🔖(%d) done in %0.4f %s", d, (time.perf_counter_ns() - start) / 1e9, uri)

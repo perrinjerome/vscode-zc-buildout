@@ -4,9 +4,12 @@ import itertools
 import logging
 import os
 import pathlib
+import profile
 import re
+import sys
+import time
 import urllib.parse
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Set, Tuple, Union
 
 import pydantic
 import pygls.protocol
@@ -59,11 +62,13 @@ from . import (
     commands,
     diagnostic,
     md5sum,
+    profiling,
     protocol,
     recipes,
     types,
     utils,
 )
+
 
 
 class CallStat(pydantic.BaseModel):
@@ -80,13 +85,70 @@ class StatsCollectingLanguageServerProtocol(
     super().__init__(server)
 
 
-server = LanguageServer(max_workers=10,
-                        protocol_cls=protocol.CancellableQueueLanguageServerProtocol)
+from .protocol import logger as protocol_logger
+
+class DiagnosticQueue(asyncio.Queue[str]):
+  _queue: Set[str]
+
+  def _init(self, maxsize: int) -> None:
+    self._queue = set()
+
+  def _get(self) -> str:
+    return self._queue.pop()
+
+  def _put(self, item: str) -> None:
+    if item in self._queue:
+      pass
+      # protocol_logger.info('👍 🔖 not queuing %s (%s)', item, len(self._queue))
+    else:
+      protocol_logger.info('🔖 queuing %s (%s)', item, len(self._queue))
+    self._queue.add(item)
 
 
-@server.command('dumpDebugStats')
-def dump_debug_stats(ls: LanguageServer) -> None:
-  ls.dump_debug_stats()  # type: ignore
+class BuildoutLanguageServer(LanguageServer):
+  lsp: protocol.CancellableQueueLanguageServerProtocol
+  def __init__(self, *args, **kw) -> None: # type: ignore
+    super().__init__(*args, **kw)
+    self.lsp._diagnostic_queue = _diagnostic_queue = DiagnosticQueue()
+    _diagnostic_queue.get_nowait
+    #self._diagnostic_worker_task = self.loop.create_task(self._diagnostics_worker())
+    
+  def Xshutdown(self) -> None:
+      print('cancelling', file=sys.stderr)
+      self._diagnostic_worker_task.cancel()
+      super().shutdown() # type: ignore
+
+  async def _diagnostics_worker(self) -> None:
+    assert self._stop_event
+    return
+    import concurrent.futures
+    # with concurrent.futures.ProcessPoolExecutor() as pool:
+    while not self._stop_event.is_set():
+      start = time.perf_counter_ns()
+      await asyncio.sleep(0.2)
+      uri = await self._diagnostic_queue.get()
+      diagnostics = []
+      async for diag in diagnostic.getDiagnostics(self, uri):
+        diagnostics.append(diag)
+      self.publish_diagnostics(uri, diagnostics)
+
+      self._diagnostic_queue.task_done()
+      protocol_logger.info("🔖 done in %0.4f %s", (time.perf_counter_ns() - start) / 1e9, uri)
+
+  async def schedule_diagnostic(self, uri: str) -> None:
+    await self.lsp._diagnostic_queue.put(uri)
+
+  async def do_diagnostic(self, uri: str) -> None:
+    diagnostics = []
+    #await asyncio.sleep(0.1)
+    async for diag in diagnostic.getDiagnostics(self, uri):
+      diagnostics.append(diag)
+    self.publish_diagnostics(uri, diagnostics)
+    return len(diagnostics)
+
+
+server = BuildoutLanguageServer(
+    protocol_cls=protocol.CancellableQueueLanguageServerProtocol)
 
 
 reference_start = '${'
@@ -110,8 +172,9 @@ async def parseAndSendDiagnostics(
     ls: LanguageServer,
     uri: str,
 ) -> None:
+  return
   diagnostics = []
-  await asyncio.sleep(0.1)
+  #await asyncio.sleep(0.1)
   async for diag in diagnostic.getDiagnostics(ls, uri):
     diagnostics.append(diag)
   ls.publish_diagnostics(uri, diagnostics)
@@ -137,35 +200,41 @@ async def command_update_md5sum(
   await md5sum.update_md5sum(ls, args[0])
 
 
-@server.feature(
-    CODE_ACTION,
-    CodeActionOptions(resolve_provider=False,
-                      code_action_kinds=[
-                          CodeActionKind.QuickFix,
-                      ]),
-)
-#@utils.singleton_task
-async def lsp_code_action(
-    ls: LanguageServer,
-    params: CodeActionParams) -> Optional[List[Union[Command, CodeAction]]]:
-  return await code_actions.getCodeActions(ls, params)
+server.command(commands.COMMAND_START_PROFILING)(profiling.start_profiling)
+server.command(commands.COMMAND_STOP_PROFILING)(profiling.stop_profiling)
+
+
+if 1:
+
+  @server.feature(
+      CODE_ACTION,
+      CodeActionOptions(resolve_provider=False,
+                        code_action_kinds=[
+                            CodeActionKind.QuickFix,
+                        ]),
+  )
+  async def lsp_code_action(
+      ls: LanguageServer,
+      params: CodeActionParams) -> Optional[List[Union[Command, CodeAction]]]:
+    return await code_actions.getCodeActions(ls, params)
 
 
 @server.feature(TEXT_DOCUMENT_DID_OPEN)
 async def did_open(
-    ls: LanguageServer,
+    ls: BuildoutLanguageServer,
     params: DidOpenTextDocumentParams,
 ) -> None:
-  await parseAndSendDiagnostics(ls, params.text_document.uri)
+  await ls.schedule_diagnostic(params.text_document.uri)
+  # await parseAndSendDiagnostics(ls, params.text_document.uri)
 
 
 @server.feature(TEXT_DOCUMENT_DID_CHANGE)
 async def did_change(
-    ls: LanguageServer,
+    ls: BuildoutLanguageServer,
     params: DidChangeTextDocumentParams,
 ) -> None:
   buildout.clearCache(params.text_document.uri)
-  await parseAndSendDiagnostics(ls, params.text_document.uri)
+  await ls.schedule_diagnostic(params.text_document.uri)
 
 
 @server.feature(WORKSPACE_DID_CHANGE_WATCHED_FILES)
@@ -178,7 +247,6 @@ async def did_change_watched_file(
 
 
 @server.feature(DOCUMENT_SYMBOL)
-#@utils.singleton_task
 async def lsp_symbols(
     ls: LanguageServer,
     params: DocumentSymbolParams,
@@ -246,7 +314,6 @@ async def lsp_completion(
 ) -> Optional[List[CompletionItem]]:
   items: List[CompletionItem] = []
   doc = ls.workspace.get_document(params.text_document.uri)
-  await asyncio.sleep(0.02)
 
   def getSectionReferenceCompletionTextEdit(
       doc: Document,
@@ -390,6 +457,7 @@ async def lsp_completion(
       # complete referenced option:
       #   [section]
       #   option = ${another_section:|
+      # TODO bug when there's a space after the : ${pycurl: |
       valid_option_references: Iterable[Tuple[str, str]] = []
 
       # We include the options of `another_section`
@@ -673,7 +741,6 @@ async def lsp_references(
 
 
 @server.feature(HOVER)
-#@utils.singleton_task
 async def lsp_hover(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -697,7 +764,6 @@ async def lsp_hover(
 
 
 @server.feature(DOCUMENT_LINK)
-#@utils.singleton_task
 async def lsp_document_link(
     ls: LanguageServer,
     params: DocumentLinkParams,
