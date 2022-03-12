@@ -2,7 +2,7 @@ import asyncio
 import collections
 import logging
 import time
-from typing import Any, Deque, Union
+from typing import Any, Deque, Set, Union
 from typing_extensions import TypeAlias
 from pygls.exceptions import JsonRpcRequestCancelled
 from pygls.lsp.methods import CANCEL_REQUEST
@@ -34,7 +34,7 @@ CancellableQueueItemType: TypeAlias = Union[JsonRPCMessageType,
 
 class CancellableQueue(asyncio.Queue[CancellableQueueItemType]):
   _queue: Deque[CancellableQueueItemType]
-
+  _early_cancellations: Set[Union[int, str]]
   def cancel(self, msg_id: Union[int, str]) -> None:
     """Mark a message in the queue as cancelled.
     """
@@ -49,17 +49,34 @@ class CancellableQueue(asyncio.Queue[CancellableQueueItemType]):
         break
     else:
       logger.debug(
-          'Received cancellation for request %s not found in the queue (queue len: %s)',
-          msg_id, len(self._queue))
+          'Received cancellation for request %s not found in the queue (queue len: %s, early cancel: %s)',
+          msg_id, len(self._queue), len(self._early_cancellations))
+      self._early_cancellations.add(msg_id)
 
   def _init(self, maxsize: int) -> None:
     self._queue = collections.deque()
+    self._early_cancellations = set()
 
   def _get(self) -> CancellableQueueItemType:
     return self._queue.popleft()
 
   def _put(self, item: CancellableQueueItemType) -> None:
-    # logger.info("put %s", item)
+    try:
+      self._xput(item)
+    except:
+      logger.exception('putte')
+
+  def _xput(self, item: CancellableQueueItemType) -> None:
+    if hasattr(item, 'id'):
+      msg_id = item.id
+      if msg_id in self._early_cancellations:
+        self._early_cancellations.remove(msg_id)
+        logger.info("👍 not putting already cancelled %s", msg_id)
+        item = CancelledJsonRPCRequestMessage(
+            jsonrpc=item.jsonrpc,
+            id=msg_id,
+            method=item.method,
+        )
     self._queue.append(item)
 
 
@@ -99,10 +116,15 @@ class CancellableQueueLanguageServerProtocol(LanguageServerProtocol):
   # def X_handle_cancel_notification(self, msg_id: Union[int, str]) -> None:
   #   self._job_queue.cancel(msg_id)
   #   super()._handle_cancel_notification(msg_id)  # type: ignore
-
   async def _worker(self) -> None:
+    while True:
+      try:
+        await self._xxx_worker()
+      except Exception:
+        logger.exception("oh merde")
+
+  async def _xxx_worker(self) -> None:
     # TODO: cleanup
-    import concurrent.futures
     def job_desc(job:CancellableQueueItemType) -> str:
       job_id = getattr(job, 'id', '-')
       return f'{job_id:>3} {job.method}'
