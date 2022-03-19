@@ -1329,28 +1329,23 @@ async def open(
 
   return None
 
-
-async def _open(
+async def _open_cache_hit(
     ls: LanguageServer,
     base: str,
     uri: URI,
     seen: List[str],
     allow_errors: bool,
 ) -> ResolvedBuildout:
-  """Open a configuration file and return the result as a dictionary,
+  return copy.deepcopy(_resolved_buildout_cache[uri])
 
-  Recursively open other files based on buildout options found.
 
-  This is equivalent of zc.buildout.buildout._open
-  """
-  #logger.debug("_open %r %r", base, uri)
-
-  if not _isurl(uri):
-    assert base
-    uri = urllib.parse.urljoin(base, uri)
-  if uri in _resolved_buildout_cache:
-    #logger.debug("_open %r was in cache", uri)
-    return copy.deepcopy(_resolved_buildout_cache[uri])
+async def _open_cache_miss(
+    ls: LanguageServer,
+    base: str,
+    uri: URI,
+    seen: List[str],
+    allow_errors: bool,
+) -> ResolvedBuildout:
   base = uri[:uri.rfind('/')] + '/'
 
   if uri in seen:
@@ -1401,6 +1396,31 @@ async def _open(
   resolved = cast(ResolvedBuildout, result)
   _resolved_buildout_cache[uri] = resolved
   return copy.deepcopy(resolved)
+
+
+
+async def _open(
+    ls: LanguageServer,
+    base: str,
+    uri: URI,
+    seen: List[str],
+    allow_errors: bool,
+) -> ResolvedBuildout:
+  """Open a configuration file and return the result as a dictionary,
+
+  Recursively open other files based on buildout options found.
+
+  This is equivalent of zc.buildout.buildout._open
+  """
+  #logger.debug("_open %r %r", base, uri)
+
+  if not _isurl(uri):
+    assert base
+    uri = urllib.parse.urljoin(base, uri)
+  if uri in _resolved_buildout_cache:
+    #logger.debug("_open %r was in cache", uri)
+    return await _open_cache_hit(ls, base, uri, seen, allow_errors)
+  return await _open_cache_miss(ls, base, uri, seen, allow_errors)
 
 
 def _update_section(
