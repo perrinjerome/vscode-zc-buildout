@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Added:
 
+- expose commands to start & stop profiling.
+
 ### Fixed:
 
 ## [0.6.2] - 2022-01-06

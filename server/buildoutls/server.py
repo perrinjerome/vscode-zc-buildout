@@ -49,7 +49,18 @@ from pygls.lsp.types.window import ShowDocumentParams
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 
-from . import buildout, code_actions, commands, diagnostic, recipes, types, md5sum, utils
+from . import (
+    buildout,
+    code_actions,
+    commands,
+    diagnostic,
+    md5sum,
+    profiling,
+    recipes,
+    types,
+    utils,
+)
+
 
 server = LanguageServer()
 

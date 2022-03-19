@@ -21,6 +21,16 @@
   ],
   "main": "./client/out/extension",
   "contributes": {
+    "commands": [
+      {
+        "command": "command/startProfiling",
+        "title": "zc.buildout: Start Profiling"
+      },
+      {
+        "command": "command/stopProfiling",
+        "title": "zc.buildout: Stop Profiling"
+      }
+    ],
     "languages": [
       {
         "id": "zc-buildout",
