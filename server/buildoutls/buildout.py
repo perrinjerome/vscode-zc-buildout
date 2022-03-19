@@ -41,6 +41,7 @@ from typing import (
 )
 from typing_extensions import TypeAlias
 
+import pyrsistent
 import requests
 from pygls.lsp.types import Location, Position, Range
 from pygls.server import LanguageServer
@@ -53,6 +54,37 @@ from zc.buildout.configparser import (
     option_start,
     section_header,
 )
+
+
+import pyrsistent
+import collections.abc
+class FastCopyDict(collections.abc.MutableMapping):
+  def __init__(self):
+    self._data = pyrsistent.m()
+
+  def __repr__(self):
+    return repr(self._data)
+ 
+  def __str__(self):
+    return str(self._data)
+
+  def __delitem__(self, item):
+    self._data[item]
+    self._data = self._data.remove(item)
+
+  def __getitem__(self, item):
+    return self._data[item]
+
+  def __setitem__(self, key, value):
+    self._data = self._data.set(key, value)
+ 
+  def __iter__(self):
+     return iter(self._data)
+
+  def __len__(self):
+    return len(self._data)
+ 
+ 
 
 from . import jinja, recipes
 
@@ -201,10 +233,9 @@ class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
 if TYPE_CHECKING:
   BuildoutSection = _BuildoutSection
 else:
-
   class BuildoutSection(
-      collections.OrderedDict,
-      _BuildoutSection,
+     FastCopyDict,
+     _BuildoutSection,
   ):
     pass
 
@@ -490,9 +521,14 @@ class BuildoutTemplate:
         yield symbol
 
 
-class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
+class BuildoutProfile(FastCopyDict, Dict[str, BuildoutSection], BuildoutTemplate):
   """A parsed buildout file, without extends.
   """
+  def clone(self):
+    clone = BuildoutProfile(self.uri, self.source)
+    clone.__dict__ = self.__dict__
+    return clone
+
   def __init__(self, uri: URI, source: str):
     BuildoutTemplate.__init__(
         self,
@@ -500,8 +536,10 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
         source=source,
         buildout=self,
     )
+    FastCopyDict.__init__(self)
     self.section_header_locations: Dict[str,
-                                        Location] = collections.OrderedDict()
+                                        Location] = cast(Dict[str,
+                                        Location], FastCopyDict())
     """The locations for each section, keyed by section names.
     """
     self.has_dynamic_extends = False
@@ -855,13 +893,16 @@ class ResolvedBuildout(BuildoutProfile):
 ### cache ###
 
 # a cache of un-resolved buildouts by uri
+# TODO isn't it cheap enough ? 
 _parse_cache: Dict[URI, BuildoutProfile] = {}
 # a cache of resolved buildouts by uri
 _resolved_buildout_cache: Dict[URI, ResolvedBuildout] = {}
 # a mapping of dependencies between extends, so that we can clear caches when
 # a profile is modified.
 _extends_dependency_graph: Dict[URI, Set[URI]] = collections.defaultdict(set)
-
+# the current values of ${buildout:extends}, to use as cache key so that if
+# extends change, the cache for this URI is invalidated
+_extends : Dict[URI, str] = {}
 
 def clearCache(uri: URI) -> None:
   """Clear all caches for uri.
@@ -911,7 +952,7 @@ async def parse(
 
   """
   if uri in _parse_cache:
-    return copy.deepcopy(_parse_cache[uri])
+    return (_parse_cache[uri]).copy()
 
   await asyncio.sleep(0)
   parsed_uri = urllib.parse.urlparse(uri)
@@ -937,7 +978,7 @@ async def parse(
       allow_errors,
   )
   # XXX copy ???
-  _parse_cache[uri] = copy.deepcopy(parsed)
+  _parse_cache[uri] = parsed.copy()
   return parsed
 
 
