@@ -1,6 +1,7 @@
 import asyncio
 import collections
 import logging
+from queue import Queue
 import time
 from typing import Any, Deque, Set, Union
 from typing_extensions import TypeAlias
@@ -61,13 +62,7 @@ class CancellableQueue(asyncio.Queue[CancellableQueueItemType]):
     return self._queue.popleft()
 
   def _put(self, item: CancellableQueueItemType) -> None:
-    try:
-      self._xput(item)
-    except:
-      logger.exception('putte')
-
-  def _xput(self, item: CancellableQueueItemType) -> None:
-    if hasattr(item, 'id'):
+    if isinstance(item, (JsonRPCRequestMessage, JsonRPCResponseMessage)):
       msg_id = item.id
       if msg_id in self._early_cancellations:
         self._early_cancellations.remove(msg_id)
@@ -75,7 +70,7 @@ class CancellableQueue(asyncio.Queue[CancellableQueueItemType]):
         item = CancelledJsonRPCRequestMessage(
             jsonrpc=item.jsonrpc,
             id=msg_id,
-            method=item.method,
+            method=getattr(item, 'method', '-'),
         )
     self._queue.append(item)
 
@@ -94,12 +89,13 @@ class CancellableQueueLanguageServerProtocol(LanguageServerProtocol):
   mark the message as cancelled before it get processed.
   """
   _server: LanguageServer
+  _diagnostic_queue: Any
 
   def __init__(self, server: LanguageServer):
     super().__init__(server)
     self._job_queue = CancellableQueue()
     self._server.loop.create_task(self._worker())
-    def handler(exc, *args, **kw):
+    def handler(exc, *args, **kw): # type: ignore
       logger.critical((exc, args, kw))
     self._server.loop.set_exception_handler(handler)
 
@@ -127,7 +123,8 @@ class CancellableQueueLanguageServerProtocol(LanguageServerProtocol):
     # TODO: cleanup
     def job_desc(job:CancellableQueueItemType) -> str:
       job_id = getattr(job, 'id', '-')
-      return f'{job_id:>3} {job.method}'
+      job_method = getattr(job, 'method', '-')
+      return f'{job_id:>3} {job_method}'
     if 1:
       # with concurrent.futures.ProcessPoolExecutor() as pool:
       while not self._shutdown:
@@ -177,6 +174,6 @@ class CancellableQueueLanguageServerProtocol(LanguageServerProtocol):
           except asyncio.QueueEmpty:
             # logger.info("no diagnostic to do")
             break
-          d = await self._server.do_diagnostic(uri)
+          d = await self._server.do_diagnostic(uri) # type: ignore
           self._diagnostic_queue.task_done()
           logger.info("🔖(%d) done in %0.4f %s", d, (time.perf_counter_ns() - start) / 1e9, uri)

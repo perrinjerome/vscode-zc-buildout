@@ -112,11 +112,6 @@ class BuildoutLanguageServer(LanguageServer):
     self.lsp._diagnostic_queue = _diagnostic_queue = DiagnosticQueue()
     _diagnostic_queue.get_nowait
     #self._diagnostic_worker_task = self.loop.create_task(self._diagnostics_worker())
-    
-  def Xshutdown(self) -> None:
-      print('cancelling', file=sys.stderr)
-      self._diagnostic_worker_task.cancel()
-      super().shutdown() # type: ignore
 
   async def _diagnostics_worker(self) -> None:
     assert self._stop_event
@@ -144,7 +139,7 @@ class BuildoutLanguageServer(LanguageServer):
     async for diag in diagnostic.getDiagnostics(self, uri):
       diagnostics.append(diag)
     self.publish_diagnostics(uri, diagnostics)
-    return len(diagnostics)
+    return len(diagnostics) # type: ignore
 
 
 server = BuildoutLanguageServer(
