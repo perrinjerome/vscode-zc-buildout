@@ -49,9 +49,22 @@ from pygls.lsp.types.window import ShowDocumentParams
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 
-from . import buildout, code_actions, commands, diagnostic, recipes, types, md5sum, utils
+from . import (
+    buildout,
+    code_actions,
+    commands,
+    diagnostic,
+    md5sum,
+    profiling,
+    recipes,
+    types,
+    utils,
+)
 
 server = LanguageServer()
+
+server.command(commands.COMMAND_START_PROFILING)(profiling.start_profiling)
+server.command(commands.COMMAND_STOP_PROFILING)(profiling.stop_profiling)
 
 reference_start = '${'
 reference_re = re.compile(
