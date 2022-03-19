@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning][semver].
 - significantly improve performance by implementing .copy() method and using an intermediate cache.
 - fix crash when completing option made only of space
 - fix crash when completing after ${}
+- fix cancellation of methods - methods were usually not cancelled when a cancel notification was received.
+- don't compute diagnostics for stale versions.
 
 ## [0.6.2] - 2022-01-06
 
