@@ -299,6 +299,22 @@ async def test_complete_option_reference(server: LanguageServer):
                  ]
 
 
+async def test_complete_options_with_space(server: LanguageServer):
+  # bug reproduction test
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///completions/options_with_space.cfg"),
+                            position=Position(line=2, character=22),
+                            context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted([c.label for c in completions]) == [
+      '_buildout_section_name_',
+      '_profile_base_location_',
+      'option',
+  ]
+
+
 async def test_complete_option_name(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete options of a section

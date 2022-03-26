@@ -263,7 +263,7 @@ async def lsp_completion(
     """Calculate the edition to insert option} a ${section:option}
     """
     words_split = re.compile(
-        r'(?P<section>\${[-a-zA-Z0-9 ._]*\:)(?P<option>[-a-zA-Z0-9._]*\}{0,1})'
+        r'(?P<section>\${[-a-zA-Z0-9 ._]*\:)(?P<option>[ ]*[-a-zA-Z0-9._]*\}{0,1})'
     )
     line = doc.lines[pos.line]
     index = 0
