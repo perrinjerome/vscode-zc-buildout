@@ -416,9 +416,9 @@ class BuildoutTemplate:
             referenced_buildout = self.second_level_buildout
           else:
             return None
-        if (section_reference_match.start() <=
+        if (section_reference_match.start('section') <=
             (position.character - line_offset) <=
-            section_reference_match.end()):
+            section_reference_match.end('section')):
           referenced_section_name = section_reference_match.group('section')
           return Symbol(
               kind=SymbolKind.SectionReference,

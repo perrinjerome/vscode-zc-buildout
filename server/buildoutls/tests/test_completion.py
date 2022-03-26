@@ -589,3 +589,25 @@ async def test_complete_comments(server: LanguageServer):
     )
     completions = await lsp_completion(server, params)
     assert completions is not None
+
+
+async def test_complete_in_empty_substitution(server: LanguageServer):
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///completions/empty_substitution.cfg"),
+                            position=Position(line=1, character=11),
+                            context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted([c.label for c in completions]) == ['buildout', 'section']
+
+
+async def test_complete_after_empty_substitution(server: LanguageServer):
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///completions/empty_substitution.cfg"),
+                            position=Position(line=1, character=18),
+                            context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted([c.label for c in completions]) == []

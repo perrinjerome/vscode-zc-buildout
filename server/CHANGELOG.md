@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed:
 
 - fix crash when completing option made only of space
+- fix crash when completing after ${}
 
 ## [0.6.2] - 2022-01-06
 
