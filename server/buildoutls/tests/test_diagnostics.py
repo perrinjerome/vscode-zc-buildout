@@ -14,7 +14,6 @@ from pygls.lsp.types import (
 from ..server import parseAndSendDiagnostics
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_syntax_error(server) -> None:
   # syntax error
   await parseAndSendDiagnostics(server, 'file:///diagnostics/syntax_error.cfg')
@@ -28,7 +27,6 @@ async def test_diagnostics_syntax_error(server) -> None:
   assert diagnostic.message == "ParseError: 'o\\n'"
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_missing_section_error(server) -> None:
   # missing section error (a parse error handled differently)
   await parseAndSendDiagnostics(
@@ -46,7 +44,6 @@ async def test_diagnostics_missing_section_error(server) -> None:
       'key = value'""")
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_non_existent_sections(server) -> None:
   # warnings for reference to non existent options
   await parseAndSendDiagnostics(server, 'file:///diagnostics/reference.cfg')
@@ -69,7 +66,6 @@ async def test_diagnostics_non_existent_sections(server) -> None:
     "Option `missing_option` does not exist in `section2`."
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_non_existent_sections_multiple_references_per_line(
     server, ) -> None:
   # harder version, two errors on same line
@@ -119,7 +115,6 @@ async def test_diagnostics_non_existent_sections_multiple_references_per_line(
     "Option `missing_option` does not exist in `section`."
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_non_existent_sections_unknown_extends(
     server, ) -> None:
   await parseAndSendDiagnostics(
@@ -135,7 +130,6 @@ async def test_diagnostics_non_existent_sections_unknown_extends(
       [])
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_required_recipe_option(server) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///diagnostics/recipe_required_option.cfg')
@@ -154,7 +148,6 @@ async def test_diagnostics_required_recipe_option(server) -> None:
                                        end=Position(line=7, character=0))
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_extends_does_not_exist(server) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///diagnostics/extends_does_not_exist.cfg')
@@ -173,7 +166,6 @@ async def test_diagnostics_extends_does_not_exist(server) -> None:
                                        end=Position(line=2, character=23))
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_template(server) -> None:
   # syntax error
   await parseAndSendDiagnostics(server, 'file:///template.in')
@@ -191,7 +183,6 @@ async def test_diagnostics_template(server) -> None:
   assert diagnostic2.message == "Option `missing_option` does not exist in `section5`."
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_buildout_parts(server) -> None:
   await parseAndSendDiagnostics(server,
                                 'file:///diagnostics/buildout_parts.cfg')
@@ -211,7 +202,6 @@ async def test_diagnostics_buildout_parts(server) -> None:
                                     end=Position(line=4, character=5))
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_buildout_parts_section_name_with_dot(
     server) -> None:
   # This test checks that we supports section name with dots or dash
@@ -226,7 +216,6 @@ async def test_diagnostics_buildout_parts_section_name_with_dot(
                                    end=Position(line=1, character=15))
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_option_redefinition(server) -> None:
   await parseAndSendDiagnostics(server,
                                 'file:///diagnostics/option_redefinition.cfg')
@@ -265,7 +254,6 @@ async def test_diagnostics_option_redefinition(server) -> None:
           ]
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_option_redefinition_extended(server) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///diagnostics/extended/option_redefinition.cfg')
@@ -280,7 +268,6 @@ async def test_diagnostics_option_redefinition_extended(server) -> None:
   assert diagnostic.message == "`recipe` already has value `x`."
 
 
-@pytest.mark.asyncio
 async def test_diagnostics_option_redefinition_default_value(server) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///diagnostics/option_redefinition_default_value.cfg')
@@ -333,7 +320,6 @@ async def test_diagnostics_option_redefinition_default_value(server) -> None:
     'file:///diagnostics/recipe_any_option.cfg',
     'file:///diagnostics/ok_parts_with_substitutions.cfg',
 ))
-@pytest.mark.asyncio
 async def test_diagnostics_ok(server, url) -> None:
   # no false positives
   await parseAndSendDiagnostics(server, url)

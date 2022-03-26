@@ -92,7 +92,6 @@ def _dump_and_load(param: CodeActionParams) -> CodeActionParams:
   return CodeActionParams(**json.loads(dumped))
 
 
-@pytest.mark.asyncio
 async def test_diagnostic_and_versions_code_action_newer_version_available(
     server,
     sampleproject_json_response,
@@ -152,7 +151,6 @@ async def test_diagnostic_and_versions_code_action_newer_version_available(
   assert len(code_actions) == 2
 
 
-@pytest.mark.asyncio
 async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
     server,
     sampleproject_json_response,
@@ -214,7 +212,6 @@ async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
   assert len(code_actions) == 2
 
 
-@pytest.mark.asyncio
 async def test_diagnostic_and_versions_code_action_latest_version(
     server,
     sampleproject_json_response,
@@ -280,7 +277,6 @@ def example_com_response(mocked_responses: responses.RequestsMock) -> None:
         Range(start=Position(line=2, character=14),
               end=Position(line=2, character=14)),
     ])
-@pytest.mark.asyncio
 async def test_update_md5sum_code_action(
     range_,
     server,
@@ -338,7 +334,6 @@ async def test_update_md5sum_code_action(
       }, ), )
 
 
-@pytest.mark.asyncio
 async def test_update_md5sum_code_action_without_md5sum_option(
     server,
     example_com_response,
@@ -446,7 +441,6 @@ async def test_update_md5sum_code_action_without_md5sum_option(
             ),
         ),
     ])
-@pytest.mark.asyncio
 async def test_update_md5sum_code_action_with_substitutions(
     server,
     range_,

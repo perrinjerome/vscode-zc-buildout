@@ -1,4 +1,3 @@
-import pytest
 from pygls.lsp.types import (
     DocumentLinkParams,
     Position,
@@ -10,7 +9,6 @@ from pygls.server import LanguageServer
 from ..server import lsp_document_link
 
 
-@pytest.mark.asyncio
 async def test_document_link(server: LanguageServer):
   params = DocumentLinkParams(text_document=TextDocumentIdentifier(
       uri="file:///extended/buildout.cfg"))

@@ -23,7 +23,6 @@ from ..buildout import (
 
 
 ## parse tests
-@pytest.mark.asyncio
 async def test_parse() -> None:
   parsed = await _parse(
       fp=io.StringIO(
@@ -97,7 +96,6 @@ async def test_parse() -> None:
   ]
 
 
-@pytest.mark.asyncio
 async def test_parse_jinja_option() -> None:
   parsed = await _parse(
       fp=io.StringIO(
@@ -133,7 +131,6 @@ async def test_parse_jinja_option() -> None:
       'JINJA_EXPRESSION'].value == 'JINJA_EXPRESSION'
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_BuildoutOptionKey(
     buildout: BuildoutProfile) -> None:
   for pos in (Position(line=5, character=3), Position(line=5, character=0),
@@ -163,7 +160,6 @@ async def test_BuildoutProfile_getSymbolAtPosition_BuildoutOptionKey(
     assert symbol.current_option_name == ''
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_BuildoutOptionValue(
     buildout: BuildoutProfile) -> None:
   for pos in (Position(line=5, character=11), Position(line=5, character=10),
@@ -189,7 +185,6 @@ async def test_BuildoutProfile_getSymbolAtPosition_BuildoutOptionValue(
     assert symbol.current_option_name == 'multi_line_option'
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_SectionReference(
     buildout: BuildoutProfile) -> None:
   for pos in (Position(line=13, character=14), Position(line=13, character=12),
@@ -244,7 +239,6 @@ async def test_BuildoutProfile_getSymbolAtPosition_SectionReference(
     assert symbol.referenced_section_recipe.name == 'plone.recipe.command'
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_OptionReference(
     buildout: BuildoutProfile) -> None:
   for pos in (Position(line=13, character=23), Position(line=13, character=21),
@@ -280,7 +274,6 @@ async def test_BuildoutProfile_getSymbolAtPosition_OptionReference(
   assert symbol.referenced_option.value == 'echo install section5'
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_SectionDefinition(
     buildout: BuildoutProfile, ) -> None:
   for pos in (Position(line=3, character=1), Position(line=3, character=0),
@@ -291,7 +284,6 @@ async def test_BuildoutProfile_getSymbolAtPosition_SectionDefinition(
     assert symbol.current_section_name == 'section1'
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getSymbolAtPosition_Comment(
     buildout: BuildoutProfile, ) -> None:
   for pos in (
@@ -321,7 +313,6 @@ async def test_BuildoutProfile_getSymbolAtPosition_Comment(
   assert symbol.value == 'value # we can have comments after options'
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getAllOptionReferenceSymbols(
     buildout: BuildoutProfile) -> None:
   symbols: List[Symbol] = []
@@ -347,7 +338,6 @@ async def test_BuildoutProfile_getAllOptionReferenceSymbols(
   assert {s.kind for s in symbols} == {SymbolKind.OptionReference}
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_getTemplate(
     buildout: BuildoutProfile,
     server: LanguageServer,
@@ -357,7 +347,6 @@ async def test_BuildoutProfile_getTemplate(
   assert await buildout.getTemplate(server, 'not exists') is None
 
 
-@pytest.mark.asyncio
 async def test_BuildoutTemplate_getSymbolAtPosition_SectionReference(
     template: BuildoutTemplate, ) -> None:
   for pos in (Position(line=2, character=24), Position(line=2, character=22),
@@ -380,7 +369,6 @@ async def test_BuildoutTemplate_getSymbolAtPosition_SectionReference(
     assert symbol.referenced_section_recipe is not None
 
 
-@pytest.mark.asyncio
 async def test_BuildoutTemplate_getSymbolAtPosition_OptionReference(
     template: BuildoutTemplate, ) -> None:
   for pos in (Position(line=2, character=34), Position(line=2, character=31),
@@ -404,7 +392,6 @@ async def test_BuildoutTemplate_getSymbolAtPosition_OptionReference(
     assert symbol.referenced_option.value == '${:command}'
 
 
-@pytest.mark.asyncio
 async def test_BuildoutTemplate_getSymbolAtPosition_None(
     template: BuildoutTemplate, ) -> None:
   for pos in (Position(line=0, character=0), Position(line=4, character=11),
@@ -413,7 +400,6 @@ async def test_BuildoutTemplate_getSymbolAtPosition_None(
     assert symbol is None
 
 
-@pytest.mark.asyncio
 async def test_BuildoutTemplate_getAllOptionReferenceSymbols(
     template: BuildoutTemplate) -> None:
   symbols: List[Symbol] = []
@@ -440,7 +426,6 @@ async def test_BuildoutTemplate_getAllOptionReferenceSymbols(
   assert {s.kind for s in symbols} == {SymbolKind.OptionReference}
 
 
-@pytest.mark.asyncio
 async def test_getOptionValues(server: LanguageServer):
   parsed = await open(
       ls=server,
@@ -465,7 +450,6 @@ async def test_getOptionValues(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_open_extends(server: LanguageServer):
   parsed = await open(
       ls=server,
@@ -568,7 +552,6 @@ async def test_open_extends(server: LanguageServer):
   assert 'option -' not in parsed['reduced_option']
 
 
-@pytest.mark.asyncio
 async def test_open_extends_buildout_default_options(server: LanguageServer):
   parsed = await open(
       ls=server, uri='file:///extended/default_buildout_options/buildout.cfg')
@@ -610,7 +593,6 @@ async def test_open_extends_buildout_default_options(server: LanguageServer):
   )
 
 
-@pytest.mark.asyncio
 async def test_open_extends_file_not_found(server: LanguageServer):
   with pytest.raises(FileNotFoundError):
     await open(
@@ -624,7 +606,6 @@ async def test_open_extends_file_not_found(server: LanguageServer):
   assert list(parsed.keys()) == ['buildout', 'section']
 
 
-@pytest.mark.asyncio
 async def test_open_extends_loop(server: LanguageServer):
   with pytest.raises(RecursiveIncludeError):
     await open(ls=server,
@@ -635,7 +616,6 @@ async def test_open_extends_loop(server: LanguageServer):
   assert list(parsed.keys()) == ['buildout', 'section']
 
 
-@pytest.mark.asyncio
 async def test_open_extends_getSymbolAtPosition(server: LanguageServer):
   parsed = await open(ls=server, uri='file:///extended/buildout.cfg')
   assert isinstance(parsed, BuildoutProfile)
@@ -655,7 +635,6 @@ async def test_open_extends_getSymbolAtPosition(server: LanguageServer):
   assert overloaded_option_value.value == 'from extended/buildout.cfg'
 
 
-@pytest.mark.asyncio
 async def test_open_extends_section_header_locations(server: LanguageServer):
   parsed = await open(ls=server, uri='file:///extended/buildout.cfg')
   assert isinstance(parsed, BuildoutProfile)
@@ -683,7 +662,6 @@ async def test_open_extends_section_header_locations(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_open_extends_cache(server: LanguageServer):
   await open(
       ls=server,
@@ -694,7 +672,6 @@ async def test_open_extends_cache(server: LanguageServer):
   assert server.workspace.get_document.call_count == 4  # type: ignore
 
 
-@pytest.mark.asyncio
 async def test_open_extends_cache_clear(server: LanguageServer):
   parsed = await open(
       ls=server,
@@ -735,7 +712,6 @@ async def test_open_extends_cache_clear(server: LanguageServer):
     assert 'option' in symbol.referenced_section
 
 
-@pytest.mark.asyncio
 async def test_open_macro(server: LanguageServer):
   parsed = await open(ls=server, uri='file:///extended/macros/buildout.cfg')
   assert isinstance(parsed, BuildoutProfile)
@@ -746,7 +722,6 @@ async def test_open_macro(server: LanguageServer):
   assert '<' not in parsed['macro_user']
 
 
-@pytest.mark.asyncio
 async def test_open_extends_network(server: LanguageServer, mocked_responses):
   mocked_responses.add(responses.GET,
                        'https://example.com/profiles/buildout.cfg',
@@ -772,7 +747,6 @@ async def test_open_extends_network(server: LanguageServer, mocked_responses):
   assert parsed['section']['option'].value == 'value'
 
 
-@pytest.mark.asyncio
 async def test_open_extends_network_fail(server: LanguageServer,
                                          mocked_responses):
   mocked_responses.add(
@@ -790,7 +764,6 @@ async def test_open_extends_network_fail(server: LanguageServer,
   assert list(parsed.keys()) == ['buildout']
 
 
-@pytest.mark.asyncio
 async def test_BuildoutProfile_resolve_value(
     buildout: BuildoutProfile) -> None:
   assert buildout.resolve_value('section5',

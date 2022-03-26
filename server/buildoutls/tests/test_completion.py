@@ -1,6 +1,5 @@
 import textwrap
 
-import pytest
 from pygls.lsp.types import (
     CompletionContext,
     CompletionParams,
@@ -17,7 +16,6 @@ from pygls.server import LanguageServer
 from ..server import lsp_completion
 
 
-@pytest.mark.asyncio
 async def test_complete_section_reference(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete section names
@@ -150,7 +148,6 @@ async def test_complete_section_reference(server: LanguageServer):
     ]
 
 
-@pytest.mark.asyncio
 async def test_complete_option_reference(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked)
 
@@ -302,7 +299,6 @@ async def test_complete_option_reference(server: LanguageServer):
                  ]
 
 
-@pytest.mark.asyncio
 async def test_complete_option_name(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete options of a section
@@ -362,7 +358,6 @@ async def test_complete_option_name(server: LanguageServer):
   ]) == ['option1 = ', 'recipe = ']
 
 
-@pytest.mark.asyncio
 async def test_complete_referenced_option_recipe_valid_values(
     server: LanguageServer):
   # complete option values with recipe valid values
@@ -380,7 +375,6 @@ async def test_complete_referenced_option_recipe_valid_values(
   ]) == ['true', 'yes']
 
 
-@pytest.mark.asyncio
 async def test_complete_recipe_option_value(server: LanguageServer):
   # complete recipe= with known recipes
   params = CompletionParams(
@@ -404,7 +398,6 @@ async def test_complete_recipe_option_value(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_complete_macro_option_value(server: LanguageServer):
   # complete <= with parts
   params = CompletionParams(
@@ -421,7 +414,6 @@ async def test_complete_macro_option_value(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_complete_insert_text(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # Only insert the text after the latest -
@@ -461,7 +453,6 @@ async def test_complete_insert_text(server: LanguageServer):
   assert completion.text_edit.new_text == '${sect.ion.three'
 
 
-@pytest.mark.asyncio
 async def test_complete_buildout_options(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete known buildout options
@@ -477,7 +468,6 @@ async def test_complete_buildout_options(server: LanguageServer):
   assert 'allow-picked-versions' in [c.label for c in completions]
 
 
-@pytest.mark.asyncio
 async def test_complete_buildout_parts(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete buildout:parts with existing parts
@@ -494,7 +484,6 @@ async def test_complete_buildout_parts(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_complete_buildout_extends(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete buildout:extends with local files
@@ -554,7 +543,6 @@ async def test_complete_buildout_extends(server: LanguageServer):
   )
 
 
-@pytest.mark.asyncio
 async def test_complete_comments(server: LanguageServer):
   # no completions happens in comments
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )

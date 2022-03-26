@@ -1,4 +1,3 @@
-import pytest
 from pygls.lsp.types import (
     Position,
     TextDocumentIdentifier,
@@ -9,7 +8,6 @@ from pygls.server import LanguageServer
 from ..server import lsp_hover
 
 
-@pytest.mark.asyncio
 async def test_hover(server: LanguageServer):
   # on referenced option, hover show the option value
   hover = await lsp_hover(

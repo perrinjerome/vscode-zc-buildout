@@ -1,4 +1,3 @@
-import pytest
 from pygls.lsp.types import (
     Location,
     Position,
@@ -11,7 +10,6 @@ from pygls.server import LanguageServer
 from ..server import lsp_definition
 
 
-@pytest.mark.asyncio
 async def test_goto_definition(server: LanguageServer):
   params = TextDocumentPositionParams(
       text_document=TextDocumentIdentifier(
@@ -26,7 +24,6 @@ async def test_goto_definition(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_unknown_option(server: LanguageServer):
   # location option in ${section1:location} is not explicitly defined,
   # in this case we jump to the section header
@@ -43,7 +40,6 @@ async def test_goto_definition_unknown_option(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_unknown_section(server: LanguageServer):
   params = TextDocumentPositionParams(
       text_document=TextDocumentIdentifier(
@@ -54,7 +50,6 @@ async def test_goto_definition_unknown_section(server: LanguageServer):
   assert definitions == []
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_macro(server: LanguageServer):
   params = TextDocumentPositionParams(
       text_document=TextDocumentIdentifier(
@@ -69,7 +64,6 @@ async def test_goto_definition_macro(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_extended_profile(server: LanguageServer):
   params = TextDocumentPositionParams(
       text_document=TextDocumentIdentifier(

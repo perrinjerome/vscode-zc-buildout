@@ -1,4 +1,3 @@
-import pytest
 from pygls.lsp.types import (
     CompletionContext,
     CompletionParams,
@@ -21,7 +20,6 @@ from ..server import (
 )
 
 
-@pytest.mark.asyncio
 async def test_complete_slapos_instance_software(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete ${ with software
@@ -39,7 +37,6 @@ async def test_complete_slapos_instance_software(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_complete_slapos_instance_instance(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # complete $${ with instance
@@ -142,7 +139,6 @@ async def test_complete_slapos_instance_instance(server: LanguageServer):
                  ]
 
 
-@pytest.mark.asyncio
 async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
   # in jinja instance, complete ${ with instance
@@ -163,7 +159,6 @@ async def test_complete_slapos_instance_instance_jinja(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def XXXXtest_complete_slapos_instance_with_unknown_extends(
     server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
@@ -184,7 +179,6 @@ async def XXXXtest_complete_slapos_instance_with_unknown_extends(
   ]
 
 
-@pytest.mark.asyncio
 async def test_hover_slapos_instance(server: LanguageServer):
   hover = await lsp_hover(
       server,
@@ -219,7 +213,6 @@ async def test_hover_slapos_instance(server: LanguageServer):
   assert hover.contents == '```\n\n```'
 
 
-@pytest.mark.asyncio
 async def test_complete_slapos_instance_template(server: LanguageServer):
   context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
 
@@ -240,7 +233,6 @@ async def test_complete_slapos_instance_template(server: LanguageServer):
   ]
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_slapos_instance_software(
     server: LanguageServer):
   definitions = await lsp_definition(
@@ -257,7 +249,6 @@ async def test_goto_definition_slapos_instance_software(
   ]
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_slapos_instance_instance(
     server: LanguageServer):
   definitions = await lsp_definition(
@@ -274,7 +265,6 @@ async def test_goto_definition_slapos_instance_instance(
   ]
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_slapos_instance_software_empty_section(
     server: LanguageServer):
   definitions = await lsp_definition(
@@ -291,7 +281,6 @@ async def test_goto_definition_slapos_instance_software_empty_section(
   ]
 
 
-@pytest.mark.asyncio
 async def test_goto_definition_slapos_instance_template(
     server: LanguageServer):
   definitions = await lsp_definition(
@@ -308,7 +297,6 @@ async def test_goto_definition_slapos_instance_template(
   ]
 
 
-@pytest.mark.asyncio
 async def test_open_instance_type(server: LanguageServer):
   assert isinstance(
       await
@@ -323,7 +311,6 @@ async def test_open_instance_type(server: LanguageServer):
   )
 
 
-@pytest.mark.asyncio
 async def test_diagnostic_instance(server) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///slapos/instance_as_buildout_profile/instance.cfg')
