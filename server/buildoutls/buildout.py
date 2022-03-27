@@ -174,14 +174,11 @@ class BuildoutOptionDefinition:
     if location is not None:
       self.locations = self.locations[:-1] + (location, )
 
-  @staticmethod
-  def clone(
-      option_def: 'BuildoutOptionDefinition') -> 'BuildoutOptionDefinition':
-    new_option_def = BuildoutOptionDefinition(option_def.value,
-                                              option_def.locations[0])
-    new_option_def.locations = option_def.locations
-    new_option_def.values = option_def.values
-    return new_option_def
+  def copy(self) -> 'BuildoutOptionDefinition':
+    copied = BuildoutOptionDefinition(self.value, self.locations[0])
+    copied.locations = self.locations
+    copied.values = self.values
+    return copied
 
 
 class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
@@ -192,6 +189,11 @@ class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
     if recipe_option is not None:
       return recipes.registry.get(recipe_option.value)
     return None
+
+  if TYPE_CHECKING:
+
+    def copy(self) -> '_BuildoutSection':
+      ...
 
 
 # Inherit from OrderDict so that we can instanciate BuildoutSection.
@@ -343,6 +345,14 @@ class BuildoutTemplate:
     # where the $${ substitution values are read
     self.second_level_buildout = second_level_buildout
 
+  def copy(self) -> 'BuildoutTemplate':
+    return self.__class__(
+        self.uri,
+        self.source,
+        self.buildout,
+        self.second_level_buildout,
+    )
+
   def _getSymbolAtPosition(
       self,
       position: Position,
@@ -492,6 +502,14 @@ class BuildoutTemplate:
 class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
   """A parsed buildout file, without extends.
   """
+  def copy(self) -> 'BuildoutProfile':
+    copied = self.__class__(self.uri, self.source)
+    copied.section_header_locations = self.section_header_locations.copy()
+    copied.has_dynamic_extends = self.has_dynamic_extends
+    for k, v in self.items():
+      copied[k] = v.copy()
+    return copied
+
   def __init__(self, uri: URI, source: str):
     BuildoutTemplate.__init__(
         self,
@@ -849,6 +867,10 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
 class ResolvedBuildout(BuildoutProfile):
   """A buildout where extends and section macros <= have been extended.
   """
+  if TYPE_CHECKING:
+
+    def copy(self) -> 'ResolvedBuildout':
+      ...
 
 
 ### cache ###
@@ -921,8 +943,10 @@ async def parse(
   Returned value changed to a BuildoutProfile instance.
 
   """
-  if uri in _parse_cache:
-    return copy.deepcopy(_parse_cache[uri])
+  try:
+    return _parse_cache[uri].copy()
+  except KeyError:
+    pass
 
   parsed_uri = urllib.parse.urlparse(uri)
   if parsed_uri.scheme in (
@@ -946,8 +970,8 @@ async def parse(
       uri,
       allow_errors,
   )
-  _parse_cache[uri] = copy.deepcopy(parsed)
-  return parsed
+  _parse_cache[uri] = parsed
+  return parsed.copy()
 
 
 async def _parse(
@@ -1317,7 +1341,7 @@ async def _open(
     assert base
     uri = urllib.parse.urljoin(base, uri)
   try:
-    return copy.deepcopy(_resolved_buildout_cache[uri])
+    return _resolved_buildout_cache[uri].copy()
   except KeyError:
     pass
 
@@ -1341,22 +1365,23 @@ async def _open(
         option_reference_re.match(extended_profile)
         for extended_profile in extends)
     if extends:
-      # extends, as absolute URI that we can use as cache key
+      # buildout:extends, as absolute URI that we can use as cache key
       absolute_extends: Tuple[URI, ...] = tuple(
           urllib.parse.urljoin(base, x) for x in extends)
       if absolute_extends in _resolved_extends_cache:
         logger.debug("_open %r was in cache", absolute_extends)
-        eresult = copy.deepcopy(_resolved_extends_cache[absolute_extends])
+        eresult = _resolved_extends_cache[absolute_extends]
       else:
         eresult = await _open(ls, base, extends.pop(0), seen, allow_errors)
-        has_dynamic_extends = has_dynamic_extends or eresult.has_dynamic_extends
         for fname in extends:
-          _update(eresult, await _open(ls, base, fname, seen, allow_errors))
+          has_dynamic_extends = has_dynamic_extends or eresult.has_dynamic_extends
+          eresult = _update(eresult, await _open(ls, base, fname, seen,
+                                                 allow_errors))
         for absolute_extend in absolute_extends:
           _extends_dependency_graph[absolute_extend].add(uri)
 
       if not has_dynamic_extends:
-        _resolved_extends_cache[absolute_extends] = copy.deepcopy(eresult)
+        _resolved_extends_cache[absolute_extends] = eresult
 
     result = _update(eresult, profile)
   else:
@@ -1379,8 +1404,8 @@ async def _open(
 
   result.has_dynamic_extends = has_dynamic_extends
   resolved = cast(ResolvedBuildout, result)
-  _resolved_buildout_cache[uri] = copy.deepcopy(resolved)
-  return resolved
+  _resolved_buildout_cache[uri] = resolved
+  return resolved.copy()
 
 
 def _update_section(
@@ -1389,7 +1414,7 @@ def _update_section(
 ) -> BuildoutSection:
   """Update s1 with values from s2.
   """
-  s2 = copy.copy(s2)
+  s1 = s1.copy()
   for k, v in s2.items():
     if k == '_profile_base_location_':
       continue
@@ -1397,7 +1422,7 @@ def _update_section(
       k = k.rstrip(' -')
       # Find v1 in s2 first; it may have been set by a += operation first
       option_def = s2.get(k, s1.get(k, v))
-      new_option_def = BuildoutOptionDefinition.clone(option_def)
+      new_option_def = option_def.copy()
       new_option_def.overrideValue(
           # same logic as as SectionKey.removeFromValue
           value='\n'.join(new_v for new_v in option_def.value.split('\n')
@@ -1410,7 +1435,7 @@ def _update_section(
       option_def = s2.get(k, s1.get(k, v))
       option_values = [] if option_def.default_value else option_def.value.split(
           '\n')
-      new_option_def = BuildoutOptionDefinition.clone(option_def)
+      new_option_def = option_def.copy()
       new_option_def.overrideValue(
           # same logic as as SectionKey.addToValue
           value='\n'.join(option_values + v.value.split('\n')),
@@ -1419,7 +1444,9 @@ def _update_section(
     else:
       if k in s1 and (v.location != s1[k].location):
         if not v.default_value:
-          s1[k].overrideValue(v.value, v.location)
+          new_option_def = s1[k].copy()
+          new_option_def.overrideValue(v.value, v.location)
+          s1[k] = new_option_def
       else:
         s1[k] = v
   return s1
@@ -1428,6 +1455,7 @@ def _update_section(
 def _update(d1: BuildoutProfile, d2: BuildoutProfile) -> BuildoutProfile:
   """update d1 with values from d2
   """
+  d1 = d1.copy()
   d1.uri = d2.uri
   d1.source = d2.source
   for section in d2:
@@ -1473,10 +1501,10 @@ def _do_extend_raw(
       if raw is None:
         raise MissingExtendedSection("No section named %r" % iname)
       result.update({
-          k: copy.copy(v)
+          k: v.copy()
           for (k, v) in _do_extend_raw(iname, raw, buildout, doing).items()
       })
-    _update_section(result, section)
+    result = _update_section(result, section)
     result.pop('<', None)
     return result
   finally:
