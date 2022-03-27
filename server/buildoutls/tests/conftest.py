@@ -11,6 +11,7 @@ from ..buildout import (
     _extends_dependency_graph,
     _parse_cache,
     _resolved_buildout_cache,
+    _resolved_extends_cache,
     parse,
 )
 
@@ -72,6 +73,7 @@ def server() -> Any:
 
   def clearCaches() -> None:
     _resolved_buildout_cache.clear()
+    _resolved_extends_cache.clear()
     _parse_cache.clear()
     _extends_dependency_graph.clear()
 
