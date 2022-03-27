@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Fixed:
 
+- significantly improve performance by implementing .copy() method and using an intermediate cache.
 - fix crash when completing option made only of space
 - fix crash when completing after ${}
 
