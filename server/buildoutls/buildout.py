@@ -855,8 +855,14 @@ class ResolvedBuildout(BuildoutProfile):
 
 # a cache of un-resolved buildouts by uri
 _parse_cache: Dict[URI, BuildoutProfile] = {}
-# a cache of resolved buildouts by uri
+# a cache of resolved buildouts by uri. This is the cache that will be used for most operations
+# such as completions, code actions etc.
 _resolved_buildout_cache: Dict[URI, ResolvedBuildout] = {}
+# a cache of resolved buildouts by list of uris. This is an intermediate cache used to rebuild
+# quickly the cach from _resolved__buildout_cache, because the cache from _resolved__buildout_cache
+# needs to be flushed each time the document at `uri` is modified. This cache is only flushed if
+# ${buildout:extends} is modified.
+_resolved_extends_cache: Dict[Tuple[URI, ...], BuildoutProfile] = {}
 # a mapping of dependencies between extends, so that we can clear caches when
 # a profile is modified.
 _extends_dependency_graph: Dict[URI, Set[URI]] = collections.defaultdict(set)
@@ -881,6 +887,9 @@ def _clearExtendCache(uri: URI, done: Set[URI]) -> None:
     return
   done.add(uri)
   _resolved_buildout_cache.pop(uri, None)
+  for uris in list(_resolved_extends_cache):
+    if uri in uris:
+      _resolved_extends_cache.pop(uris, None)
   logger.debug(
       "Clearing extends cache for %s Dependencies: %s",
       uri,
@@ -888,6 +897,9 @@ def _clearExtendCache(uri: URI, done: Set[URI]) -> None:
   )
   for dependend_uri in _extends_dependency_graph[uri]:
     _resolved_buildout_cache.pop(dependend_uri, None)
+    for dependend_uris in list(_resolved_extends_cache):
+      if dependend_uri in dependend_uris:
+        _resolved_extends_cache.pop(dependend_uris, None)
     _clearExtendCache(dependend_uri, done)
   _extends_dependency_graph[uri].clear()
 
@@ -1304,9 +1316,11 @@ async def _open(
   if not _isurl(uri):
     assert base
     uri = urllib.parse.urljoin(base, uri)
-  if uri in _resolved_buildout_cache:
-    logger.debug("_open %r was in cache", uri)
+  try:
     return copy.deepcopy(_resolved_buildout_cache[uri])
+  except KeyError:
+    pass
+
   base = uri[:uri.rfind('/')] + '/'
 
   if uri in seen:
@@ -1316,10 +1330,10 @@ async def _open(
 
   seen.append(uri)
 
-  result = await parse(ls, uri, allow_errors=allow_errors)
+  profile = await parse(ls, uri, allow_errors=allow_errors)
+  extends_option = profile['buildout'].pop(
+      'extends', None) if 'buildout' in profile else None
 
-  extends_option = result['buildout'].pop(
-      'extends', None) if 'buildout' in result else None
   has_dynamic_extends = False
   if extends_option:
     extends = extends_option.value.split()
@@ -1328,15 +1342,25 @@ async def _open(
         for extended_profile in extends)
     if extends:
       # extends, as absolute URI that we can use as cache key
-      absolute_extends = tuple(urllib.parse.urljoin(base, x) for x in extends)
-      eresult = await _open(ls, base, extends.pop(0), seen, allow_errors)
-      has_dynamic_extends = has_dynamic_extends or eresult.has_dynamic_extends
-      for fname in extends:
-        _update(eresult, await _open(ls, base, fname, seen, allow_errors))
-      for absolute_extend in absolute_extends:
-        _extends_dependency_graph[absolute_extend].add(uri)
+      absolute_extends: Tuple[URI, ...] = tuple(
+          urllib.parse.urljoin(base, x) for x in extends)
+      if absolute_extends in _resolved_extends_cache:
+        logger.debug("_open %r was in cache", absolute_extends)
+        eresult = copy.deepcopy(_resolved_extends_cache[absolute_extends])
+      else:
+        eresult = await _open(ls, base, extends.pop(0), seen, allow_errors)
+        has_dynamic_extends = has_dynamic_extends or eresult.has_dynamic_extends
+        for fname in extends:
+          _update(eresult, await _open(ls, base, fname, seen, allow_errors))
+        for absolute_extend in absolute_extends:
+          _extends_dependency_graph[absolute_extend].add(uri)
 
-      result = _update(eresult, result)
+      if not has_dynamic_extends:
+        _resolved_extends_cache[absolute_extends] = copy.deepcopy(eresult)
+
+    result = _update(eresult, profile)
+  else:
+    result = profile
 
   seen.pop()
 
@@ -1355,8 +1379,8 @@ async def _open(
 
   result.has_dynamic_extends = has_dynamic_extends
   resolved = cast(ResolvedBuildout, result)
-  _resolved_buildout_cache[uri] = resolved
-  return copy.deepcopy(resolved)
+  _resolved_buildout_cache[uri] = copy.deepcopy(resolved)
+  return resolved
 
 
 def _update_section(
