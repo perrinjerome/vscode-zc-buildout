@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Iterable, Optional
+from typing import Iterable, Optional, cast
 
 import cachetools
 import packaging.version
@@ -41,7 +41,7 @@ class PyPIClient:
     current = pkg_resources.parse_version(version)
     latest = pkg_resources.parse_version(project_data['info']['version'])
     if latest > current:
-      return latest
+      return cast(packaging.version.Version, latest)
     return None
 
   @cachetools.cached(
