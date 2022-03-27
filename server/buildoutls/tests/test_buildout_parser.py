@@ -712,6 +712,46 @@ async def test_open_extends_cache_clear(server: LanguageServer):
     assert 'option' in symbol.referenced_section
 
 
+async def test_open_resolved_cache_clear(server: LanguageServer):
+  with mock.patch.object(
+      server.workspace,
+      'get_document',
+      wraps=server.workspace.get_document,
+  ) as get_document_initial:
+    parsed = await open(
+        ls=server,
+        uri='file:///extended/two_levels.cfg',
+    )
+    assert parsed is not None
+    symbol = await parsed.getSymbolAtPosition(Position(line=6, character=30))
+    assert symbol is not None
+    assert symbol.referenced_section is not None
+    assert 'option' in symbol.referenced_section
+  assert mock.call(
+      'file:///extended/extended.cfg') in get_document_initial.mock_calls
+
+  clearCache('file:///extended/two_levels.cfg')
+
+  with mock.patch.object(
+      server.workspace,
+      'get_document',
+      wraps=server.workspace.get_document,
+  ) as get_document_after_clear_cache:
+    parsed = await open(
+        ls=server,
+        uri='file:///extended/two_levels.cfg',
+    )
+    assert parsed is not None
+    symbol = await parsed.getSymbolAtPosition(Position(line=6, character=30))
+    assert symbol is not None
+    assert symbol.referenced_section is not None
+    assert 'option' in symbol.referenced_section
+  assert mock.call('file:///extended/two_levels.cfg'
+                   ) in get_document_after_clear_cache.mock_calls
+  assert mock.call('file:///extended/extended.cfg'
+                   ) not in get_document_after_clear_cache.mock_calls
+
+
 async def test_open_macro(server: LanguageServer):
   parsed = await open(ls=server, uri='file:///extended/macros/buildout.cfg')
   assert isinstance(parsed, BuildoutProfile)
