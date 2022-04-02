@@ -131,6 +131,9 @@ export async function activate() {
     for (let retries = 0; retries < 60; retries++) {
       await shortDelay();
       installationOK = isExtensionInstalled(settings.python.executable);
+      if (installationOK) {
+        break;
+      }
     }
     if (installationOK) {
       vscode.window.showInformationMessage(
