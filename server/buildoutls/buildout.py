@@ -910,7 +910,7 @@ async def parse(
 
   """
   if uri in _parse_cache:
-    return copy.deepcopy(_parse_cache[uri])
+    return copy.deepcopy(copy.deepcopy(_parse_cache[uri]))
 
   parsed_uri = urllib.parse.urlparse(uri)
   if parsed_uri.scheme in (
@@ -934,7 +934,7 @@ async def parse(
       uri,
       allow_errors,
   )
-  _parse_cache[uri] = copy.deepcopy(parsed)
+  _parse_cache[uri] = copy.deepcopy(copy.deepcopy(copy.deepcopy(parsed)))
   return parsed
 
 
