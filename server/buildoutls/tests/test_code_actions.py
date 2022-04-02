@@ -333,6 +333,11 @@ async def test_update_md5sum_code_action(
           ],
       }, ), )
 
+  server.progress.create_async.assert_awaited_once()
+  server.progress.begin.assert_called_once()
+  server.progress.report.assert_called()
+  server.progress.end.assert_called_once()
+
 
 async def test_update_md5sum_code_action_without_md5sum_option(
     server,
