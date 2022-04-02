@@ -96,13 +96,15 @@ def aio_benchmark(benchmark):
 
 
 @pytest.mark.parametrize('cache', ('with_cache', 'without_cache'))
-@pytest.mark.parametrize('profile_relative_path', (
-    'stack/slapos.cfg',
-    'stack/erp5/buildout.cfg',
-    'stack/erp5/rsyslogd.cfg.in',
-    'stack/erp5/instance.cfg.in',
-    'stack/erp5/instance-erp5.cfg.in',
-))
+@pytest.mark.parametrize(
+    'profile_relative_path',
+    (
+        'stack/slapos.cfg',
+        # 'stack/erp5/buildout.cfg',
+        # 'stack/erp5/rsyslogd.cfg.in',
+        # 'stack/erp5/instance.cfg.in',
+        # 'stack/erp5/instance-erp5.cfg.in',
+    ))
 async def test_open_and_diagnostic(
     no_pypi_diagnostics: Any,
     slapos_working_copy: pathlib.Path,
