@@ -27,7 +27,7 @@
   "python.formatting.provider": "yapf",
   "python.linting.pylintEnabled": false,
   "python.linting.mypyEnabled": true,
-  "python.pythonPath": ".env/bin/python",
+  "python.pythonPath": "../venv/bin/python",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   }
