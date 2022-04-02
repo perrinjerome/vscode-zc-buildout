@@ -1,11 +1,16 @@
 import os
 import urllib.parse
 from typing import Any
-from unittest import mock
+import sys
+if sys.version_info < (3, 8):
+  import mock
+else:
+  from unittest import mock
 
 import pytest
 import responses
 from pygls.workspace import Document, Workspace
+import pygls.progress
 
 from ..buildout import (
     _extends_dependency_graph,
@@ -49,6 +54,7 @@ def server() -> Any:
     show_message = mock.Mock()
     show_message_log = mock.Mock()
     apply_edit = mock.Mock()
+    progress = mock.create_autospec(pygls.progress.Progress)
 
   server = FakeServer()
 

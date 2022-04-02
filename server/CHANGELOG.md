@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Added:
 
+- code actions: report progress when updating md5sum
 - expose commands to start & stop profiling.
 
 ### Fixed:
