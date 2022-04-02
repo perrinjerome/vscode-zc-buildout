@@ -1,0 +1,39 @@
+name: Benchmark server
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  benchmark:
+    name: Run pytest-benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Run benchmark
+        run: |
+          cd server
+          pip install -r requirements.txt -r test-requirements.txt
+          pytest buildoutls/bench/slapos.py --benchmark-json ../benchmark-data.json
+      - name: Download previous benchmark data
+        uses: actions/cache@v1
+        with:
+          path: ./cache
+          key: ${{ runner.os }}-benchmark
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1.13.0
+        with:
+          name: Python Benchmark with pytest-benchmark
+          tool: "pytest"
+          output-file-path: benchmark-data.json
+          external-data-json-path: ./cache/benchmark-data.json
+          alert-threshold: "110%"
+          fail-on-alert: true
