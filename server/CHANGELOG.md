@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+## [0.7.0] - 2022-01-06
+
 ### Added:
 
 - code actions: report progress when updating md5sum
@@ -124,4 +126,5 @@ and this project adheres to [Semantic Versioning][semver].
 [0.6.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.5.0...v0.6.0
 [0.6.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.0...v0.6.1
 [0.6.2]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.1...v0.6.2
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.2...master
+[0.7.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.2...v0.7.0
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.7.0...master
