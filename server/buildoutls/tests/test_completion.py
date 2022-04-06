@@ -611,3 +611,15 @@ async def test_complete_after_empty_substitution(server: LanguageServer):
   completions = await lsp_completion(server, params)
   assert completions is not None
   assert sorted([c.label for c in completions]) == []
+
+
+async def test_complete_empty_substitution_before_substitution(
+    server: LanguageServer):
+  context = CompletionContext(trigger_kind=CompletionTriggerKind.Invoked, )
+  params = CompletionParams(text_document=TextDocumentIdentifier(
+      uri="file:///completions/empty_substitution.cfg"),
+                            position=Position(line=2, character=12),
+                            context=context)
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted([c.label for c in completions]) == ['buildout', 'section']
