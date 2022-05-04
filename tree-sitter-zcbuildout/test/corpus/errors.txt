@@ -1,0 +1,35 @@
+====
+Incomplete section
+====
+[sec
+
+----
+(profile
+  (ERROR
+    (section_name)
+    (UNEXPECTED '\n')))
+
+
+====
+Incomplete substitution
+====
+[section]
+options = ${}
+
+----
+(profile
+  (ERROR
+    (section_name)
+    (UNEXPECTED '\n')))
+
+
+====
+Incomplete option
+[section]
+option
+
+----
+(profile
+  (ERROR
+    (section_name)
+    (UNEXPECTED '\n')))

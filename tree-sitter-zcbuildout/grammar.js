@@ -2,7 +2,6 @@ module.exports = grammar({
   name: "zcbuildout",
 
   extras: ($) => [
-    // $.comment,
     /[ \t]+\n*/, // Ignore empty lines.
   ],
 
@@ -24,10 +23,21 @@ module.exports = grammar({
     section_name: ($) => /[^\[\]:\n]+/,
     section_condition: ($) => /[^\[\]\n]+/,
 
+    // TODO: multi line options
     option: ($) => seq($.option_name, "=", $.option_value),
 
     option_name: ($) => /[^#=\s\[]+/,
-    option_value: ($) => /[^\n]+/,
+    option_value: ($) =>
+      seq(
+        optional($.option_text),
+        repeat1(seq($.option_with_reference, optional($.option_text)))
+      ),
+
+    option_with_reference: ($) =>
+      seq("${", optional($.referenced_section), ":", $.referenced_option, "}"),
+    referenced_section: ($) => /[^:\}\n]+/,
+    referenced_option: ($) => /[^\n\}]+/,
+    option_text: ($) => choice(/[^\$\n]+[^\n]*/, /[^\$\n]\$\{[^\}\n]+/),
 
     comment: ($) => token(prec(-10, /#.*\n+/)),
   },

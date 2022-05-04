@@ -10,7 +10,7 @@ foo = bar
 (profile
   (section
     (section_name)
-      (option (option_name) (option_value))))
+      (option (option_name) (option_value (option_text)))))
 
 
 ==================
@@ -85,26 +85,8 @@ this = # is not comment
     (comment)
     (option
       (option_name)
-      (option_value))))
-
-
-=====================
-variable substitution
-=====================
-
-[section]
-foo = ${section-reference:option-reference}
-
----
-
-(profile
-  (section
-    (section_name)
-    (option
-      (option_name)
       (option_value
-          (section_reference)
-          (option_reference)))))
+        (option_text)))))
 
 
 ==================
@@ -122,5 +104,6 @@ foo = bar
     (section_condition)
     (option
       (option_name)
-      (option_value))))
+      (option_value
+        (option_text)))))
 

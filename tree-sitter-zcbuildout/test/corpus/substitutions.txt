@@ -1,0 +1,105 @@
+=====================
+variable substitution
+=====================
+
+[section]
+foo = ${section-reference:option-reference}
+
+---
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_with_reference
+          (referenced_section)
+          (referenced_option))))))
+
+
+=====================
+variable substitution text before and after
+=====================
+
+[section]
+before = before ${section-reference:option-reference}
+after = ${section-reference:option-reference} text after
+before-and-after = text before ${section-reference:option-reference} text after
+
+---
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text)
+        (option_with_reference
+          (referenced_section)
+          (referenced_option))
+        (option_text)))))
+
+
+=====================
+variable substitution empty section
+=====================
+
+[section]
+foo = ${:option-reference}
+
+---
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_with_reference
+          (referenced_section)
+          (referenced_option))))))
+
+=====================
+variable substitution multiple substitutions
+=====================
+
+[section]
+foo = ${section1:option1} ${section2:option2}
+foo = ${section1:option1} middle ${section2:option2}
+foo = before ${section1:option1} ${section2:option2}
+foo = ${section1:option1} ${section2:option2} after
+foo = before ${section1:option1}  ${section2:option2} after
+foo = before ${section1:option1} middle ${section2:option2} after
+
+---
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_with_reference
+          (referenced_section)
+          (referenced_option))))))
+
+
+=====================
+variable substitution escaped
+=====================
+
+[section]
+foo = $${section-reference:option-reference} text after
+
+---
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text)))))
+
