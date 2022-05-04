@@ -31,6 +31,8 @@ jobs:
           cd client && npm audit
       - name: lint
         run: npm run lint
+      - name: test:syntax
+        run: npm run test:syntax
       - name: run end to end test
         run: xvfb-run npm run test
       - name: build extension package

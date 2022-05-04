@@ -86,6 +86,7 @@
     "watch": "tsc -b -w",
     "postinstall": "cd client && npm install && cd ..",
     "test": "bash -c 'CODE_TESTS_PATH=\"$(pwd)/client/out/test\" CODE_TESTS_WORKSPACE=\"$(pwd)/profiles/\" node \"$(pwd)/client/out/test/runTest\"'",
+    "test:syntax": "vscode-tmgrammar-snap 'test/syntax/*.cfg*'",
     "lint": "eslint . --ext .js,.ts",
     "lint-fix": "eslint . --ext .js,.ts --fix"
   },
@@ -106,6 +107,7 @@
     "sinon": "^9.0.2",
     "tslint": "^5.16.0",
     "typescript": "^3.9.4",
-    "vsce": "latest"
+    "vsce": "latest",
+    "vscode-tmgrammar-test": "^0.1.1"
   }
 }
