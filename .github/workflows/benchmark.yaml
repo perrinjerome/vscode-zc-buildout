@@ -29,7 +29,6 @@ jobs:
           key: ${{ runner.os }}-benchmark
       - name: Initialise base benchmark result (pull request)
         run: |
-          ls ./cache
           if test -f ./cache/benchmark-data-main.json ; then cp ./cache/benchmark-data-main.json ./cache/benchmark-data-pull-request.json ; fi
         if: ${{ github.event_name == 'pull_request' }}
       - name: Store benchmark result (pull request)
