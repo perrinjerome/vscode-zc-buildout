@@ -12,11 +12,15 @@ class RecipeOption:
       self,
       documentation: str = "",
       valid_values: Sequence[str] = (),
+      deprecated: Optional[str] = "",
   ):
     self.documentation = documentation
 
     self.valid_values = valid_values
     """Possible values. If this is empty, it means no constraint on values.
+    """
+    self.deprecated = deprecated
+    """Reason for the option to be deprected, if it is deprecated.
     """
 
 
@@ -63,6 +67,8 @@ Recipe(
     options={
         'url':
         RecipeOption('Url or path of the input template', ),
+        'inline':
+        RecipeOption('Inline input template', ),
         'output':
         RecipeOption('Path of the output', ),
         'md5sum':
@@ -80,14 +86,21 @@ Recipe(
     description=
     'Template recipe which supports remote resource and templating with [jinja2](https://jinja.palletsprojects.com/en/2.10.x/)',
     url='https://pypi.org/project/slapos.recipe.template/',
-    required_options=('template', 'rendered'),
+    required_options=('url', 'output'),
     options={
+        'url':
+        RecipeOption('Url or path of the input template', ),
+        'inline':
+        RecipeOption('Inline input template', ),
+        'output':
+        RecipeOption('Path of the output', ),
         'template':
         RecipeOption(
             'Template url/path, as accepted by `zc.buildout.download.Download.__call__`. For very short template, it can make sense to put it directly into buildout.cfg: the value is the template itself, prefixed by the string `inline:` + an optional newline.',
-        ),
+            deprecated="Use `url` or `inline` options instead"),
         'rendered':
-        RecipeOption('Where rendered template should be stored.', ),
+        RecipeOption('Where rendered template should be stored.',
+                     deprecated="Use `output` option instead"),
         'context':
         RecipeOption(
             """
