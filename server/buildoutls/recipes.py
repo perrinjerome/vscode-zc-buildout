@@ -111,10 +111,10 @@ Recipe(
  Available types are described below. name is the variable name to declare. Expression semantic varies depending on the type.
 
 Available types:
-	* `raw`: Immediate literal string.
-	* `key`: Indirect literal string.
-	* `import`: Import a python module.
-	* `section`: Make a whole buildout section available to template, as a dictionary.
+  * `raw`: Immediate literal string.
+  * `key`: Indirect literal string.
+  * `import`: Import a python module.
+  * `section`: Make a whole buildout section available to template, as a dictionary.
 
 Indirection targets are specified as `[section]:key` . It is possible to use buildout’s built-in variable replacement instead instead of `key` type, but keep in mind that different lines are different variables for this recipe. It might be what you want (factorising context chunk declarations), otherwise you should use indirect types
 """, ),
@@ -143,11 +143,11 @@ Indirection targets are specified as `[section]:key` . It is possible to use bui
 
 Available types:
 
-	* `rawfile`: Literal path of a file.
-	* `file`: Indirect path of a file.
-	* `rawfolder`: Literal path of a folder. Any file in such folder can be imported.
-	* `folder`: Indirect path of a folder. Any file in such folder can be imported.
-	* `encoding`: Encoding for input template and output file. Defaults to `utf-8`.
+  * `rawfile`: Literal path of a file.
+  * `file`: Indirect path of a file.
+  * `rawfolder`: Literal path of a folder. Any file in such folder can be imported.
+  * `folder`: Indirect path of a folder. Any file in such folder can be imported.
+  * `encoding`: Encoding for input template and output file. Defaults to `utf-8`.
 """, ),
     },
 )
