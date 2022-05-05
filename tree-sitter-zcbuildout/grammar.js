@@ -32,10 +32,12 @@ module.exports = grammar({
         ),
         seq(/\n/, prec.left(2, repeat1($._option_value_multi_line)))
       ),
-    _option_value_mono_line: ($) => prec.left(1, seq($.option_text, /\n+/)),
+    _option_value_mono_line: ($) => prec.left(1, seq($._option_text, /\n+/)),
     _option_value_multi_line: ($) =>
-      prec.left(2, repeat1(seq(/\s+/, $.option_text, /\n+/))),
+      prec.left(2, repeat1(seq(/\s+/, $._option_text, /\n+/))),
 
+    _option_text: ($) =>
+      repeat1(choice($.option_text, $.option_with_reference)),
     option_text: ($) => /[^\n]+/,
     xoption_value: ($) =>
       seq(
@@ -43,7 +45,6 @@ module.exports = grammar({
         repeat1(seq($.option_with_reference, optional($.option_text)))
       ),
 
-    // option = text maybe ${ok:ok}
     option_with_reference: ($) =>
       seq("${", optional($.referenced_section), ":", $.referenced_option, "}"),
     referenced_section: ($) => /[^:\}\n]+/,
