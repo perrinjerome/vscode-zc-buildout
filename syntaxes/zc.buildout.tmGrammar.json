@@ -6,46 +6,12 @@
   "scopeName": "source.zc-buildout",
   "patterns": [
     {
-      "begin": "^([ \\t]+)?(?=#)",
-      "beginCaptures": {
+      "captures": {
         "1": {
-          "name": "punctuation.whitespace.comment.leading.zc-buildout"
-        }
-      },
-      "end": "(?!\\G)",
-      "patterns": [
-        {
-          "begin": "#",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.comment.zc-buildout"
-            }
-          },
-          "end": "\\n",
           "name": "comment.line.number-sign.zc-buildout"
         }
-      ]
-    },
-    {
-      "begin": "^(^[ \\t]+)?(?=;)",
-      "beginCaptures": {
-        "1": {
-          "name": "punctuation.whitespace.comment.leading.zc-buildout"
-        }
       },
-      "end": "(?!\\G)",
-      "patterns": [
-        {
-          "begin": ";",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.comment.zc-buildout"
-            }
-          },
-          "end": "\\n",
-          "name": "comment.line.semicolon.zc-buildout"
-        }
-      ]
+      "match": "^([#;].*)\n"
     },
     {
       "captures": {

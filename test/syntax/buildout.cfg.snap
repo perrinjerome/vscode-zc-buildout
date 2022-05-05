@@ -1,6 +1,7 @@
 ># comment
-#^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout punctuation.definition.comment.zc-buildout
-# ^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
+#^^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
+>; comment
+#^^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
 >[section]
 #^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
 # ^^^^^^^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout entity.name.type.section-name.zc-buildout
@@ -11,8 +12,17 @@
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
 #        ^^^^^^^ source.zc-buildout-jinja
 ># comment
-#^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout punctuation.definition.comment.zc-buildout
-# ^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
+#^^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
+>; comment
+#^^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
+>option =
+#^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
+#      ^ source.zc-buildout-jinja
+#       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
+>  # not comment (after space)
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.zc-buildout-jinja
+>	# not comment (aftar tabs)
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.zc-buildout-jinja
 >
 >[substitutions]
 #^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
