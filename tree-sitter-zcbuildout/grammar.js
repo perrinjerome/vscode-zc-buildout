@@ -4,9 +4,7 @@ module.exports = grammar({
   extras: ($) => [
     /[ \t]+\n*/, // Ignore empty lines.
   ],
-  conflicts: ($) => [
-    // [$.option_value]
-  ],
+
   rules: {
     profile: ($) =>
       seq(/[\n]*/, optional(repeat($.comment)), repeat(seq($.section))),
@@ -21,7 +19,7 @@ module.exports = grammar({
     section_name: ($) => /[^\[\]:\n]+/,
     section_condition: ($) => /[^\[\]\n]+/,
 
-    option: ($) => seq($.option_name, "=", $.option_value),
+    option: ($) => seq($.option_name, "=", /\s*/, $.option_value),
 
     option_name: ($) => /[^#;=\s\[]+/,
     option_value: ($) =>
@@ -38,18 +36,12 @@ module.exports = grammar({
 
     _option_text: ($) =>
       repeat1(choice($.option_text, $.option_with_reference)),
-    option_text: ($) => /[^\n]+/,
-    xoption_value: ($) =>
-      seq(
-        optional($.option_text),
-        repeat1(seq($.option_with_reference, optional($.option_text)))
-      ),
+    option_text: ($) => /([^\n]+\$\$[^\n]*|[^\n]*\$\$[^\n]+|[^\$\n]+)+/,
 
     option_with_reference: ($) =>
       seq("${", optional($.referenced_section), ":", $.referenced_option, "}"),
     referenced_section: ($) => /[^:\}\n]+/,
     referenced_option: ($) => /[^\n\}]+/,
-    xoption_text: ($) => choice(/[^\$\n]+[^\n]*/, /[^\$\n]\$\{[^\}\n]+/),
 
     comment: ($) => token(prec(-10, /[#;]+.*\n+/)),
   },

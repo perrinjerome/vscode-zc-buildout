@@ -1,21 +1,23 @@
-==================
+================================================================================
 one section
-==================
+================================================================================
 
 [a section title]
 foo = bar
 
----
+--------------------------------------------------------------------------------
 
 (profile
   (section
     (section_name)
-      (option (option_name) (option_value (option_text)))))
+    (option
+      (option_name)
+      (option_value
+        (option_text)))))
 
-
-==================
+================================================================================
 many sections, some empty
-==================
+================================================================================
 
 [a section title]
 foo = bar
@@ -33,44 +35,48 @@ foo = bar
 
 # a straggler comment...
 
----
-
+--------------------------------------------------------------------------------
 
 (profile
   (section
     (section_name)
     (option
       (option_name)
-      (option_value)))
+      (option_value
+        (option_text))))
   (section
     (section_name)
     (option
       (option_name)
-      (option_value)))
+      (option_value
+        (option_text))))
   (section
     (section_name))
   (section
     (section_name)
     (option
       (option_name)
-      (option_value))
+      (option_value
+        (option_text)))
     (option
       (option_name)
-      (option_value))
+      (option_value
+        (option_text)))
     (comment)
     (comment)
     (option
       (option_name)
-      (option_value))
+      (option_value
+        (option_text)))
     (option
       (option_name)
-      (option_value))
-  (comment)))
+      (option_value
+        (option_text)))
+    (comment)))
 
-
-==================
+================================================================================
 multiline options
-==================
+================================================================================
 
 [section]
 multi1 = line1
@@ -80,7 +86,7 @@ multi2 =
   line1
   line2
 
----
+--------------------------------------------------------------------------------
 
 (profile
   (section
@@ -96,9 +102,9 @@ multi2 =
         (option_text)
         (option_text)))))
 
-=====================
+================================================================================
 comments
-=====================
+================================================================================
 
 # this is comment
 [section]
@@ -109,7 +115,8 @@ this =
    # this is not comment
 # this is comment
 
-----
+--------------------------------------------------------------------------------
+
 (profile
   (comment)
   (section
@@ -121,21 +128,19 @@ this =
         (option_text)))
     (comment)
     (option
-        (option_name)
-        (option_value
-          (option_text)))
-      (comment)))
+      (option_name)
+      (option_value
+        (option_text)))
+    (comment)))
 
-
-
-==================
+================================================================================
 conditional section
-==================
+================================================================================
 
 [section1:python2]
 foo = bar
 
----
+--------------------------------------------------------------------------------
 
 (profile
   (section
@@ -145,4 +150,3 @@ foo = bar
       (option_name)
       (option_value
         (option_text)))))
-
