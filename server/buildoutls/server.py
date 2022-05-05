@@ -26,6 +26,7 @@ from pygls.lsp.types import (
     Command,
     CompletionItem,
     CompletionItemKind,
+    CompletionItemTag,
     CompletionOptions,
     CompletionParams,
     DidChangeTextDocumentParams,
@@ -449,17 +450,22 @@ async def lsp_completion(
         if recipe:
           for k, v in recipe.options.items():
             items.append(
-                CompletionItem(label=k,
-                               text_edit=getDefaultTextEdit(
-                                   doc,
-                                   params.position,
-                                   k + ' = ',
-                               ),
-                               kind=CompletionItemKind.Variable,
-                               documentation=MarkupContent(
-                                   kind=MarkupKind.Markdown,
-                                   value=v.documentation,
-                               )))
+                CompletionItem(
+                    label=k,
+                    text_edit=getDefaultTextEdit(
+                        doc,
+                        params.position,
+                        k + ' = ',
+                    ),
+                    kind=CompletionItemKind.Variable,
+                    tags=([CompletionItemTag.Deprecated]
+                          if v.deprecated else []),
+                    documentation=MarkupContent(
+                        kind=MarkupKind.Markdown,
+                        value=
+                        (f'**Deprecated**\n{v.deprecated}\n\n----\n{v.documentation}'
+                         if v.deprecated else v.documentation),
+                    )))
         else:
           # section has no recipe, complete `recipe` as an option name
           items.append(

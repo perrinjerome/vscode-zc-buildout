@@ -4,6 +4,7 @@ from pygls.lsp.types import (
     CompletionContext,
     CompletionParams,
     CompletionTriggerKind,
+    CompletionItemTag,
     MarkupContent,
     MarkupKind,
     Position,
@@ -389,6 +390,31 @@ async def test_complete_referenced_option_recipe_valid_values(
       c.text_edit.new_text for c in completions
       if isinstance(c.text_edit, TextEdit)
   ]) == ['true', 'yes']
+
+
+async def test_complete_deprecated_options(server: LanguageServer):
+  params = CompletionParams(
+      text_document=TextDocumentIdentifier(
+          uri="file:///completions/recipe.cfg"),
+      position=Position(line=12, character=1),
+      context=CompletionContext(trigger_kind=CompletionTriggerKind.Invoked))
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert 'rendered' in [c.label for c in completions]
+  rendered_completion, = [c for c in completions if c.label == 'rendered']
+  assert rendered_completion.tags == [CompletionItemTag.Deprecated]
+  assert rendered_completion.documentation == MarkupContent(
+      kind=MarkupKind.Markdown,
+      value=textwrap.dedent('''\
+          **Deprecated**
+          Use `output` option instead
+
+          ----
+          Where rendered template should be stored.'''))
+  output_completion, = [c for c in completions if c.label == 'output']
+  assert not output_completion.tags
+  assert output_completion.documentation == MarkupContent(
+      kind=MarkupKind.Markdown, value='Path of the output')
 
 
 async def test_complete_recipe_option_value(server: LanguageServer):
