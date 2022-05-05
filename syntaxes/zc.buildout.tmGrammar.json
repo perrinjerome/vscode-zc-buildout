@@ -64,14 +64,17 @@
           "name": "punctuation.definition.entity.zc-buildout"
         },
         "2": {
-          "name": "keyword.other.section.zc-buildout"
+          "name": "entity.name.type.section-name.zc-buildout"
         },
         "3": {
+          "name": "variable.parameter.section-condition.zc-buildout"
+        },
+        "4": {
           "name": "punctuation.definition.entity.zc-buildout"
         }
       },
-      "match": "^(\\[)(.*?)(\\])",
-      "name": "entity.name.section.group-title.zc-buildout"
+      "match": "^(\\[)([^:\n]*?)(:.*)?(\\])",
+      "name": "entity.name.type.section-name.zc-buildout"
     },
     {
       "begin": "\"",
