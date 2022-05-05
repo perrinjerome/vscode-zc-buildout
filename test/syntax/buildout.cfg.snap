@@ -22,9 +22,7 @@
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^^^^^ source.zc-buildout-jinja
-#               ^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout punctuation.definition.comment.zc-buildout
-#                ^^^^^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
+#        ^^^^^^^^^^^^^^^^^^^^^ source.zc-buildout-jinja
 >option = ${section:option}
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja

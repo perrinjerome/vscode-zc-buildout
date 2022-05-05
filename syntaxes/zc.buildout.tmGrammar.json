@@ -6,7 +6,7 @@
   "scopeName": "source.zc-buildout",
   "patterns": [
     {
-      "begin": "(^[ \\t]+)?(?=#)",
+      "begin": "^([ \\t]+)?(?=#)",
       "beginCaptures": {
         "1": {
           "name": "punctuation.whitespace.comment.leading.zc-buildout"
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "begin": "(^[ \\t]+)?(?=;)",
+      "begin": "^(^[ \\t]+)?(?=;)",
       "beginCaptures": {
         "1": {
           "name": "punctuation.whitespace.comment.leading.zc-buildout"
