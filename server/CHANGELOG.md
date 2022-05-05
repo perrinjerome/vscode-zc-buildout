@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning][semver].
 - recipe: support defining deprecated options
 - recipe: support `slapos.recipe.template` version 0.5
 
+### Fixed:
+
+- recipe: fix some markdown syntax in recipe docs
+
 ## [0.7.0] - 2022-01-06
 
 ### Added:
