@@ -92,25 +92,15 @@
       "name": "string.quoted.double.zc-buildout"
     },
     {
-      "begin": "[^\\$]\\$\\{",
-      "beginCaptures": {
+      "match": "(\\$\\{[a-zA-Z0-9_.-]*):([a-zA-Z0-9_.-]+\\})",
+      "captures": {
         "0": {
-          "name": "punctuation.definition.string.begin.zc-buildout"
+          "name": "variable.language.section-reference.zc-buildout"
+        },
+        "1": {
+          "name": "variable.parameter.option-reference.zc-buildout"
         }
-      },
-      "end": "(\\}|\n)",
-      "endCaptures": {
-        "0": {
-          "name": "punctuation.definition.string.end.zc-buildout"
-        }
-      },
-      "name": "variable.other.single.zc-buildout",
-      "patterns": [
-        {
-          "match": "\\\\.",
-          "name": "constant.character.escape.zc-buildout"
-        }
-      ]
+      }
     }
   ]
 }
