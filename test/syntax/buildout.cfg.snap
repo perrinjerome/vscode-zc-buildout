@@ -125,3 +125,28 @@
 #                              ^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
 >
 >
+>[strings]
+#^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
+# ^^^^^^^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout entity.name.type.section-name.zc-buildout
+#        ^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
+>line = "single line"
+#^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
+#    ^ source.zc-buildout-jinja
+#     ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
+#      ^ source.zc-buildout-jinja
+#       ^ source.zc-buildout-jinja string.quoted.double.zc-buildout punctuation.definition.string.begin.zc-buildout
+#        ^^^^^^^^^^^ source.zc-buildout-jinja string.quoted.double.zc-buildout
+#                   ^ source.zc-buildout-jinja string.quoted.double.zc-buildout punctuation.definition.string.end.zc-buildout
+>without-end = "without end
+#^^^^^^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
+#           ^ source.zc-buildout-jinja
+#            ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
+#             ^ source.zc-buildout-jinja
+#              ^ source.zc-buildout-jinja string.quoted.double.zc-buildout punctuation.definition.string.begin.zc-buildout
+#               ^^^^^^^^^^^ source.zc-buildout-jinja string.quoted.double.zc-buildout
+>this = is not string
+#^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
+#    ^ source.zc-buildout-jinja
+#     ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
+#      ^^^^^^^^^^^^^^^ source.zc-buildout-jinja
+>

@@ -83,7 +83,7 @@
           "name": "punctuation.definition.string.begin.zc-buildout"
         }
       },
-      "end": "\"",
+      "end": "[\"\n]",
       "endCaptures": {
         "0": {
           "name": "punctuation.definition.string.end.zc-buildout"
