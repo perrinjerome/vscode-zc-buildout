@@ -27,94 +27,86 @@
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#           ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                         ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^ source.zc-buildout-jinja
+#         ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                  ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 >option = text ${section:option}
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^^^ source.zc-buildout-jinja
-#             ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                              ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^^^^^^ source.zc-buildout-jinja
+#              ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                       ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 >option = ${section:option} text
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#           ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                         ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^ source.zc-buildout-jinja
+#         ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                  ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 #                          ^^^^^^ source.zc-buildout-jinja
 >option = text ${section:option} ${section:option}
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^^^ source.zc-buildout-jinja
-#             ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                              ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
-#                               ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                                  ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                                                ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^^^^^^ source.zc-buildout-jinja
+#              ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                       ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
+#                               ^ source.zc-buildout-jinja
+#                                ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                                         ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 >option = ${section:option} text ${section:option}
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#           ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                         ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
-#                          ^^^^^ source.zc-buildout-jinja
-#                               ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                                  ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                                                ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^ source.zc-buildout-jinja
+#         ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                  ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
+#                          ^^^^^^ source.zc-buildout-jinja
+#                                ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                                         ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 >option = ${section:option} ${section:option} text
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#           ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                         ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
-#                          ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                             ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                                           ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^ source.zc-buildout-jinja
+#         ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                  ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
+#                          ^ source.zc-buildout-jinja
+#                           ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                                    ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 #                                            ^^^^^^ source.zc-buildout-jinja
 >option = text ${section:option} text ${section:option}
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^^^ source.zc-buildout-jinja
-#             ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                              ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
-#                               ^^^^^ source.zc-buildout-jinja
-#                                    ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                                       ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                                                     ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^^^^^^ source.zc-buildout-jinja
+#              ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                       ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
+#                               ^^^^^^ source.zc-buildout-jinja
+#                                     ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                                              ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 >option = text ${section:option} text ${section:option} text
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^^^ source.zc-buildout-jinja
-#             ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                              ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
-#                               ^^^^^ source.zc-buildout-jinja
-#                                    ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                                       ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                                                     ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^^^^^^ source.zc-buildout-jinja
+#              ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                       ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
+#                               ^^^^^^ source.zc-buildout-jinja
+#                                     ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                                              ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 #                                                      ^^^^^^ source.zc-buildout-jinja
 >option = ${section:option} text ${section:option} text
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
 #       ^ source.zc-buildout-jinja punctuation.separator.key-value.zc-buildout
-#        ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#           ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                         ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
-#                          ^^^^^ source.zc-buildout-jinja
-#                               ^^^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.begin.zc-buildout
-#                                  ^^^^^^^^^^^^^^ source.zc-buildout-jinja variable.other.single.zc-buildout
-#                                                ^ source.zc-buildout-jinja variable.other.single.zc-buildout punctuation.definition.string.end.zc-buildout
+#        ^ source.zc-buildout-jinja
+#         ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                  ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
+#                          ^^^^^^ source.zc-buildout-jinja
+#                                ^^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout variable.parameter.option-reference.zc-buildout
+#                                         ^^^^^^^^ source.zc-buildout-jinja variable.language.section-reference.zc-buildout
 #                                                 ^^^^^^ source.zc-buildout-jinja
 >
 >
