@@ -2,9 +2,9 @@
 #^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout punctuation.definition.comment.zc-buildout
 # ^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
 >[section]
-#^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout punctuation.definition.entity.zc-buildout
-# ^^^^^^^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout keyword.other.section.zc-buildout
-#        ^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout punctuation.definition.entity.zc-buildout
+#^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
+# ^^^^^^^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout entity.name.type.section-name.zc-buildout
+#        ^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
 >option = value
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
@@ -15,9 +15,9 @@
 # ^^^^^^^^ source.zc-buildout-jinja comment.line.number-sign.zc-buildout
 >
 >[substitutions]
-#^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout punctuation.definition.entity.zc-buildout
-# ^^^^^^^^^^^^^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout keyword.other.section.zc-buildout
-#              ^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout punctuation.definition.entity.zc-buildout
+#^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
+# ^^^^^^^^^^^^^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout entity.name.type.section-name.zc-buildout
+#              ^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
 >option = va_ue # not-comment
 #^^^^^^ source.zc-buildout-jinja keyword.other.definition.zc-buildout
 #      ^ source.zc-buildout-jinja
@@ -119,8 +119,9 @@
 >
 >
 >[conditional-section:condition]
-#^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout punctuation.definition.entity.zc-buildout
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout keyword.other.section.zc-buildout
-#                              ^ source.zc-buildout-jinja entity.name.section.group-title.zc-buildout punctuation.definition.entity.zc-buildout
+#^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
+# ^^^^^^^^^^^^^^^^^^^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout entity.name.type.section-name.zc-buildout
+#                    ^^^^^^^^^^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout variable.parameter.section-condition.zc-buildout
+#                              ^ source.zc-buildout-jinja entity.name.type.section-name.zc-buildout punctuation.definition.entity.zc-buildout
 >
 >
