@@ -68,6 +68,34 @@ foo = bar
   (comment)))
 
 
+==================
+multiline options
+==================
+
+[section]
+multi1 = line1
+  line2
+
+multi2 =
+  line1
+  line2
+
+---
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text)
+        (option_text)))
+    (option
+      (option_name)
+      (option_value
+        (option_text)
+        (option_text)))))
+
 =====================
 comments
 =====================
@@ -76,6 +104,10 @@ comments
 [section]
 # this is comment
 this = # is not comment
+; this is comment
+this =
+   # this is not comment
+# this is comment
 
 ----
 (profile
@@ -86,7 +118,14 @@ this = # is not comment
     (option
       (option_name)
       (option_value
-        (option_text)))))
+        (option_text)))
+    (comment)
+    (option
+        (option_name)
+        (option_value
+          (option_text)))
+      (comment)))
+
 
 
 ==================
