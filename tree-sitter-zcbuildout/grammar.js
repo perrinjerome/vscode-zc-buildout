@@ -15,7 +15,12 @@ module.exports = grammar({
       ),
 
     _section_header: ($) =>
-      seq("[", $.section_name, optional(seq(/:/, $.section_condition)), "]"),
+      seq(
+        "[",
+        field("section_name", $.section_name),
+        optional(seq(/:/, field("section_condition", $.section_condition))),
+        "]"
+      ),
     section_name: ($) => /[^\[\]:\n]+/,
     section_condition: ($) => /[^\[\]\n]+/,
 
@@ -39,7 +44,13 @@ module.exports = grammar({
     option_text: ($) => /([^\n]+\$\$[^\n]*|[^\n]*\$\$[^\n]+|[^\$\n]+)+/,
 
     option_with_reference: ($) =>
-      seq("${", optional($.referenced_section), ":", $.referenced_option, "}"),
+      seq(
+        "${",
+        field("referenced_section", optional($.referenced_section)),
+        ":",
+        field("referenced_option", $.referenced_option),
+        "}"
+      ),
     referenced_section: ($) => /[^:\}\n]+/,
     referenced_option: ($) => /[^\n\}]+/,
 
