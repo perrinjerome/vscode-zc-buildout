@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+## [0.7.1] - 2022-05-08
+
 ### Added:
 
 - recipe: support defining deprecated options
@@ -16,7 +18,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 - recipe: fix some markdown syntax in recipe docs
 
-## [0.7.0] - 2022-01-06
+## [0.7.0] - 2022-04-03
 
 ### Added:
 
@@ -136,4 +138,5 @@ and this project adheres to [Semantic Versioning][semver].
 [0.6.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.0...v0.6.1
 [0.6.2]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.1...v0.6.2
 [0.7.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.2...v0.7.0
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.7.0...master
+[0.7.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.7.0...v0.7.1
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.7.1...master
