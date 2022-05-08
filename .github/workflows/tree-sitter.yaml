@@ -19,4 +19,5 @@ jobs:
         run: |
           cd tree-sitter-zcbuildout
           npm install
+          npx run tree-sitter generate
           npm run test
