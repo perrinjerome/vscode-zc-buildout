@@ -1,0 +1,22 @@
+name: tree-sitter grammar
+
+on: [push]
+
+env:
+  NODE_VERSION: "16.x"
+
+jobs:
+  build-and-test:
+    name: Compile and test grammar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: npm install and compile
+        run: |
+          cd tree-sitter-zcbuildout
+          npm install
+          npm run test
