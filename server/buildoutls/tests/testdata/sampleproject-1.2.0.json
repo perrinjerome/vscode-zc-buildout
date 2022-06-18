@@ -279,7 +279,7 @@
   "vulnerabilities": [
     {
       "aliases": ["example"],
-      "details": "An example vulnerabulity",
+      "details": "An example vulnerability",
       "fixed_in": ["1.3.0", "2.0.0"],
       "id": "EXAMPLE-VUL",
       "link": "https://example.org/vulnerability/EXAMPLE-VUL",
