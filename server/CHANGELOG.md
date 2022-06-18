@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+### Fixed:
+
+ - pypi: fix a crash when unknown project is listed in `versions`
+
 ## [0.7.1] - 2022-05-08
 
 ### Added:

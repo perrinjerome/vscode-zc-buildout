@@ -40,6 +40,19 @@ def sampleproject_json_response(
 
 
 @pytest.fixture
+def notfound_0_0_1_json_response(
+    mocked_responses: responses.RequestsMock) -> None:
+  with open(
+      pathlib.Path(__file__).parent / 'testdata' / 'notfound-0.0.1.json') as f:
+    response_json = json.load(f)
+  mocked_responses.add(
+      responses.GET,
+      'https://pypi.org/pypi/notfound/0.0.1/json',
+      json=response_json,
+  )
+
+
+@pytest.fixture
 def sampleproject_1_2_0_json_response(
     mocked_responses: responses.RequestsMock) -> None:
   with open(
@@ -153,6 +166,7 @@ async def test_diagnostic_and_versions_code_action_newer_version_available(
 
 async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
     server,
+    notfound_0_0_1_json_response,
     sampleproject_json_response,
     sampleproject_1_2_0_json_response,
 ) -> None:

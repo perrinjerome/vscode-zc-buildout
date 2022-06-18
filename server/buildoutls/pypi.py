@@ -75,7 +75,7 @@ class PyPIClient:
     else:
       parsed_version = pkg_resources.parse_version(version)
       for vulnerability in (KnownVulnerability(**v)
-                            for v in project_data['vulnerabilities']):
+                            for v in project_data.get('vulnerabilities', ())):
         for fixed_in in (pkg_resources.parse_version(f)
                          for f in vulnerability.fixed_in):
           if fixed_in > parsed_version:
