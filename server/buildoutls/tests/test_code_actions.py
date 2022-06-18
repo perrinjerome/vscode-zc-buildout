@@ -169,9 +169,9 @@ async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
                                    end=Position(line=1, character=21))
   assert diagnostic.message == \
     textwrap.dedent("""\
-      sampleproject 1.2.0 has some known vunerabilities:
+      sampleproject 1.2.0 has some known vulnerabilities:
       EXAMPLE-VUL
-      An example vulnerabulity
+      An example vulnerability
       https://example.org/vulnerability/EXAMPLE-VUL""")
 
   code_action_params = CodeActionParams(

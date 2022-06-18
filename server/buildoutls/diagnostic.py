@@ -269,7 +269,7 @@ async def getDiagnostics(
             severity = DiagnosticSeverity.Hint
             message = f"Newer version available ({newer_version})"
             if known_vulnerabilities:
-              message = f'{package_name} {package_version} has some known vunerabilities:\n' + '\n\n'.join(
+              message = f'{package_name} {package_version} has some known vulnerabilities:\n' + '\n\n'.join(
                   f"{v.id}\n{v.details}\n{v.link}"
                   for v in known_vulnerabilities)
               severity = DiagnosticSeverity.Warning
