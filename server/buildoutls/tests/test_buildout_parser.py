@@ -94,6 +94,7 @@ async def test_parse() -> None:
                 range=Range(start=Position(line=3, character=0),
                             end=Position(line=4, character=0)))),
   ]
+  assert not parsed.has_jinja
 
 
 async def test_parse_jinja_option() -> None:
@@ -129,6 +130,7 @@ async def test_parse_jinja_option() -> None:
   assert parsed['sectionJINJA_EXPRESSION']['option'].value == 'value'
   assert parsed['another_section'][
       'JINJA_EXPRESSION'].value == 'JINJA_EXPRESSION'
+  assert parsed.has_jinja
 
 
 async def test_BuildoutProfile_getSymbolAtPosition_BuildoutOptionKey(

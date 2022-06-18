@@ -130,6 +130,16 @@ async def test_diagnostics_non_existent_sections_unknown_extends(
       [])
 
 
+async def test_diagnostics_non_existent_sections_jinja(server) -> None:
+  await parseAndSendDiagnostics(
+      server,
+      'file:///diagnostics/jinja-sections.cfg',
+  )
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/jinja-sections.cfg', [])
+  server.publish_diagnostics.reset_mock()
+
+
 async def test_diagnostics_required_recipe_option(server) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///diagnostics/recipe_required_option.cfg')

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed:
 
  - pypi: fix a crash when unknown project is listed in `versions`
+ - diagnostic: don't emit false positives for profiles generated with jinja
 
 ## [0.7.1] - 2022-05-08
 
