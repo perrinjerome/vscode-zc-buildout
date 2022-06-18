@@ -40,7 +40,7 @@ def sampleproject_json_response(
 
 
 @pytest.fixture
-def sampleproject_json_1_2_0_response(
+def sampleproject_1_2_0_json_response(
     mocked_responses: responses.RequestsMock) -> None:
   with open(
       pathlib.Path(__file__).parent / 'testdata' /
@@ -54,7 +54,7 @@ def sampleproject_json_1_2_0_response(
 
 
 @pytest.fixture
-def sampleproject_json_1_3_0_response(
+def sampleproject_1_3_0_json_response(
     mocked_responses: responses.RequestsMock) -> None:
   with open(
       pathlib.Path(__file__).parent / 'testdata' /
@@ -68,7 +68,7 @@ def sampleproject_json_1_3_0_response(
 
 
 @pytest.fixture
-def sampleproject_json_2_0_0_response(
+def sampleproject_2_0_0_json_response(
     mocked_responses: responses.RequestsMock) -> None:
   with open(
       pathlib.Path(__file__).parent / 'testdata' /
@@ -95,7 +95,7 @@ def _dump_and_load(param: CodeActionParams) -> CodeActionParams:
 async def test_diagnostic_and_versions_code_action_newer_version_available(
     server,
     sampleproject_json_response,
-    sampleproject_json_1_3_0_response,
+    sampleproject_1_3_0_json_response,
 ) -> None:
   await parseAndSendDiagnostics(
       server,
@@ -154,7 +154,7 @@ async def test_diagnostic_and_versions_code_action_newer_version_available(
 async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
     server,
     sampleproject_json_response,
-    sampleproject_json_1_2_0_response,
+    sampleproject_1_2_0_json_response,
 ) -> None:
   await parseAndSendDiagnostics(
       server, 'file:///code_actions/known_vulnerabilities.cfg')
@@ -215,7 +215,7 @@ async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
 async def test_diagnostic_and_versions_code_action_latest_version(
     server,
     sampleproject_json_response,
-    sampleproject_json_2_0_0_response,
+    sampleproject_2_0_0_json_response,
 ) -> None:
   await parseAndSendDiagnostics(
       server,
