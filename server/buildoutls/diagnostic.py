@@ -76,7 +76,9 @@ async def getDiagnostics(
   has_dynamic_extends = (isinstance(resolved_buildout,
                                     buildout.BuildoutProfile)
                          and resolved_buildout.has_dynamic_extends)
-  if not has_dynamic_extends:
+  has_jinja = (isinstance(resolved_buildout, buildout.BuildoutProfile)
+               and resolved_buildout.has_jinja)
+  if not has_dynamic_extends and not has_jinja:
     installed_parts: Set[str] = set([])
     if isinstance(resolved_buildout, buildout.BuildoutProfile):
       if "parts" in resolved_buildout["buildout"]:

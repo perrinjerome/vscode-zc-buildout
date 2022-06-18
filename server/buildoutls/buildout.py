@@ -506,6 +506,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     copied = self.__class__(self.uri, self.source)
     copied.section_header_locations = self.section_header_locations.copy()
     copied.has_dynamic_extends = self.has_dynamic_extends
+    copied.has_jinja = self.has_jinja
     for k, v in self.items():
       copied[k] = v.copy()
     return copied
@@ -523,6 +524,10 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     """
     self.has_dynamic_extends = False
     """Flag true if this resolved buildout had extends defined dynamically.
+    This only happens with SlapOS instance buildout which are templates of profiles.
+    """
+    self.has_jinja = False
+    """Flag true if this resolved buildout is a jinja template.
     This only happens with SlapOS instance buildout which are templates of profiles.
     """
 
@@ -1090,6 +1095,7 @@ async def _parse(
 
     jinja_parser.feed(line)
     if jinja_parser.is_in_jinja:
+      sections.has_jinja = True
       continue
     line = jinja_parser.line
 
@@ -1359,6 +1365,7 @@ async def _open(
       'extends', None) if 'buildout' in profile else None
 
   has_dynamic_extends = False
+  has_jinja = profile.has_jinja
   if extends_option:
     extends = extends_option.value.split()
     has_dynamic_extends = (jinja.JinjaParser.jinja_value in extends) or any(
@@ -1375,6 +1382,7 @@ async def _open(
         eresult = await _open(ls, base, extends.pop(0), seen, allow_errors)
         for fname in extends:
           has_dynamic_extends = has_dynamic_extends or eresult.has_dynamic_extends
+          has_jinja = has_jinja or eresult.has_jinja
           eresult = _update(eresult, await _open(ls, base, fname, seen,
                                                  allow_errors))
         for absolute_extend in absolute_extends:
@@ -1403,6 +1411,7 @@ async def _open(
         pass
 
   result.has_dynamic_extends = has_dynamic_extends
+  result.has_jinja = has_jinja
   resolved = cast(ResolvedBuildout, result)
   _resolved_buildout_cache[uri] = resolved
   return resolved.copy()
