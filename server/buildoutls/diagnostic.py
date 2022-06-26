@@ -1,7 +1,9 @@
+import asyncio
 import logging
 import re
 import urllib.parse
-from typing import AsyncIterable, Set
+from typing import AsyncIterable, Awaitable, List, Optional, Set, Tuple
+import packaging
 
 from pygls.lsp.types import (
     Diagnostic,
@@ -236,6 +238,13 @@ async def getDiagnostics(
               )
 
       if resolved_buildout.get('versions'):
+        sem = asyncio.Semaphore(6)
+        package_version_options: List[Tuple[
+            str, str, buildout.BuildoutOptionDefinition]] = []
+        known_vulnerabilities_coros: List[Awaitable[Tuple[
+            types.KnownVulnerability, ...]]] = []
+        latest_version_coros: List[Awaitable[Optional[
+            packaging.version.Version]]] = []
         for package_name, option in resolved_buildout['versions'].items():
           if option.location.uri != uri:
             continue
@@ -259,14 +268,32 @@ async def getDiagnostics(
               package_version,
               option.location,
           )
-
-          known_vulnerabilities = tuple(
+          package_version_options.append(
+              (package_name, package_version, option))
+          known_vulnerabilities_coros.append(
               pypi_client.get_known_vulnerabilities(
                   package_name,
                   package_version,
+                  sem,
               ))
-          newer_version = pypi_client.get_latest_version(
-              package_name, package_version)
+          latest_version_coros.append(
+              pypi_client.get_latest_version(
+                  package_name,
+                  package_version,
+                  sem,
+              ))
+        known_vulnerabilities_results = await asyncio.gather(
+            *known_vulnerabilities_coros)
+        latest_version_results = await asyncio.gather(*latest_version_coros)
+        for (
+            (package_name, package_version, option),
+            known_vulnerabilities,
+            newer_version,
+        ) in zip(
+            package_version_options,
+            known_vulnerabilities_results,
+            latest_version_results,
+        ):
           if newer_version:
             severity = DiagnosticSeverity.Hint
             message = f"Newer version available ({newer_version})"

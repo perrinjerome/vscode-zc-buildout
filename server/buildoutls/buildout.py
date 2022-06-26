@@ -38,12 +38,12 @@ from typing import (
     Union,
     cast,
 )
-from typing_extensions import TypeAlias
 
-import requests
+import aiohttp.client_exceptions
 from pygls.lsp.types import Location, Position, Range
 from pygls.server import LanguageServer
 from pygls.workspace import Document
+from typing_extensions import TypeAlias
 from zc.buildout.buildout import _buildout_default_options
 from zc.buildout.configparser import (
     MissingSectionHeaderError,
@@ -53,10 +53,9 @@ from zc.buildout.configparser import (
     section_header,
 )
 
-from . import jinja, recipes
+from . import aiohttp_session, jinja, recipes
 
 logger = logging.getLogger(__name__)
-requests_session = requests.Session()
 
 # Matches a reference like ${section:option}
 # We also tolerate ${section: without option or the ending } to generate completions.
@@ -959,8 +958,11 @@ async def parse(
       'https',
   ):
     try:
-      fp = io.StringIO(requests_session.get(uri).text)
-    except requests.exceptions.ConnectionError:
+      async with aiohttp_session.get_session().get(uri) as resp:
+        resp.raise_for_status()
+        fp = io.StringIO(await resp.text())
+    except aiohttp.client_exceptions.ClientError:
+      logger.warning('Error parsing from uri %s', uri, exc_info=True)
       fp = io.StringIO('')
   else:
     document = ls.workspace.get_document(uri)

@@ -8,7 +8,7 @@ else:
   from unittest import mock
 
 import pytest
-import responses
+import aioresponses
 from pygls.workspace import Document, Workspace
 import pygls.progress
 
@@ -19,12 +19,19 @@ from ..buildout import (
     _resolved_extends_cache,
     parse,
 )
+from ..aiohttp_session import close_session
+
+
+@pytest.fixture(autouse=True)
+async def close_aiohttp_session():
+  yield
+  await close_session()
 
 
 @pytest.fixture
 def mocked_responses():
-  with responses.RequestsMock() as rsps:
-    yield rsps
+  with aioresponses.aioresponses() as m:
+    yield m
 
 
 @pytest.fixture
