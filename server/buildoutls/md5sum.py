@@ -2,21 +2,20 @@ import hashlib
 import time
 import uuid
 
-import requests
 from pygls.lsp.types import (
     Location,
     MessageType,
     Position,
     Range,
     TextEdit,
-    WorkspaceEdit,
     WorkDoneProgressBegin,
     WorkDoneProgressEnd,
     WorkDoneProgressReport,
+    WorkspaceEdit,
 )
 from pygls.server import LanguageServer
 
-from . import buildout
+from . import aiohttp_session, buildout
 from .types import UpdateMD5SumCommandParams
 
 
@@ -43,30 +42,32 @@ async def update_md5sum(
 
   start = time.time()
   m = hashlib.md5()
-  resp = requests.get(url, stream=True)
-  if not resp.ok:
-    ls.show_message(
-        f"Could not update md5sum: {url} had status code {resp.status_code}",
-        MessageType.Error,
-    )
-    ls.progress.end(token, WorkDoneProgressEnd(kind='end'))
-    return
 
-  download_total_size = int(resp.headers.get('content-length', '-1'))
-  downloaded_size = 0
-  for chunk in resp.iter_content(2 << 14):
-    m.update(chunk)
-    downloaded_size += len(chunk)
+  async with aiohttp_session.get_session().get(url) as resp:
 
-    elapsed_time = time.time() - start
-    percentage = (downloaded_size / download_total_size * 100)
-    ls.progress.report(
-        token,
-        WorkDoneProgressReport(
-            kind='report',
-            message=f"{percentage:0.2f}% in {elapsed_time:0.2f}s",
-            percentage=percentage,
-        ))
+    if not resp.ok:
+      ls.show_message(
+          f"Could not update md5sum: {url} had status code {resp.status}",
+          MessageType.Error,
+      )
+      ls.progress.end(token, WorkDoneProgressEnd(kind='end'))
+      return
+
+    download_total_size = int(resp.headers.get('content-length', '-1'))
+    downloaded_size = 0
+    async for chunk in resp.content.iter_chunked(2 << 14):
+      m.update(chunk)
+      downloaded_size += len(chunk)
+
+      elapsed_time = time.time() - start
+      percentage = (downloaded_size / download_total_size * 100)
+      ls.progress.report(
+          token,
+          WorkDoneProgressReport(
+              kind='report',
+              message=f"{percentage:0.2f}% in {elapsed_time:0.2f}s",
+              percentage=percentage,
+          ))
 
   hexdigest = m.hexdigest()
 

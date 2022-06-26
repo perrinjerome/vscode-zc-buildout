@@ -4,7 +4,7 @@ import textwrap
 from unittest import mock
 
 import pytest
-import responses
+import aioresponses
 from pygls.lsp.types import (
     CodeAction,
     CodeActionContext,
@@ -28,69 +28,64 @@ from ..types import OpenPypiPageCommandParams, UpdateMD5SumCommandParams
 
 @pytest.fixture
 def sampleproject_json_response(
-    mocked_responses: responses.RequestsMock) -> None:
+    mocked_responses: aioresponses.aioresponses) -> None:
   with open(pathlib.Path(__file__).parent / 'testdata' /
             'sampleproject.json') as f:
     response_json = json.load(f)
-  mocked_responses.add(
-      responses.GET,
+  mocked_responses.get(
       'https://pypi.org/pypi/sampleproject/json',
-      json=response_json,
+      payload=response_json,
   )
 
 
 @pytest.fixture
 def notfound_0_0_1_json_response(
-    mocked_responses: responses.RequestsMock) -> None:
+    mocked_responses: aioresponses.aioresponses) -> None:
   with open(
       pathlib.Path(__file__).parent / 'testdata' / 'notfound-0.0.1.json') as f:
     response_json = json.load(f)
-  mocked_responses.add(
-      responses.GET,
+  mocked_responses.get(
       'https://pypi.org/pypi/notfound/0.0.1/json',
-      json=response_json,
+      payload=response_json,
   )
 
 
 @pytest.fixture
 def sampleproject_1_2_0_json_response(
-    mocked_responses: responses.RequestsMock) -> None:
+    mocked_responses: aioresponses.aioresponses) -> None:
   with open(
       pathlib.Path(__file__).parent / 'testdata' /
       'sampleproject-1.2.0.json') as f:
     response_json = json.load(f)
-  mocked_responses.add(
-      responses.GET,
+  mocked_responses.get(
       'https://pypi.org/pypi/sampleproject/1.2.0/json',
-      json=response_json,
+      payload=response_json,
   )
 
 
 @pytest.fixture
 def sampleproject_1_3_0_json_response(
-    mocked_responses: responses.RequestsMock) -> None:
+    mocked_responses: aioresponses.aioresponses) -> None:
   with open(
       pathlib.Path(__file__).parent / 'testdata' /
       'sampleproject-1.3.0.json') as f:
     response_json = json.load(f)
-  mocked_responses.add(
-      responses.GET,
+  mocked_responses.get(
       'https://pypi.org/pypi/sampleproject/1.3.0/json',
-      json=response_json,
+      payload=response_json,
   )
 
 
 @pytest.fixture
 def sampleproject_2_0_0_json_response(
-    mocked_responses: responses.RequestsMock) -> None:
+    mocked_responses: aioresponses.aioresponses) -> None:
   with open(
       pathlib.Path(__file__).parent / 'testdata' /
       'sampleproject-2.0.0.json') as f:
     response_json = json.load(f)
-  mocked_responses.add(
-      responses.GET,
+  mocked_responses.get(
       'https://pypi.org/pypi/sampleproject/2.0.0/json',
-      json=response_json,
+      payload=response_json,
   )
 
 
@@ -269,11 +264,10 @@ async def test_diagnostic_and_versions_code_action_latest_version(
 
 
 @pytest.fixture
-def example_com_response(mocked_responses: responses.RequestsMock) -> None:
-  mocked_responses.add(
-      responses.GET,
+def example_com_response(mocked_responses: aioresponses.aioresponses) -> None:
+  mocked_responses.get(
       'https://example.com',
-      b"hello",
+      body=b"hello",
   )
 
 

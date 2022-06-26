@@ -4,8 +4,8 @@ from typing import List
 from unittest import mock
 
 import pytest
-import requests
-import responses
+import aioresponses
+from aiohttp.client_exceptions import ClientConnectionError
 from pygls.lsp.types import Location, Position, Range
 from pygls.server import LanguageServer
 
@@ -764,15 +764,14 @@ async def test_open_macro(server: LanguageServer):
   assert '<' not in parsed['macro_user']
 
 
-async def test_open_extends_network(server: LanguageServer, mocked_responses):
-  mocked_responses.add(responses.GET,
-                       'https://example.com/profiles/buildout.cfg',
+async def test_open_extends_network(
+    server: LanguageServer, mocked_responses: aioresponses.aioresponses):
+  mocked_responses.get('https://example.com/profiles/buildout.cfg',
                        body=textwrap.dedent('''\
         [buildout]
         extends = ./other.cfg
         '''))
-  mocked_responses.add(responses.GET,
-                       'https://example.com/profiles/other.cfg',
+  mocked_responses.get('https://example.com/profiles/other.cfg',
                        body=textwrap.dedent('''\
         [section]
         option = value
@@ -789,12 +788,10 @@ async def test_open_extends_network(server: LanguageServer, mocked_responses):
   assert parsed['section']['option'].value == 'value'
 
 
-async def test_open_extends_network_fail(server: LanguageServer,
-                                         mocked_responses):
-  mocked_responses.add(
-      responses.GET,
-      'https://example.com/profiles/buildout.cfg',
-      body=requests.exceptions.ConnectionError('random network error'))
+async def test_open_extends_network_fail(
+    server: LanguageServer, mocked_responses: aioresponses.aioresponses):
+  mocked_responses.get('https://example.com/profiles/buildout.cfg',
+                       exception=ClientConnectionError())
 
   parsed = await open(
       ls=server,

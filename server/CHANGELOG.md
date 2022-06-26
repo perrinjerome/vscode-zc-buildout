@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+### Added:
+
+- switch from `requests` to `aiohttp`. Doing http requests asynchronously and in the case of pypi diagnostics, concurrently.
+
 ### Fixed:
 
- - pypi: fix a crash when unknown project is listed in `versions`
- - diagnostic: don't emit false positives for profiles generated with jinja
+- pypi: fix a crash when unknown project is listed in `versions`
+- diagnostic: don't emit false positives for profiles generated with jinja
 
 ## [0.7.1] - 2022-05-08
 
