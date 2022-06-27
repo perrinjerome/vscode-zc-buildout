@@ -59,7 +59,6 @@ from . import (
     profiling,
     recipes,
     types,
-    utils,
 )
 
 server = LanguageServer()
@@ -83,7 +82,6 @@ def getOptionValue(
   return option.value
 
 
-@utils.singleton_task
 async def parseAndSendDiagnostics(
     ls: LanguageServer,
     uri: str,
@@ -121,7 +119,6 @@ async def command_update_md5sum(
                           CodeActionKind.QuickFix,
                       ]),
 )
-@utils.singleton_task
 async def lsp_code_action(
     ls: LanguageServer,
     params: CodeActionParams) -> Optional[List[Union[Command, CodeAction]]]:
@@ -155,7 +152,6 @@ async def did_change_watched_file(
 
 
 @server.feature(DOCUMENT_SYMBOL)
-@utils.singleton_task
 async def lsp_symbols(
     ls: LanguageServer,
     params: DocumentSymbolParams,
@@ -217,7 +213,6 @@ async def lsp_symbols(
 
 
 @server.feature(COMPLETION, CompletionOptions(trigger_characters=["{", ":"]))
-@utils.singleton_task
 async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
@@ -550,7 +545,6 @@ async def lsp_completion(
 
 
 @server.feature(DEFINITION)
-@utils.singleton_task
 async def lsp_definition(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -593,7 +587,6 @@ async def lsp_definition(
 
 
 @server.feature(REFERENCES)
-@utils.singleton_task
 async def lsp_references(
     server: LanguageServer,
     params: TextDocumentPositionParams,
@@ -655,7 +648,6 @@ async def lsp_references(
 
 
 @server.feature(HOVER)
-@utils.singleton_task
 async def lsp_hover(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -679,7 +671,6 @@ async def lsp_hover(
 
 
 @server.feature(DOCUMENT_LINK)
-@utils.singleton_task
 async def lsp_document_link(
     ls: LanguageServer,
     params: DocumentLinkParams,
