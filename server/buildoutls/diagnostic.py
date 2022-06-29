@@ -282,21 +282,38 @@ async def getDiagnostics(
                   package_version,
                   sem,
               ))
+        logger.debug('gathering %d known vulnerabilities',
+                     len(known_vulnerabilities_coros))
         known_vulnerabilities_results = await asyncio.gather(
-            *known_vulnerabilities_coros)
-        latest_version_results = await asyncio.gather(*latest_version_coros)
+            *known_vulnerabilities_coros, return_exceptions=True)
+        logger.debug('gathered %s', known_vulnerabilities_results)
+
+        logger.debug('gathering %d latest versions', len(latest_version_coros))
+        latest_version_results = await asyncio.gather(*latest_version_coros,
+                                                      return_exceptions=True)
+        logger.debug('gathered %s', latest_version_results)
         for (
             (package_name, package_version, option),
             known_vulnerabilities,
-            newer_version,
+            latest_version,
         ) in zip(
             package_version_options,
             known_vulnerabilities_results,
             latest_version_results,
         ):
-          if newer_version:
+          if isinstance(known_vulnerabilities, BaseException) or isinstance(
+              latest_version, BaseException):
+            logger.error(
+                'error with %s %s: %s / %s',
+                package_name,
+                package_version,
+                known_vulnerabilities,
+                latest_version,
+            )
+            continue
+          if latest_version:
             severity = DiagnosticSeverity.Hint
-            message = f"Newer version available ({newer_version})"
+            message = f"Newer version available ({latest_version})"
             if known_vulnerabilities:
               message = f'{package_name} {package_version} has some known vulnerabilities:\n' + '\n\n'.join(
                   f"{v.id}\n{v.details}\n{v.link}"
@@ -309,7 +326,7 @@ async def getDiagnostics(
                 source="buildout",
                 severity=severity,
                 data=types.PyPIPackageInfo(
-                    latest_version=str(newer_version),
+                    latest_version=str(latest_version),
                     url=pypi_client.get_home_page_url(
                         package_name,
                         package_version,
