@@ -177,6 +177,7 @@ class BuildoutOptionDefinition:
     copied = BuildoutOptionDefinition(self.value, self.locations[0])
     copied.locations = self.locations
     copied.values = self.values
+    copied.default_values = self.default_values
     return copied
 
 

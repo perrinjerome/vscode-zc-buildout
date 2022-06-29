@@ -143,7 +143,8 @@ async def getDiagnostics(
                   severity=DiagnosticSeverity.Error,
               )
 
-        # check for options redefined to same values
+        # hints with redefined options, but at "Information" level when option redefines
+        # the same values
         for option_name, option in section.items():
           if option.locations[-1].uri != uri:
             continue
@@ -153,20 +154,25 @@ async def getDiagnostics(
           # per profile, so redefining an option from another profile with the same
           # ${:_profile_base_location_} should not be considered as redefining to
           # same value.
-          if len(option.locations) > 1 and (_profile_base_location_re.sub(
-              option.locations[-1].uri,
-              option.values[-1],
-          ) == _profile_base_location_re.sub(
-              option.locations[-2].uri,
-              option.values[-2],
-          )):
+          if len(option.locations) > 1:
+            is_same_value = (_profile_base_location_re.sub(
+                option.locations[-1].uri,
+                option.values[-1],
+            ) == _profile_base_location_re.sub(
+                option.locations[-2].uri,
+                option.values[-2],
+            ))
+
             related_information = []
             reported_related_location = set()
+            overriding_default_value = False
             for other_location, other_value, other_is_default_value in zip(
                 option.locations,
                 option.values,
                 option.default_values,
             ):
+              if other_is_default_value:
+                overriding_default_value = True
               hashable_location = (
                   other_location.uri,
                   other_location.range.start.line,
@@ -180,14 +186,23 @@ async def getDiagnostics(
                       message=f"default value: `{other_value}`"
                       if other_is_default_value else f"value: `{other_value}`",
                   ))
-
-            yield Diagnostic(
-                message=f"`{option_name}` already has value `{option.value}`.",
-                range=option.locations[-1].range,
-                source="buildout",
-                severity=DiagnosticSeverity.Warning,
-                related_information=related_information,
-            )
+            if is_same_value:
+              yield Diagnostic(
+                  message=
+                  f"`{option_name}` already has value `{option.value}`.",
+                  range=option.locations[-1].range,
+                  source="buildout",
+                  severity=DiagnosticSeverity.Information,
+                  related_information=related_information,
+              )
+            elif not overriding_default_value:
+              yield Diagnostic(
+                  message=f"`{option_name}` overrides an existing value.",
+                  range=option.locations[-1].range,
+                  source="buildout",
+                  severity=DiagnosticSeverity.Hint,
+                  related_information=related_information,
+              )
 
       jinja_parser = jinja.JinjaParser()
       if parsed is not None and "extends" in parsed["buildout"]:
