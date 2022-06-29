@@ -1,15 +1,15 @@
 import asyncio
 import datetime
 import logging
-from typing import AsyncIterable, Iterable, Dict, Optional, Tuple, cast
+from typing import AsyncIterable, Dict, Iterable, Optional, Tuple, cast
 
 import aiohttp
 import cachetools
 import packaging.version
 import pkg_resources
 
-from .types import KnownVulnerability
 from . import aiohttp_session
+from .types import KnownVulnerability
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class PyPIClient:
       async with aiohttp_session.get_session().get(
           f'{self._package_index_url}/pypi/{project}/json') as resp:
         project_data = await resp.json()
-    except (aiohttp.ClientError, ValueError):
+    except (aiohttp.ClientError, ValueError, asyncio.TimeoutError):
       logger.warning(
           'Error fetching latest version for %s',
           project,
@@ -119,7 +119,7 @@ class PyPIClient:
             f'{self._package_index_url}/pypi/{project}/{version}/json',
         ) as resp:
           project_data = await resp.json()
-    except (aiohttp.ClientError, ValueError):
+    except (aiohttp.ClientError, ValueError, asyncio.TimeoutError):
       logger.warning(
           'Error fetching project release %s %s',
           project,
