@@ -6,7 +6,6 @@ import pytest
 from pygls.lsp.types import (
     Diagnostic,
     DiagnosticSeverity,
-    Location,
     Position,
     Range,
 )
@@ -231,34 +230,39 @@ async def test_diagnostics_option_redefinition(server) -> None:
                                 'file:///diagnostics/option_redefinition.cfg')
   server.publish_diagnostics.assert_called_once_with(
       'file:///diagnostics/option_redefinition.cfg',
-      [mock.ANY],
+      [mock.ANY, mock.ANY],
   )
-  diagnostic, = cast(List[Diagnostic],
-                     server.publish_diagnostics.call_args[0][1])
-  assert diagnostic.range == Range(start=Position(line=7, character=3),
-                                   end=Position(line=7, character=11))
-  assert diagnostic.message == "`b` already has value `value b`."
-  assert diagnostic.related_information
-  assert [(ri.location, ri.message)
-          for ri in diagnostic.related_information] == [
+  diagnostic_override, diagnostic_already_has_value = cast(
+      List[Diagnostic], server.publish_diagnostics.call_args[0][1])
+
+  assert repr(diagnostic_override.range) == '5:3-5:18'
+  assert diagnostic_override.message == "`a` overrides an existing value."
+  assert diagnostic_override.severity == DiagnosticSeverity.Hint
+  assert diagnostic_override.related_information
+  assert [(repr(ri.location), ri.message)
+          for ri in diagnostic_override.related_information] == [
               (
-                  Location(
-                      uri='file:///diagnostics/option_redefinition.cfg',
-                      range=Range(
-                          start=Position(line=2, character=3),
-                          end=Position(line=2, character=11),
-                      ),
-                  ),
+                  'file:///diagnostics/option_redefinition.cfg:1:3-1:11',
+                  'value: `value a`',
+              ),
+              (
+                  'file:///diagnostics/option_redefinition.cfg:5:3-5:18',
+                  'value: `something else`',
+              ),
+          ]
+
+  assert repr(diagnostic_already_has_value.range) == '7:3-7:11'
+  assert diagnostic_already_has_value.message == "`b` already has value `value b`."
+  assert diagnostic_already_has_value.severity == DiagnosticSeverity.Information
+  assert diagnostic_already_has_value.related_information
+  assert [(repr(ri.location), ri.message)
+          for ri in diagnostic_already_has_value.related_information] == [
+              (
+                  'file:///diagnostics/option_redefinition.cfg:2:3-2:11',
                   'value: `value b`',
               ),
               (
-                  Location(
-                      uri='file:///diagnostics/option_redefinition.cfg',
-                      range=Range(
-                          start=Position(line=7, character=3),
-                          end=Position(line=7, character=11),
-                      ),
-                  ),
+                  'file:///diagnostics/option_redefinition.cfg:7:3-7:11',
                   'value: `value b`',
               ),
           ]
@@ -273,8 +277,7 @@ async def test_diagnostics_option_redefinition_extended(server) -> None:
   )
   diagnostic, = cast(List[Diagnostic],
                      server.publish_diagnostics.call_args[0][1])
-  assert diagnostic.range == Range(start=Position(line=4, character=8),
-                                   end=Position(line=4, character=10))
+  assert repr(diagnostic.range) == '4:8-4:10'
   assert diagnostic.message == "`recipe` already has value `x`."
 
 
@@ -287,32 +290,107 @@ async def test_diagnostics_option_redefinition_default_value(server) -> None:
   )
   diagnostic, = cast(List[Diagnostic],
                      server.publish_diagnostics.call_args[0][1])
-  assert diagnostic.range == Range(start=Position(line=1, character=13),
-                                   end=Position(line=1, character=15))
+  assert repr(diagnostic.range) == '1:13-1:15'
   assert diagnostic.message == "`allow-hosts` already has value `*`."
   assert diagnostic.related_information
   assert [
-      (ri.location, ri.message) for ri in diagnostic.related_information
+      (repr(ri.location), ri.message) for ri in diagnostic.related_information
   ] == [
       (
-          Location(
-              uri='file:///diagnostics/option_redefinition_default_value.cfg',
-              range=Range(
-                  start=Position(line=0, character=0),
-                  end=Position(line=0, character=0),
-              ),
-          ),
+          'file:///diagnostics/option_redefinition_default_value.cfg:0:0-0:0',
           'default value: `*`',
       ),
       (
-          Location(
-              uri='file:///diagnostics/option_redefinition_default_value.cfg',
-              range=Range(
-                  start=Position(line=1, character=13),
-                  end=Position(line=1, character=15),
-              ),
-          ),
+          'file:///diagnostics/option_redefinition_default_value.cfg:1:13-1:15',
           'value: `*`',
+      ),
+  ]
+
+
+async def test_diagnostics_option_redefined_hints_macro(server) -> None:
+  await parseAndSendDiagnostics(
+      server,
+      'file:///diagnostics/option_redefinition_macro.cfg',
+  )
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/option_redefinition_macro.cfg',
+      [mock.ANY, mock.ANY])
+  duser, danother_user = cast(List[Diagnostic],
+                              server.publish_diagnostics.call_args[0][1])
+  assert repr(duser.range) == '5:5-5:9'
+  assert duser.severity == DiagnosticSeverity.Hint
+  assert duser.message == '`foo` overrides an existing value.'
+  assert duser.related_information
+  assert [
+      (repr(ri.location), ri.message) for ri in duser.related_information
+  ] == [(
+      'file:///diagnostics/option_redefinition_macro.cfg:1:5-1:9',
+      'value: `bar`',
+  ),
+        (
+            'file:///diagnostics/option_redefinition_macro.cfg:5:5-5:9',
+            'value: `baz`',
+        )]
+
+  assert repr(danother_user.range) == '9:5-9:9'
+  assert danother_user.severity == DiagnosticSeverity.Hint
+  assert danother_user.message == '`foo` overrides an existing value.'
+  assert danother_user.related_information
+  assert [(repr(ri.location), ri.message)
+          for ri in danother_user.related_information] == [
+              (
+                  'file:///diagnostics/option_redefinition_macro.cfg:1:5-1:9',
+                  'value: `bar`',
+              ),
+              (
+                  'file:///diagnostics/option_redefinition_macro.cfg:9:5-9:9',
+                  'value: `baz`',
+              ),
+          ]
+
+
+async def test_diagnostics_option_redefined_hints_extends(server) -> None:
+  await parseAndSendDiagnostics(
+      server,
+      'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
+  )
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
+      [mock.ANY, mock.ANY])
+  dsection, dmacro = cast(List[Diagnostic],
+                          server.publish_diagnostics.call_args[0][1])
+
+  assert repr(dsection.range) == '5:8-5:46'
+  assert dsection.severity == DiagnosticSeverity.Hint
+  assert dsection.message == '`option` overrides an existing value.'
+  assert dsection.related_information
+  assert [
+      (repr(ri.location), ri.message) for ri in dsection.related_information
+  ] == [
+      (
+          'file:///diagnostics/extended/option_redefinition_extend_profile_base_location.cfg:1:8-1:46',
+          'value: `${:_profile_base_location_}/something`',
+      ),
+      (
+          'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg:5:8-5:46',
+          'value: `${:_profile_base_location_}/something`',
+      ),
+  ]
+
+  assert repr(dmacro.range) == '9:8-9:46'
+  assert dmacro.severity == DiagnosticSeverity.Hint
+  assert dmacro.message == '`option` overrides an existing value.'
+  assert dmacro.related_information
+  assert [
+      (repr(ri.location), ri.message) for ri in dmacro.related_information
+  ] == [
+      (
+          'file:///diagnostics/extended/option_redefinition_extend_profile_base_location.cfg:4:8-4:46',
+          'value: `${:_profile_base_location_}/something`',
+      ),
+      (
+          'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg:9:8-9:46',
+          'value: `${:_profile_base_location_}/something`',
       ),
   ]
 
@@ -325,8 +403,6 @@ async def test_diagnostics_option_redefinition_default_value(server) -> None:
     'file:///diagnostics/ok_but_problems_in_extended.cfg',
     'file:///diagnostics/ok_extends_with_substitutions.cfg',
     'file:///diagnostics/ok_extends_from_url.cfg',
-    'file:///diagnostics/option_redefinition_macro.cfg',
-    'file:///diagnostics/option_redefinition_extend_profile_base_location.cfg',
     'file:///diagnostics/recipe_any_option.cfg',
     'file:///diagnostics/ok_parts_with_substitutions.cfg',
 ))
