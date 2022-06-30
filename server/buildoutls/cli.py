@@ -24,6 +24,11 @@ def main() -> None:
       type=str,
   )
   parser.add_argument(
+      '--log-pygls',
+      help='Include pygls messages in the log',
+      action='store_true',
+  )
+  parser.add_argument(
       '--tcp',
       help='listen on tcp port or hostname:port on IPv4.',
       type=str,
@@ -42,6 +47,8 @@ def main() -> None:
         level=logging.DEBUG,
     )
     logging.getLogger().propagate = False
+    if not options.log_pygls:
+      logging.getLogger('pygls').setLevel(logging.CRITICAL)
 
   if options.tcp:
     host = 'localhost'
