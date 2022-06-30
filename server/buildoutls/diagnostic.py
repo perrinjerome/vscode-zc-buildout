@@ -238,7 +238,7 @@ async def getDiagnostics(
               )
 
       if resolved_buildout.get('versions'):
-        sem = asyncio.Semaphore(6)
+        sem = asyncio.Semaphore(4)
         package_version_options: List[Tuple[
             str, str, buildout.BuildoutOptionDefinition]] = []
         known_vulnerabilities_coros: List[Awaitable[Tuple[
