@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import logging
-from typing import AsyncIterable, Dict, Iterable, Optional, Tuple, cast
+from typing import AsyncIterable, Dict, Optional, Tuple, cast
 
 import aiohttp
 import cachetools
@@ -21,8 +21,6 @@ OptionalVersion = Optional[packaging.version.Version]
 
 
 class PyPIClient:
-  _session: aiohttp.ClientSession
-
   def __init__(self, package_index_url: str = 'https://pypi.org'):
     self._package_index_url = package_index_url
     self.__get_latest_version_cache = cast(
@@ -37,11 +35,6 @@ class PyPIClient:
             maxsize=2 << 10,
             ttl=datetime.timedelta(hours=2).total_seconds(),
         ))
-
-  async def get_latest_versions(
-      self, project_versions: Iterable[Tuple[Project, VersionStr]]
-  ) -> Iterable[OptionalVersion]:
-    return []
 
   async def get_latest_version(
       self,
