@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning][semver].
 - switch from `requests` to `aiohttp`. Doing http requests asynchronously and in the case of pypi diagnostics, concurrently.
 - diagnostic: lower severity of option redefined to same value to information level
 - diagnostic: add hint level diagnostic for every redefined value
+- cli: new `--log-pygls` flag to include pygls logs. By default they are not included.
 
 ### Fixed:
 
