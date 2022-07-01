@@ -316,7 +316,40 @@ async def getDiagnostics(
             known_vulnerabilities_results,
             latest_version_results,
         ):
-          if isinstance(known_vulnerabilities, BaseException) or isinstance(
+          if isinstance(latest_version, types.ProjectNotFound):
+            yield Diagnostic(
+                message=f'Project {package_name} does not exist',
+                range=option.location.range,
+                source="buildout",
+                severity=DiagnosticSeverity.Warning,
+                data=types.PyPIPackageInfo(
+                    latest_version='',
+                    url=pypi_client.get_home_page_url(
+                        package_name,
+                        package_version,
+                    ),
+                    known_vulnerabilities=[],
+                ),
+            )
+            continue
+          elif isinstance(known_vulnerabilities, types.VersionNotFound):
+            yield Diagnostic(
+                message=
+                f'Version {package_version} does not exist for {package_name}',
+                range=option.location.range,
+                source="buildout",
+                severity=DiagnosticSeverity.Warning,
+                data=types.PyPIPackageInfo(
+                    latest_version=str(latest_version),
+                    url=pypi_client.get_home_page_url(
+                        package_name,
+                        package_version,
+                    ),
+                    known_vulnerabilities=[],
+                ),
+            )
+            continue
+          elif isinstance(known_vulnerabilities, BaseException) or isinstance(
               latest_version, BaseException):
             logger.error(
                 'error with %s %s: %s / %s',
