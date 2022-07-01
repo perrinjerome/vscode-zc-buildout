@@ -608,6 +608,13 @@ async def test_open_extends_file_not_found(server: LanguageServer):
   assert list(parsed.keys()) == ['buildout', 'section']
 
 
+async def test_open_extends_empty_extends(server: LanguageServer):
+  parsed = await open(ls=server,
+                      uri='file:///extended/broken/empty_extends.cfg')
+  assert isinstance(parsed, BuildoutProfile)
+  assert list(parsed.keys()) == ['buildout', 'section']
+
+
 async def test_open_extends_loop(server: LanguageServer):
   with pytest.raises(RecursiveIncludeError):
     await open(ls=server,

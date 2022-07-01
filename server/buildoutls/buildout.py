@@ -1367,6 +1367,7 @@ async def _open(
   extends_option = profile['buildout'].pop(
       'extends', None) if 'buildout' in profile else None
 
+  result = profile
   has_dynamic_extends = False
   has_jinja = profile.has_jinja
   if extends_option:
@@ -1393,10 +1394,7 @@ async def _open(
 
       if not has_dynamic_extends:
         _resolved_extends_cache[absolute_extends] = eresult
-
-    result = _update(eresult, profile)
-  else:
-    result = profile
+      result = _update(eresult, profile)
 
   seen.pop()
 
