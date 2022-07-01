@@ -94,22 +94,23 @@ async def getCodeActions(
             exc_info=True,
         )
         return None
-      edit = WorkspaceEdit(
-          changes={
-              params.text_document.uri: [
-                  TextEdit(
-                      range=diagnostic.range,
-                      new_text=' ' + package_info.latest_version,
-                  ),
-              ]
-          })
-      code_actions.insert(
-          0,
-          CodeAction(
-              title=f"Use version {package_info.latest_version}",
-              kind=CodeActionKind.QuickFix,
-              edit=edit,
-              is_preferred=True,
-          ),
-      )
+      if package_info.latest_version:
+        edit = WorkspaceEdit(
+            changes={
+                params.text_document.uri: [
+                    TextEdit(
+                        range=diagnostic.range,
+                        new_text=' ' + package_info.latest_version,
+                    ),
+                ]
+            })
+        code_actions.insert(
+            0,
+            CodeAction(
+                title=f"Use version {package_info.latest_version}",
+                kind=CodeActionKind.QuickFix,
+                edit=edit,
+                is_preferred=True,
+            ),
+        )
   return code_actions

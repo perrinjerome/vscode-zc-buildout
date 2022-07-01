@@ -14,6 +14,16 @@ class KnownVulnerability(pydantic.BaseModel):
   source: str
 
 
+class ProjectNotFound(Exception):
+  """The project does not exists on pypi
+  """
+
+
+class VersionNotFound(Exception):
+  """The version does not exists on pypi
+  """
+
+
 class PyPIPackageInfo(pydantic.BaseModel):
   latest_version: str
   url: str

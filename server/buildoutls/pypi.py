@@ -9,7 +9,7 @@ import packaging.version
 import pkg_resources
 
 from . import aiohttp_session
-from .types import KnownVulnerability
+from .types import KnownVulnerability, VersionNotFound, ProjectNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,10 @@ class PyPIClient:
           exc_info=True,
       )
       return None
-
+    if 'info' not in project_data:
+      raise ProjectNotFound(project)
+    if version not in project_data['releases']:
+      version = '0'
     current = pkg_resources.parse_version(version)
     latest = pkg_resources.parse_version(project_data['info']['version'])
     if latest > current:
@@ -120,6 +123,8 @@ class PyPIClient:
           exc_info=True,
       )
     else:
+      if 'info' not in project_data:
+        raise VersionNotFound((project, version))
       parsed_version = pkg_resources.parse_version(version)
       for vulnerability in (KnownVulnerability(**v)
                             for v in project_data.get('vulnerabilities', ())):

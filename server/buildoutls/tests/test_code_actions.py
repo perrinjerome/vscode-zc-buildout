@@ -39,6 +39,17 @@ def sampleproject_json_response(
 
 
 @pytest.fixture
+def notfound_json_response(
+    mocked_responses: aioresponses.aioresponses) -> None:
+  with open(pathlib.Path(__file__).parent / 'testdata' / 'notfound.json') as f:
+    response_json = json.load(f)
+  mocked_responses.get(
+      'https://pypi.org/pypi/notfound/json',
+      payload=response_json,
+  )
+
+
+@pytest.fixture
 def notfound_0_0_1_json_response(
     mocked_responses: aioresponses.aioresponses) -> None:
   with open(
@@ -85,6 +96,19 @@ def sampleproject_2_0_0_json_response(
     response_json = json.load(f)
   mocked_responses.get(
       'https://pypi.org/pypi/sampleproject/2.0.0/json',
+      payload=response_json,
+  )
+
+
+@pytest.fixture
+def sampleproject_9_9_9_json_response(
+    mocked_responses: aioresponses.aioresponses) -> None:
+  with open(
+      pathlib.Path(__file__).parent / 'testdata' /
+      'sampleproject-9.9.9.json') as f:
+    response_json = json.load(f)
+  mocked_responses.get(
+      'https://pypi.org/pypi/sampleproject/9.9.9/json',
       payload=response_json,
   )
 
@@ -161,7 +185,6 @@ async def test_diagnostic_and_versions_code_action_newer_version_available(
 
 async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
     server,
-    notfound_0_0_1_json_response,
     sampleproject_json_response,
     sampleproject_1_2_0_json_response,
 ) -> None:
@@ -219,6 +242,100 @@ async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
           ]))
 
   assert len(code_actions) == 2
+
+
+async def test_diagnostic_and_versions_code_action_version_not_exists(
+    server, sampleproject_9_9_9_json_response,
+    sampleproject_json_response) -> None:
+  await parseAndSendDiagnostics(
+      server, 'file:///code_actions/package_version_not_exists.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///code_actions/package_version_not_exists.cfg',
+      [mock.ANY],
+  )
+  diagnostic: Diagnostic
+  diagnostic, = server.publish_diagnostics.call_args[0][1]
+  assert diagnostic.severity == DiagnosticSeverity.Warning
+  assert repr(diagnostic.range) == '1:15-1:20'
+
+  assert diagnostic.message == 'Version 9.9.9 does not exist for sampleproject'
+
+  code_action_params = CodeActionParams(
+      textDocument=TextDocumentIdentifier(
+          uri='file:///code_actions/package_version_not_exists.cfg'),
+      range=Range(start=Position(line=1, character=15),
+                  end=Position(line=1, character=20)),
+      context=CodeActionContext(diagnostics=(diagnostic, )),
+  )
+  code_actions = await lsp_code_action(
+      server,
+      _dump_and_load(code_action_params),
+  )
+  assert isinstance(code_actions, list)
+  assert code_actions[0] == CodeAction(
+      title="Use version 2.0.0",
+      kind=CodeActionKind.QuickFix,
+      is_preferred=True,
+      edit=WorkspaceEdit(
+          changes={
+              'file:///code_actions/package_version_not_exists.cfg': [
+                  TextEdit(range=Range(start=Position(line=1, character=15),
+                                       end=Position(line=1, character=20)),
+                           new_text=' 2.0.0'),
+              ]
+          }))
+
+  assert code_actions[1] == CodeAction(
+      title='View on pypi https://pypi.org/project/sampleproject/9.9.9/',
+      command=Command(
+          title='View on pypi',
+          command=COMMAND_OPEN_PYPI_PAGE,
+          arguments=[
+              OpenPypiPageCommandParams(
+                  url='https://pypi.org/project/sampleproject/9.9.9/')
+          ]))
+
+  assert len(code_actions) == 2
+
+
+async def test_diagnostic_and_versions_code_action_package_not_exists(
+    server, notfound_0_0_1_json_response, notfound_json_response) -> None:
+  await parseAndSendDiagnostics(server,
+                                'file:///code_actions/package_not_exists.cfg')
+  server.publish_diagnostics.assert_called_once_with(
+      'file:///code_actions/package_not_exists.cfg',
+      [mock.ANY],
+  )
+  diagnostic: Diagnostic
+  diagnostic, = server.publish_diagnostics.call_args[0][1]
+  assert diagnostic.severity == DiagnosticSeverity.Warning
+  assert repr(diagnostic.range) == '1:10-1:16'
+
+  code_action_params = CodeActionParams(
+      textDocument=TextDocumentIdentifier(
+          uri='file:///code_actions/package_not_exists.cfg'),
+      range=Range(start=Position(line=1, character=11),
+                  end=Position(line=1, character=16)),
+      context=CodeActionContext(diagnostics=(diagnostic, )))
+
+  code_actions = await lsp_code_action(
+      server,
+      _dump_and_load(code_action_params),
+  )
+  assert isinstance(code_actions, list)
+  assert code_actions == [
+      CodeAction(title='View on pypi https://pypi.org/project/notfound/0.0.1/',
+                 command=Command(
+                     title='View on pypi',
+                     command=COMMAND_OPEN_PYPI_PAGE,
+                     arguments=[
+                         OpenPypiPageCommandParams(
+                             url='https://pypi.org/project/notfound/0.0.1/')
+                     ]))
+  ]
+  assert isinstance(code_actions[0].command, Command)
+  assert code_actions[0].command.arguments
+  await command_open_pypi_page(server, code_actions[0].command.arguments)
 
 
 async def test_diagnostic_and_versions_code_action_latest_version(
