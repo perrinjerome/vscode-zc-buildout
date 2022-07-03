@@ -338,10 +338,21 @@ async def test_diagnostic_and_versions_code_action_package_not_exists(
   await command_open_pypi_page(server, code_actions[0].command.arguments)
 
 
+@pytest.mark.parametrize(
+    '_range',
+    (
+        # on value
+        Range(start=Position(line=1, character=15),
+              end=Position(line=1, character=21)),
+        # on option
+        Range(start=Position(line=1, character=4),
+              end=Position(line=1, character=8)),
+    ))
 async def test_diagnostic_and_versions_code_action_latest_version(
     server,
     sampleproject_json_response,
     sampleproject_2_0_0_json_response,
+    _range,
 ) -> None:
   await parseAndSendDiagnostics(
       server,
@@ -355,8 +366,7 @@ async def test_diagnostic_and_versions_code_action_latest_version(
   code_action_params = CodeActionParams(
       textDocument=TextDocumentIdentifier(
           uri='file:///code_actions/latest_version.cfg'),
-      range=Range(start=Position(line=1, character=15),
-                  end=Position(line=1, character=21)),
+      range=_range,
       context=CodeActionContext(diagnostics=()))
 
   code_actions = await lsp_code_action(

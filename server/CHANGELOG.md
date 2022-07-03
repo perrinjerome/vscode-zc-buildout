@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [Unreleased]
 
+### Fixed:
+
+- code_actions: fix visit project on pypi when invoked from option key
+
 ## [0.8.0] - 2022-07-02
 
 ### Added:
