@@ -10,7 +10,7 @@ node_modules/
 server/.pytype/
 **/__pycache__/
 **/*.egg-info
-**/.env/
+**/venv/
 **/.*cache/
 **/.tox/
 **/.coverage
