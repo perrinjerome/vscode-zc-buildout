@@ -50,10 +50,12 @@ async def getCodeActions(
       value,
       symbol,
   )
-  if symbol.current_section_name == 'versions' and symbol.current_option_name:
+  if symbol.current_section_name == 'versions' \
+      and symbol.current_option_name \
+      and symbol.current_option is not None:
     url = pypi_client.get_home_page_url(
         symbol.current_option_name,
-        symbol.value,
+        symbol.current_option.value,
     )
     code_actions.append(
         CodeAction(
