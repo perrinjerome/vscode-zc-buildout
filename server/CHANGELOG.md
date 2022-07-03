@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][keepachangelog],
 and this project adheres to [Semantic Versioning][semver].
 
-## [Unreleased]
+## [0.8.1] - 2022-07-03
 
 ### Fixed:
 
@@ -161,4 +161,5 @@ and this project adheres to [Semantic Versioning][semver].
 [0.7.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.6.2...v0.7.0
 [0.7.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.7.0...v0.7.1
 [0.8.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.7.1...v0.8.0
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.8.0...main
+[0.8.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.8.0...v0.8.1
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.8.1...main
