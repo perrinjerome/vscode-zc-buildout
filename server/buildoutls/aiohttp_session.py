@@ -11,7 +11,7 @@ def get_session() -> aiohttp.ClientSession:
   global _session
   if _session is None:
     logging.info("init")
-    _session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10))
+    _session = aiohttp.ClientSession()
   return _session
 
 

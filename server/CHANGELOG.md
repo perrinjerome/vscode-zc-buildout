@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Fixed:
 
 - code_actions: fix visit project on pypi when invoked from option key
+- aiohttp: don't set global timeout
 
 ## [0.8.0] - 2022-07-02
 
