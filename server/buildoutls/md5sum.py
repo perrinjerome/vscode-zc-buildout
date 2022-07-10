@@ -33,9 +33,6 @@ async def update_md5sum(
   ls.progress.begin(
       token,
       WorkDoneProgressBegin(
-          # XXX explicitly pass kind to workaround pygls issue
-          # https://github.com/openlawlibrary/pygls/issues/231
-          kind='begin',
           cancellable=True,  # TODO actually support cancellation
           title=f"Updating md5sum for {url}",
       ))
@@ -64,7 +61,6 @@ async def update_md5sum(
       ls.progress.report(
           token,
           WorkDoneProgressReport(
-              kind='report',
               message=f"{percentage:0.2f}% in {elapsed_time:0.2f}s",
               percentage=percentage,
           ))
@@ -92,7 +88,7 @@ async def update_md5sum(
     )
     new_text = f"md5sum = {hexdigest}\n"
 
-  ls.progress.end(token, WorkDoneProgressEnd(kind='end'))
+  ls.progress.end(token, WorkDoneProgressEnd())
   ls.apply_edit(
       WorkspaceEdit(
           changes={
