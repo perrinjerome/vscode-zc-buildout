@@ -1,3 +1,5 @@
+import collections
+import concurrent.futures
 import os
 import urllib.parse
 from typing import Any
@@ -55,6 +57,7 @@ def server() -> Any:
     show_message_log = mock.Mock()
     apply_edit = mock.Mock()
     progress = mock.create_autospec(pygls.progress.Progress)
+    progress.tokens = collections.defaultdict(concurrent.futures.Future)
 
   server = FakeServer()
 
