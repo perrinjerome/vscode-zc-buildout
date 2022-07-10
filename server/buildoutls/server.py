@@ -35,12 +35,16 @@ from lsprotocol.types import (
     DocumentSymbol,
     DocumentSymbolParams,
     Hover,
+    WorkDoneProgressBegin,
+    WorkDoneProgressEnd,
     Location,
     MarkupContent,
     MarkupKind,
     Position,
     Range,
     ShowDocumentParams,
+    ReferenceOptions,
+    ReferenceParams,
     SymbolKind,
     TextDocumentPositionParams,
     TextEdit,
@@ -585,12 +589,17 @@ async def lsp_definition(
   return locations
 
 
-@server.feature(TEXT_DOCUMENT_REFERENCES)
+@server.feature(TEXT_DOCUMENT_REFERENCES,
+                ReferenceOptions(work_done_progress=True))
 async def lsp_references(
     server: LanguageServer,
-    params: TextDocumentPositionParams,
+    params: ReferenceParams,
 ) -> List[Location]:
   references: List[Location] = []
+  if params.work_done_token:
+    server.progress.begin(
+        params.work_done_token,
+        WorkDoneProgressBegin(title="Finding references", cancellable=True))
   searched_document = await buildout.parse(server, params.text_document.uri)
   assert searched_document is not None
   searched_symbol = await searched_document.getSymbolAtPosition(params.position
@@ -643,6 +652,8 @@ async def lsp_references(
                   loc = option_value.locations[-1]
                   assert loc.uri == profile.uri
                   references.append(loc)
+  if params.work_done_token:
+    server.progress.end(params.work_done_token, WorkDoneProgressEnd())
   return references
 
 
