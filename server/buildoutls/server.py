@@ -37,11 +37,16 @@ from pygls.lsp.types import (
     DocumentSymbol,
     DocumentSymbolParams,
     Hover,
+    WorkDoneProgressBegin,
+    WorkDoneProgressEnd,
+    WorkDoneProgressReport,
     Location,
     MarkupContent,
     MarkupKind,
     Position,
     Range,
+    ReferenceOptions,
+    ReferenceParams,
     SymbolKind,
     TextDocumentPositionParams,
     TextEdit,
@@ -586,16 +591,20 @@ async def lsp_definition(
   return locations
 
 
-@server.feature(REFERENCES)
+@server.feature(REFERENCES, ReferenceOptions(work_done_progress=True))
 async def lsp_references(
     server: LanguageServer,
-    params: TextDocumentPositionParams,
+    params: ReferenceParams,
 ) -> List[Location]:
   references: List[Location] = []
+  if params.work_done_token:
+    server.progress.begin(
+      params.work_done_token,
+      WorkDoneProgressBegin(title="Finding references", cancellable=True))
   searched_document = await buildout.parse(server, params.text_document.uri)
   assert searched_document is not None
-  searched_symbol = await searched_document.getSymbolAtPosition(params.position
-                                                                )
+  searched_symbol = await searched_document.getSymbolAtPosition(
+    params.position)
   if searched_symbol is not None:
     searched_option = None
     if searched_symbol.kind in (
