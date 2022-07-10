@@ -33,7 +33,7 @@ async def update_md5sum(
   ls.progress.begin(
       token,
       WorkDoneProgressBegin(
-          cancellable=True,  # TODO actually support cancellation
+          cancellable=True,
           title=f"Updating md5sum for {url}",
       ))
 
@@ -64,6 +64,10 @@ async def update_md5sum(
               message=f"{percentage:0.2f}% in {elapsed_time:0.2f}s",
               percentage=max(0, int(percentage)),
           ))
+      progress_token = ls.progress.tokens[token]
+      assert progress_token
+      if progress_token.cancelled():
+        break
 
   hexdigest = m.hexdigest()
 
@@ -88,13 +92,16 @@ async def update_md5sum(
     )
     new_text = f"md5sum = {hexdigest}\n"
 
-  ls.progress.end(token, WorkDoneProgressEnd())
-  ls.apply_edit(
-      WorkspaceEdit(
-          changes={
-              md5sum_location.uri:
-              [TextEdit(
-                  range=md5sum_location.range,
-                  new_text=new_text,
-              )]
-          }))
+  progress_token = ls.progress.tokens[token]
+  assert progress_token
+  if not progress_token.cancelled():
+    ls.progress.end(token, WorkDoneProgressEnd())
+    ls.apply_edit(
+        WorkspaceEdit(
+            changes={
+                md5sum_location.uri:
+                [TextEdit(
+                    range=md5sum_location.range,
+                    new_text=new_text,
+                )]
+            }))
