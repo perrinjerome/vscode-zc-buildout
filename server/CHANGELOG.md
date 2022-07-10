@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+## Added
+
+ - code actions: support cancellation of md5sum command
+
 ## Fixed
 
  - hover: fix crash when opening instance.cfg.in outside of workspace folder

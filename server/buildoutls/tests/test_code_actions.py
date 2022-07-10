@@ -1,3 +1,6 @@
+from __future__ import annotations
+import collections
+import concurrent.futures
 import json
 import pathlib
 import textwrap
@@ -548,6 +551,55 @@ async def test_update_md5sum_code_action_without_md5sum_option(
               ),
           ],
       }, ), )
+
+
+async def test_update_md5sum_code_action_cancelled(
+    server,
+    example_com_response,
+) -> None:
+
+  code_action_params = CodeActionParams(
+      text_document=TextDocumentIdentifier(
+          uri='file:///code_actions/update_md5sum.cfg'),
+      range=Range(start=Position(line=1, character=11),
+                  end=Position(line=1, character=12)),
+      context=CodeActionContext(diagnostics=[]))
+
+  code_actions = await lsp_code_action(
+      server,
+      _dump_and_load(code_action_params),
+  )
+  assert isinstance(code_actions, list)
+  assert code_actions == [
+      CodeAction(
+          title='Update md5sum',
+          kind=CodeActionKind.QuickFix,
+          command=Command(
+              title='Update md5sum',
+              command=COMMAND_UPDATE_MD5SUM,
+              arguments=[
+                  UpdateMD5SumCommandParams(
+                      document_uri='file:///code_actions/update_md5sum.cfg',
+                      section_name='section',
+                  ),
+              ],
+          ),
+      )
+  ]
+  assert isinstance(code_actions[0].command, Command)
+  assert code_actions[0].command.arguments
+
+  def cancelled_future() -> concurrent.futures.Future[None]:
+    f: concurrent.futures.Future[None] = concurrent.futures.Future()
+    f.cancel()
+    return f
+
+  server.progress.tokens = collections.defaultdict(cancelled_future)
+
+  await command_update_md5sum(
+      server,
+      cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments))
+  server.apply_edit.assert_not_called()
 
 
 @pytest.mark.parametrize(
