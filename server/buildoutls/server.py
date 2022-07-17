@@ -1,10 +1,11 @@
+import asyncio
 import itertools
 import logging
 import os
 import pathlib
 import re
 import urllib.parse
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Set, Tuple, Type, Union
 
 from pygls.lsp.methods import (
     CODE_ACTION,
@@ -47,6 +48,7 @@ from pygls.lsp.types import (
     TextEdit,
 )
 from pygls.lsp.types.window import ShowDocumentParams
+from pygls.protocol import LanguageServerProtocol
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 
@@ -57,11 +59,54 @@ from . import (
     diagnostic,
     md5sum,
     profiling,
+    protocol,
     recipes,
     types,
 )
 
-server = LanguageServer()
+
+class DiagnosticQueue(asyncio.Queue[str]):
+  _queue: Set[str]
+
+  def _init(self, maxsize: int) -> None:
+    self._queue = set()
+
+  def _get(self) -> str:
+    return self._queue.pop()
+
+  def _put(self, item: str) -> None:
+    self._queue.add(item)
+
+
+class BuildoutLanguageServer(LanguageServer):
+  lsp: protocol.CancellableQueueLanguageServerProtocol
+
+  def __init__(
+      self,
+      loop: Optional[asyncio.AbstractEventLoop] = None,
+      protocol_cls: Type[LanguageServerProtocol] = protocol.
+      CancellableQueueLanguageServerProtocol,
+      max_workers: int = 2,
+  ):
+    super().__init__(
+        loop=loop,
+        protocol_cls=protocol_cls,
+        max_workers=max_workers,
+    )
+    self.lsp._diagnostic_queue = DiagnosticQueue()
+
+  async def schedule_diagnostic(self, uri: str) -> None:
+    await self.lsp._diagnostic_queue.put(uri)
+
+  async def do_diagnostic(self, uri: str) -> None:
+    diagnostics = []
+    async for diag in diagnostic.getDiagnostics(self, uri):
+      diagnostics.append(diag)
+    self.publish_diagnostics(uri, diagnostics)
+    return len(diagnostics)  # type: ignore
+
+
+server = BuildoutLanguageServer()
 
 server.command(commands.COMMAND_START_PROFILING)(profiling.start_profiling)
 server.command(commands.COMMAND_STOP_PROFILING)(profiling.stop_profiling)
@@ -127,19 +172,20 @@ async def lsp_code_action(
 
 @server.feature(TEXT_DOCUMENT_DID_OPEN)
 async def did_open(
-    ls: LanguageServer,
+    ls: BuildoutLanguageServer,
     params: DidOpenTextDocumentParams,
 ) -> None:
-  await parseAndSendDiagnostics(ls, params.text_document.uri)
+  await ls.schedule_diagnostic(params.text_document.uri)
+  # await parseAndSendDiagnostics(ls, params.text_document.uri)
 
 
 @server.feature(TEXT_DOCUMENT_DID_CHANGE)
 async def did_change(
-    ls: LanguageServer,
+    ls: BuildoutLanguageServer,
     params: DidChangeTextDocumentParams,
 ) -> None:
   buildout.clearCache(params.text_document.uri)
-  await parseAndSendDiagnostics(ls, params.text_document.uri)
+  await ls.schedule_diagnostic(params.text_document.uri)
 
 
 @server.feature(WORKSPACE_DID_CHANGE_WATCHED_FILES)
