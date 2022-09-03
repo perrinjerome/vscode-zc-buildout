@@ -125,7 +125,7 @@ export async function activate() {
       "# Install buildout-language-server on selected python.\n"
     );
     terminal.sendText(
-      `${settings.python.executable} -m pip install --user -e "${__dirname}/../../server/"
+      `${settings.python.executable} -m pip install --user "${__dirname}/../../server/" -r "${__dirname}/../../server/requirements.txt"
 `
     );
     for (let retries = 0; retries < 60; retries++) {
