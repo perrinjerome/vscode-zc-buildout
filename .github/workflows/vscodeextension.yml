@@ -2,8 +2,8 @@ name: vscode extension
 on: [push]
 
 env:
-  NODE_VERSION: "14.x"
-  PYTHON_VERSION: "3.7"
+  NODE_VERSION: "16.x"
+  PYTHON_VERSION: "3.8"
 
 jobs:
   build-and-test:
