@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog][keepachangelog],
 and this project adheres to [Semantic Versioning][semver].
 
 
+## [0.8.2] - 2022-10-29
+
+### Fixed:
+
+- client: install with requirements.txt to install a fixed version
+
+### Added:
+
+- client: version up dependencies
+- server: support python 3.11
+
 ## [0.8.1] - 2022-07-03
 
 ### Fixed:
