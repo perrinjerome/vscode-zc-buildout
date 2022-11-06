@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [0.8.3] - 2022-11-06
 
+### Fixed
+
+ - client: revert to older vscode and vscode-languageclient dependencies
+
 ### Added
 
 - server: support more slapos recipes
