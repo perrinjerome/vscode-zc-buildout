@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][keepachangelog],
 and this project adheres to [Semantic Versioning][semver].
 
+## [0.8.3] - 2022-11-06
+
+### Added
+
+- server: support more slapos recipes
 
 ## [0.8.2] - 2022-10-29
 

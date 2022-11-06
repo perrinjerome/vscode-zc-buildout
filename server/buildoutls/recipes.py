@@ -227,6 +227,60 @@ These will be removed when buildout (re)installs or removes this part.''', ),
 )
 
 Recipe(
+    name='slapos.recipe.build:download',
+    description='''Download a file
+    ''',
+    url='https://pypi.org/project/slapos.recipe.build/',
+    options={
+        'url':
+        RecipeOption('URL to download from', ),
+        'md5sum':
+        RecipeOption('Checksum of the download', ),
+        'offline':
+        RecipeOption(
+            'Override buildout global ``offline`` setting for the context of this section',
+            valid_values=('true', 'false')),
+        'filename':
+        RecipeOption('', ),
+    },
+    generated_options={
+        'location': RecipeOption('', ),
+        'target': RecipeOption('', ),
+    },
+    required_options=(
+        'url',
+        'md5sum',
+    ))
+
+Recipe(
+    name='slapos.recipe.build:download-unpacked',
+    description='''Download an archive and unpack it
+    ''',
+    url='https://pypi.org/project/slapos.recipe.build/',
+    options={
+        'url':
+        RecipeOption('URL to download from', ),
+        'md5sum':
+        RecipeOption('Checksum of the download', ),
+        'offline':
+        RecipeOption(
+            'Override buildout global ``offline`` setting for the context of this section',
+            valid_values=('true', 'false')),
+        'filename':
+        RecipeOption('', ),
+        'strip-top-level-dir':
+        RecipeOption('', valid_values=('true', 'false')),
+    },
+    generated_options={
+        'location': RecipeOption('', ),
+        'target': RecipeOption('', ),
+    },
+    required_options=(
+        'url',
+        'md5sum',
+    ))
+
+Recipe(
     name='slapos.recipe.build',
     description=
     '''Generally deprecated in favor slapos.recipe.cmmi, which supports shared parts,
@@ -672,3 +726,30 @@ It does not install the egg, another `zc.recipe.egg` section will be needed for 
             'The path to a setup script or directory containing a startup script. This is required'
         )
     })
+
+Recipe(
+    name='slapos.cookbook:wrapper',
+    description='''Recipe to create a script from given command and options.
+    ''',
+    url='https://lab.nexedi.com/nexedi/slapos/',
+    options={
+        'command-line':
+        RecipeOption('shell command which launches the intended process'),
+        'wrapper-path':
+        RecipeOption("absolute path to file's destination"),
+        'wait-for-files':
+        RecipeOption('list of files to wait for'),
+        'hash-files':
+        RecipeOption('list of buildout-generated files to be checked by hash'),
+        'hash-existing-files':
+        RecipeOption('list of existing files to be checked by hash'),
+        'pidfile':
+        RecipeOption('path to pidfile ensure exclusivity for the process'),
+        'private-tmpfs':
+        RecipeOption(
+            'list of "<size> <path>" private tmpfs, using user namespaces'),
+        'reserve-cpu':
+        RecipeOption('Command will ask for an exclusive CPU core', ),
+    },
+    required_options=('command-line', 'wrapper-path'),
+)
