@@ -1,6 +1,6 @@
 import textwrap
 
-from pygls.lsp.types import (
+from lsprotocol.types import (
     CompletionContext,
     CompletionParams,
     CompletionTriggerKind,

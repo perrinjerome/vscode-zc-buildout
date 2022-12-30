@@ -283,7 +283,8 @@
       "fixed_in": ["1.3.0", "2.0.0"],
       "id": "EXAMPLE-VUL",
       "link": "https://example.org/vulnerability/EXAMPLE-VUL",
-      "source": "example"
+      "source": "example",
+      "summary": "(summary of the vulnerability)"
     }
   ]
 }

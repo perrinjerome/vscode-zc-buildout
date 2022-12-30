@@ -5,7 +5,7 @@ from typing import Any, List, no_type_check
 from unittest import mock
 
 import pytest
-from pygls.lsp.types import Diagnostic
+from lsprotocol.types import Diagnostic
 from pygls.server import LanguageServer
 from pygls.workspace import Workspace
 
@@ -114,7 +114,9 @@ async def test_open_and_diagnostic(
 ) -> None:
   doc_uri = (slapos_working_copy / profile_relative_path).as_uri()
   workspace = Workspace(slapos_working_copy.as_uri())  # type: ignore
-  ls = LanguageServer(asyncio.new_event_loop())
+  ls = LanguageServer(name='zc.buildout.languageserver',
+                      version='dev',
+                      loop=asyncio.new_event_loop())
   ls.lsp.workspace = workspace
 
   async def open_and_get_diagnostics() -> List[Diagnostic]:

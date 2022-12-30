@@ -40,7 +40,7 @@ from typing import (
 )
 
 import aiohttp.client_exceptions
-from pygls.lsp.types import Location, Position, Range
+from lsprotocol.types import Location, Position, Range
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 from typing_extensions import TypeAlias

@@ -33,7 +33,7 @@ setup(
         'aiohttp',
         'cachetools',
         'packaging',
-        'pygls >= 0.10.1',
+        'pygls >= 1.0',
         'typing-extensions',
         'zc.buildout',
     ],

@@ -2,10 +2,11 @@ import json
 import pathlib
 import textwrap
 from unittest import mock
+from typing import cast, List
 
 import pytest
 import aioresponses
-from pygls.lsp.types import (
+from lsprotocol.types import (
     CodeAction,
     CodeActionContext,
     CodeActionKind,
@@ -19,10 +20,9 @@ from pygls.lsp.types import (
     TextEdit,
     WorkspaceEdit,
 )
-from pygls.protocol import default_serializer
 
 from ..commands import COMMAND_OPEN_PYPI_PAGE, COMMAND_UPDATE_MD5SUM
-from ..server import command_open_pypi_page, command_update_md5sum, lsp_code_action, parseAndSendDiagnostics
+from ..server import server, command_open_pypi_page, command_update_md5sum, lsp_code_action, parseAndSendDiagnostics
 from ..types import OpenPypiPageCommandParams, UpdateMD5SumCommandParams
 
 
@@ -116,12 +116,10 @@ def sampleproject_9_9_9_json_response(
 def _dump_and_load(param: CodeActionParams) -> CodeActionParams:
   """Simulate a code action params going through pygls protocol.
   """
-  dumped = param.json(
-      by_alias=True,
-      exclude_unset=True,
-      encoder=default_serializer,
-  )
-  return CodeActionParams(**json.loads(dumped))
+  dumped = json.dumps(param, default=server.lsp._serialize_message)
+  return cast(
+      CodeActionParams,
+      server.lsp._converter.structure(json.loads(dumped), CodeActionParams))
 
 
 async def test_diagnostic_and_versions_code_action_newer_version_available(
@@ -146,11 +144,13 @@ async def test_diagnostic_and_versions_code_action_newer_version_available(
     "Newer version available (2.0.0)"
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri='file:///code_actions/newer_version_available.cfg'),
       range=Range(start=Position(line=1, character=15),
                   end=Position(line=1, character=21)),
-      context=CodeActionContext(diagnostics=(diagnostic, )),
+      context=CodeActionContext(diagnostics=[
+          diagnostic,
+      ]),
   )
   code_actions = await lsp_code_action(
       server,
@@ -207,11 +207,13 @@ async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
       https://example.org/vulnerability/EXAMPLE-VUL""")
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri='file:///code_actions/newer_version_available.cfg'),
       range=Range(start=Position(line=1, character=15),
                   end=Position(line=1, character=21)),
-      context=CodeActionContext(diagnostics=(diagnostic, )),
+      context=CodeActionContext(diagnostics=[
+          diagnostic,
+      ]),
   )
   code_actions = await lsp_code_action(
       server,
@@ -261,11 +263,13 @@ async def test_diagnostic_and_versions_code_action_version_not_exists(
   assert diagnostic.message == 'Version 9.9.9 does not exist for sampleproject'
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri='file:///code_actions/package_version_not_exists.cfg'),
       range=Range(start=Position(line=1, character=15),
                   end=Position(line=1, character=20)),
-      context=CodeActionContext(diagnostics=(diagnostic, )),
+      context=CodeActionContext(diagnostics=[
+          diagnostic,
+      ]),
   )
   code_actions = await lsp_code_action(
       server,
@@ -312,11 +316,13 @@ async def test_diagnostic_and_versions_code_action_package_not_exists(
   assert repr(diagnostic.range) == '1:10-1:16'
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri='file:///code_actions/package_not_exists.cfg'),
       range=Range(start=Position(line=1, character=11),
                   end=Position(line=1, character=16)),
-      context=CodeActionContext(diagnostics=(diagnostic, )))
+      context=CodeActionContext(diagnostics=[
+          diagnostic,
+      ]))
 
   code_actions = await lsp_code_action(
       server,
@@ -335,7 +341,9 @@ async def test_diagnostic_and_versions_code_action_package_not_exists(
   ]
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
-  await command_open_pypi_page(server, code_actions[0].command.arguments)
+  await command_open_pypi_page(
+      server,
+      cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments))
 
 
 @pytest.mark.parametrize(
@@ -364,10 +372,10 @@ async def test_diagnostic_and_versions_code_action_latest_version(
   )
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri='file:///code_actions/latest_version.cfg'),
       range=_range,
-      context=CodeActionContext(diagnostics=()))
+      context=CodeActionContext(diagnostics=[]))
 
   code_actions = await lsp_code_action(
       server,
@@ -387,7 +395,9 @@ async def test_diagnostic_and_versions_code_action_latest_version(
   ]
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
-  await command_open_pypi_page(server, code_actions[0].command.arguments)
+  await command_open_pypi_page(
+      server,
+      cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments))
 
 
 @pytest.fixture
@@ -419,10 +429,10 @@ async def test_update_md5sum_code_action(
 ) -> None:
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri='file:///code_actions/update_md5sum.cfg'),
       range=range_,
-      context=CodeActionContext(diagnostics=()))
+      context=CodeActionContext(diagnostics=[]))
 
   code_actions = await lsp_code_action(
       server,
@@ -438,8 +448,7 @@ async def test_update_md5sum_code_action(
               command=COMMAND_UPDATE_MD5SUM,
               arguments=[
                   UpdateMD5SumCommandParams(
-                      document=TextDocumentIdentifier(
-                          uri='file:///code_actions/update_md5sum.cfg'),
+                      document_uri='file:///code_actions/update_md5sum.cfg',
                       section_name='section',
                   ),
               ],
@@ -448,7 +457,9 @@ async def test_update_md5sum_code_action(
   ]
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
-  await command_update_md5sum(server, code_actions[0].command.arguments)
+  await command_update_md5sum(
+      server,
+      cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments))
   server.apply_edit.assert_called_once_with(
       WorkspaceEdit(changes={
           'file:///code_actions/update_md5sum.cfg': [
@@ -480,11 +491,11 @@ async def test_update_md5sum_code_action_without_md5sum_option(
 ) -> None:
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri='file:///code_actions/update_md5sum_without_md5sum_option.cfg'),
       range=Range(start=Position(line=1, character=11),
                   end=Position(line=1, character=12)),
-      context=CodeActionContext(diagnostics=()))
+      context=CodeActionContext(diagnostics=[]))
 
   code_actions = await lsp_code_action(
       server,
@@ -500,10 +511,8 @@ async def test_update_md5sum_code_action_without_md5sum_option(
               command=COMMAND_UPDATE_MD5SUM,
               arguments=[
                   UpdateMD5SumCommandParams(
-                      document=TextDocumentIdentifier(
-                          uri=
-                          'file:///code_actions/update_md5sum_without_md5sum_option.cfg'
-                      ),
+                      document_uri=
+                      'file:///code_actions/update_md5sum_without_md5sum_option.cfg',
                       section_name='section',
                   ),
               ],
@@ -512,7 +521,9 @@ async def test_update_md5sum_code_action_without_md5sum_option(
   ]
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
-  await command_update_md5sum(server, code_actions[0].command.arguments)
+  await command_update_md5sum(
+      server,
+      cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments))
   server.apply_edit.assert_called_once_with(
       WorkspaceEdit(changes={
           'file:///code_actions/update_md5sum_without_md5sum_option.cfg': [
@@ -588,12 +599,12 @@ async def test_update_md5sum_code_action_with_substitutions(
 ) -> None:
 
   code_action_params = CodeActionParams(
-      textDocument=TextDocumentIdentifier(
+      text_document=TextDocumentIdentifier(
           uri=
           'file:///code_actions/update_md5sum_code_action_with_substitutions.cfg'
       ),
       range=range_,
-      context=CodeActionContext(diagnostics=(), ),
+      context=CodeActionContext(diagnostics=[], ),
   )
 
   code_actions = await lsp_code_action(
@@ -610,10 +621,8 @@ async def test_update_md5sum_code_action_with_substitutions(
               command=COMMAND_UPDATE_MD5SUM,
               arguments=[
                   UpdateMD5SumCommandParams(
-                      document=TextDocumentIdentifier(
-                          uri=
-                          'file:///code_actions/update_md5sum_code_action_with_substitutions.cfg'
-                      ),
+                      document_uri=
+                      'file:///code_actions/update_md5sum_code_action_with_substitutions.cfg',
                       section_name='section',
                   ),
               ],
@@ -622,7 +631,9 @@ async def test_update_md5sum_code_action_with_substitutions(
   ]
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
-  await command_update_md5sum(server, code_actions[0].command.arguments)
+  await command_update_md5sum(
+      server,
+      cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments))
   server.apply_edit.assert_called_once_with(
       WorkspaceEdit(changes={
           'file:///code_actions/update_md5sum_code_action_with_substitutions.cfg':

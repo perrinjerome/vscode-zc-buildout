@@ -5,10 +5,11 @@ import urllib.parse
 from typing import AsyncIterable, Awaitable, List, Optional, Set, Tuple
 import packaging
 
-from pygls.lsp.types import (
+from lsprotocol.types import (
     Diagnostic,
     DiagnosticRelatedInformation,
     DiagnosticSeverity,
+    DiagnosticTag,
     Position,
     Range,
 )
@@ -194,7 +195,7 @@ async def getDiagnostics(
                   source="buildout",
                   severity=DiagnosticSeverity.Information,
                   related_information=related_information,
-              )
+                  tags=[DiagnosticTag.Unnecessary])
             elif not overriding_default_value:
               yield Diagnostic(
                   message=f"`{option_name}` overrides an existing value.",
