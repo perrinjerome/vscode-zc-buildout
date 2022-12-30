@@ -2,7 +2,7 @@ import hashlib
 import time
 import uuid
 
-from pygls.lsp.types import (
+from lsprotocol.types import (
     Location,
     MessageType,
     Position,
@@ -23,10 +23,10 @@ async def update_md5sum(
     ls: LanguageServer,
     params: UpdateMD5SumCommandParams,
 ) -> None:
-  profile = await buildout.open(ls, params.document.uri)
+  profile = await buildout.open(ls, params['document_uri'])
   assert isinstance(profile, buildout.BuildoutProfile)
-  section = profile[params.section_name]
-  url = profile.resolve_value(params.section_name, "url")
+  section = profile[params['section_name']]
+  url = profile.resolve_value(params['section_name'], "url")
 
   token = str(uuid.uuid4())
   await ls.progress.create_async(token)
@@ -62,7 +62,7 @@ async def update_md5sum(
           token,
           WorkDoneProgressReport(
               message=f"{percentage:0.2f}% in {elapsed_time:0.2f}s",
-              percentage=percentage,
+              percentage=max(0, int(percentage)),
           ))
 
   hexdigest = m.hexdigest()

@@ -1,7 +1,8 @@
 import logging
 from typing import List, Optional, Union
 
-from pygls.lsp.types import (
+from lsprotocol.converters import get_converter
+from lsprotocol.types import (
     CodeAction,
     CodeActionKind,
     CodeActionParams,
@@ -12,9 +13,14 @@ from pygls.lsp.types import (
 from pygls.server import LanguageServer
 
 from .commands import COMMAND_OPEN_PYPI_PAGE, COMMAND_UPDATE_MD5SUM
-from .types import OpenPypiPageCommandParams, PyPIPackageInfo, UpdateMD5SumCommandParams
+from .types import (
+    OpenPypiPageCommandParams,
+    PyPIPackageInfo,
+    UpdateMD5SumCommandParams,
+)
 
 logger = logging.getLogger(__name__)
+converter = get_converter()
 
 from . import buildout, pypi
 
@@ -77,7 +83,7 @@ async def getCodeActions(
                 command=COMMAND_UPDATE_MD5SUM,
                 arguments=[
                     UpdateMD5SumCommandParams(
-                        document=params.text_document,
+                        document_uri=params.text_document.uri,
                         section_name=symbol.current_section_name,
                     )
                 ],
@@ -88,7 +94,7 @@ async def getCodeActions(
   for diagnostic in params.context.diagnostics:
     if diagnostic.data and diagnostic.range.start.line == current_line:
       try:
-        package_info = PyPIPackageInfo(**diagnostic.data)
+        package_info = converter.structure(diagnostic.data, PyPIPackageInfo)
       except Exception:
         logging.debug(
             "Unable to convert diagnostic data %s",

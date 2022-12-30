@@ -10,6 +10,9 @@ import pkg_resources
 
 from . import aiohttp_session
 from .types import KnownVulnerability, VersionNotFound, ProjectNotFound
+import cattrs
+
+converter = cattrs.Converter()
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +129,7 @@ class PyPIClient:
       if 'info' not in project_data:
         raise VersionNotFound((project, version))
       parsed_version = pkg_resources.parse_version(version)
-      for vulnerability in (KnownVulnerability(**v)
+      for vulnerability in (converter.structure(v, KnownVulnerability)
                             for v in project_data.get('vulnerabilities', ())):
         for fixed_in in (pkg_resources.parse_version(f)
                          for f in vulnerability.fixed_in):

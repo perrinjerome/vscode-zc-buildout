@@ -3,7 +3,7 @@ from typing import List, Sequence, cast
 from unittest import mock
 
 import pytest
-from pygls.lsp.types import (
+from lsprotocol.types import (
     Diagnostic,
     DiagnosticSeverity,
     Position,

@@ -1,11 +1,11 @@
 from typing import List
 
-from pygls.lsp.types import TextDocumentIdentifier
+import attrs
+from typing_extensions import TypedDict
 
-import pydantic
 
-
-class KnownVulnerability(pydantic.BaseModel):
+@attrs.define
+class KnownVulnerability:
   aliases: List[str]
   details: str
   fixed_in: List[str]
@@ -24,16 +24,18 @@ class VersionNotFound(Exception):
   """
 
 
-class PyPIPackageInfo(pydantic.BaseModel):
+@attrs.define
+class PyPIPackageInfo:
   latest_version: str
   url: str
   known_vulnerabilities: List[KnownVulnerability]
 
 
-class OpenPypiPageCommandParams(pydantic.BaseModel):
+# XXX command params are passed as dict in pygls 1.0
+class OpenPypiPageCommandParams(TypedDict):
   url: str
 
 
-class UpdateMD5SumCommandParams(pydantic.BaseModel):
-  document: TextDocumentIdentifier
+class UpdateMD5SumCommandParams(TypedDict):
+  document_uri: str
   section_name: str

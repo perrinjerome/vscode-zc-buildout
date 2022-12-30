@@ -6,19 +6,17 @@ import re
 import urllib.parse
 from typing import Iterable, List, Optional, Tuple, Union
 
-from pygls.lsp.methods import (
-    CODE_ACTION,
-    COMPLETION,
-    DEFINITION,
-    DOCUMENT_LINK,
-    DOCUMENT_SYMBOL,
-    HOVER,
-    REFERENCES,
+from lsprotocol.types import (
+    TEXT_DOCUMENT_CODE_ACTION,
+    TEXT_DOCUMENT_COMPLETION,
+    TEXT_DOCUMENT_DEFINITION,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
+    TEXT_DOCUMENT_DOCUMENT_LINK,
+    TEXT_DOCUMENT_DOCUMENT_SYMBOL,
+    TEXT_DOCUMENT_HOVER,
+    TEXT_DOCUMENT_REFERENCES,
     WORKSPACE_DID_CHANGE_WATCHED_FILES,
-)
-from pygls.lsp.types import (
     CodeAction,
     CodeActionKind,
     CodeActionOptions,
@@ -42,11 +40,11 @@ from pygls.lsp.types import (
     MarkupKind,
     Position,
     Range,
+    ShowDocumentParams,
     SymbolKind,
     TextDocumentPositionParams,
     TextEdit,
 )
-from pygls.lsp.types.window import ShowDocumentParams
 from pygls.server import LanguageServer
 from pygls.workspace import Document
 
@@ -61,7 +59,7 @@ from . import (
     types,
 )
 
-server = LanguageServer()
+server = LanguageServer(name="zc.buildout.languageserver", version="0.8.3")
 
 server.command(commands.COMMAND_START_PROFILING)(profiling.start_profiling)
 server.command(commands.COMMAND_STOP_PROFILING)(profiling.stop_profiling)
@@ -99,7 +97,7 @@ async def command_open_pypi_page(
 ) -> None:
   await ls.show_document_async(
       ShowDocumentParams(
-          uri=args[0].url,
+          uri=args[0]['url'],
           external=True,
       ))
 
@@ -113,7 +111,7 @@ async def command_update_md5sum(
 
 
 @server.feature(
-    CODE_ACTION,
+    TEXT_DOCUMENT_CODE_ACTION,
     CodeActionOptions(resolve_provider=False,
                       code_action_kinds=[
                           CodeActionKind.QuickFix,
@@ -151,7 +149,7 @@ async def did_change_watched_file(
     buildout.clearCache(change.uri)
 
 
-@server.feature(DOCUMENT_SYMBOL)
+@server.feature(TEXT_DOCUMENT_DOCUMENT_SYMBOL)
 async def lsp_symbols(
     ls: LanguageServer,
     params: DocumentSymbolParams,
@@ -212,7 +210,8 @@ async def lsp_symbols(
   return symbols
 
 
-@server.feature(COMPLETION, CompletionOptions(trigger_characters=["{", ":"]))
+@server.feature(TEXT_DOCUMENT_COMPLETION,
+                CompletionOptions(trigger_characters=["{", ":"]))
 async def lsp_completion(
     ls: LanguageServer,
     params: CompletionParams,
@@ -544,7 +543,7 @@ async def lsp_completion(
   return items
 
 
-@server.feature(DEFINITION)
+@server.feature(TEXT_DOCUMENT_DEFINITION)
 async def lsp_definition(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -586,7 +585,7 @@ async def lsp_definition(
   return locations
 
 
-@server.feature(REFERENCES)
+@server.feature(TEXT_DOCUMENT_REFERENCES)
 async def lsp_references(
     server: LanguageServer,
     params: TextDocumentPositionParams,
@@ -647,7 +646,7 @@ async def lsp_references(
   return references
 
 
-@server.feature(HOVER)
+@server.feature(TEXT_DOCUMENT_HOVER)
 async def lsp_hover(
     ls: LanguageServer,
     params: TextDocumentPositionParams,
@@ -670,7 +669,7 @@ async def lsp_hover(
   return Hover(contents=f'```\n{hover_text}\n```')
 
 
-@server.feature(DOCUMENT_LINK)
+@server.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
 async def lsp_document_link(
     ls: LanguageServer,
     params: DocumentLinkParams,

@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 import aioresponses
 from aiohttp.client_exceptions import ClientConnectionError
-from pygls.lsp.types import Location, Position, Range
+from lsprotocol.types import Location, Position, Range
 from pygls.server import LanguageServer
 
 from buildoutls.buildout import clearCache

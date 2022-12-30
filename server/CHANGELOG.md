@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][keepachangelog],
 and this project adheres to [Semantic Versioning][semver].
 
+## [unreleased]
+
+### Added
+
+- update to pygls 1.0
+
 ## [0.8.3] - 2022-11-06
 
 ### Fixed
 
- - client: revert to older vscode and vscode-languageclient dependencies
+- client: revert to older vscode and vscode-languageclient dependencies
 
 ### Added
 
