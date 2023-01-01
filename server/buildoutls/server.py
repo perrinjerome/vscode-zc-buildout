@@ -59,7 +59,7 @@ from . import (
     types,
 )
 
-server = LanguageServer(name="zc.buildout.languageserver", version="0.8.3")
+server = LanguageServer(name="zc.buildout.languageserver", version="0.9.0")
 
 server.command(commands.COMMAND_START_PROFILING)(profiling.start_profiling)
 server.command(commands.COMMAND_STOP_PROFILING)(profiling.stop_profiling)
