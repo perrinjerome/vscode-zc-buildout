@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [unreleased]
 
+### Added
+
+- client: version up dependencies
+
 
 ## [0.9.0] - 2023-01-01
 
