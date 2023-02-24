@@ -28,7 +28,7 @@ setup(
     ],
     keywords='zc.buildout languageserver',
     packages=['buildoutls'],
-    python_requires='>=3.7.*',
+    python_requires='>=3.7',
     install_requires=[
         'aiohttp',
         'cachetools',

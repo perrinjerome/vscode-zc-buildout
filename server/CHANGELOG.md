@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+### Fixed
+
+- server: fixed definition of `python_requires`
+
 ## [0.9.1] - 2023-02-24
 
 ### Added
