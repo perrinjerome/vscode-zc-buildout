@@ -552,8 +552,11 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
       uri = urllib.parse.urljoin(base, uri)
       uris.add(uri)
     else:
-      assert uri.startswith('file://')
-      assert self.uri.startswith('file://')
+      if not uri.startswith('file://'):
+        # this might be a "virtual" scheme, for example gitlens:// is used in the git
+        # history views
+        return None
+      assert self.uri.startswith('file://'), self.uri
       uri_path = pathlib.Path(uri[len('file://'):])
       uris.add(
           str(

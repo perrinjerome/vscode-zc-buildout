@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+### Fixed
+
+- server: Fix crash when hover .cfg.in in gitlens views
+
 ## [0.9.2] - 2023-02-24
 
 ### Fixed
