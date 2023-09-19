@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+## [0.9.3] - 2023-09-19
+
 ### Fixed
 
 - server: Fix crash when hover .cfg.in in gitlens views
+- client,server: update dependencies
 
 ## [0.9.2] - 2023-02-24
 
@@ -194,7 +197,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 [keepachangelog]: https://keepachangelog.com/en/1.0.0/
 [semver]: https://semver.org/spec/v2.0.0.html
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.9.2...main
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.9.3...main
+[0.9.3]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.8.3...v0.9.0
