@@ -107,7 +107,7 @@
     "sinon": "^9.0.2",
     "tslint": "^5.16.0",
     "typescript": "^4.5.5",
-    "vsce": "latest",
+    "@vscode/vsce": "latest",
     "vscode-tmgrammar-test": "^0.1.1"
   }
 }
