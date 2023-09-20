@@ -28,7 +28,7 @@ setup(
     ],
     keywords='zc.buildout languageserver',
     packages=['buildoutls'],
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     install_requires=[
         'aiohttp',
         'cachetools',
@@ -40,9 +40,7 @@ setup(
     extras_require={
         'test': [
             'aioresponses',
-            'asynctest; python_version < "3.8"',
             'coverage',
-            'mock;  python_version < "3.8"',
             'mypy',
             'pylint',
             'pytest-asyncio',
@@ -50,7 +48,6 @@ setup(
             'pytest-cov',
             'pytest',
             'types-cachetools',
-            'types-mock;  python_version < "3.8"',
             'types-setuptools',
             'types-toml',
             'yapf',

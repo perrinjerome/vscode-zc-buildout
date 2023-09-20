@@ -3,11 +3,7 @@ import concurrent.futures
 import os
 import urllib.parse
 from typing import Any
-import sys
-if sys.version_info < (3, 8):
-  import mock
-else:
-  from unittest import mock
+from unittest import mock
 
 import pytest
 import aioresponses
