@@ -49,10 +49,7 @@ def server() -> Any:
                                    root_path + '/')
       self.workspace._root_uri = 'file:///'
 
-    # BBB AsyncMock needs python3.8 , for now we don't assert the actual call args
-    async def show_document_async(self, *args, **kw):
-      pass
-
+    show_document_async = mock.AsyncMock()
     publish_diagnostics = mock.Mock()
     show_message = mock.Mock()
     show_message_log = mock.Mock()

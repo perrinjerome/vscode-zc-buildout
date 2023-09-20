@@ -16,6 +16,7 @@ from lsprotocol.types import (
     DiagnosticSeverity,
     Position,
     Range,
+    ShowDocumentParams,
     TextDocumentIdentifier,
     TextEdit,
     WorkspaceEdit,
@@ -344,6 +345,11 @@ async def test_diagnostic_and_versions_code_action_package_not_exists(
   await command_open_pypi_page(
       server,
       cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments))
+  server.show_document_async.assert_called_with(
+      ShowDocumentParams(
+          uri='https://pypi.org/project/notfound/0.0.1/',
+          external=True,
+      ))
 
 
 @pytest.mark.parametrize(
