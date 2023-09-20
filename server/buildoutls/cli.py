@@ -56,6 +56,6 @@ def main() -> None:
     if ':' in options.tcp:
       host, port = options.tcp.split(':')
     print('Listening on {}:{}'.format(host, port))
-    server.start_tcp(host, int(port))  # type: ignore
+    server.start_tcp(host, int(port))
   else:
-    server.start_io()  # type: ignore
+    server.start_io()
