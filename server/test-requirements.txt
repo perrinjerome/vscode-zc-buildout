@@ -48,9 +48,13 @@ wheel==0.41.2
 wrapt==1.15.0
 yapf==0.40.1
 yarl==1.9.2
-zc-buildout==3.0.1
+# zc-buildout==3.0.1
 zipp==3.17.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools
+
+
+## note: zc-buildout is commented out here, for tests we want to run
+# with multiple versions, so we specify these versions in tox.ini
