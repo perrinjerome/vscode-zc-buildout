@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+## Fixed
+
+ - hover: fix crash when opening instance.cfg.in outside of workspace folder
+
 ## [0.10.1] - 2023-09-20
 
 ### Fixed
+
 - revert: code actions: support cancellation of md5sum command, this needs an unreleased pygls
 
 ## [0.10.0] - 2023-09-20
