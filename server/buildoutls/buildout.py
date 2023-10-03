@@ -1270,7 +1270,8 @@ async def getProfileForTemplate(
       resolved_path = str(buildout_path.resolve())
       # For paths in workspace, we don't use buildout_path.resolve().as_uri(),
       # because we have fake uri -> path mapping in tests
-      if resolved_path.startswith(ls.workspace.root_path):
+      if resolved_path.startswith(
+          ls.workspace.root_path) and ls.workspace.root_uri:
         buildout_uri = resolved_path.replace(
             ls.workspace.root_path,
             ls.workspace.root_uri,
