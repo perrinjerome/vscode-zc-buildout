@@ -221,7 +221,7 @@ async def lsp_completion(
     params: CompletionParams,
 ) -> Optional[List[CompletionItem]]:
   items: List[CompletionItem] = []
-  doc = ls.workspace.get_document(params.text_document.uri)
+  doc = ls.workspace.get_text_document(params.text_document.uri)
 
   def getSectionReferenceCompletionTextEdit(
       doc: Document,

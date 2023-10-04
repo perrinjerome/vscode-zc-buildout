@@ -113,11 +113,11 @@ async def test_open_and_diagnostic(
     cache: Any,
 ) -> None:
   doc_uri = (slapos_working_copy / profile_relative_path).as_uri()
-  workspace = Workspace(slapos_working_copy.as_uri())  # type: ignore
+  workspace = Workspace(slapos_working_copy.as_uri())
   ls = LanguageServer(name='zc.buildout.languageserver',
                       version='dev',
                       loop=asyncio.new_event_loop())
-  ls.lsp.workspace = workspace
+  ls.lsp._workspace = workspace
 
   async def open_and_get_diagnostics() -> List[Diagnostic]:
     diags: List[Diagnostic] = []

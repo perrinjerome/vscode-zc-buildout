@@ -563,7 +563,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               uri_path.relative_to(
                   pathlib.Path(self.uri[len('file://'):]).parent)))
 
-    document = ls.workspace.get_document(uri)
+    document = ls.workspace.get_text_document(uri)
     if not os.path.exists(document.path):
       return None
 
@@ -969,7 +969,7 @@ async def parse(
       logger.warning('Error parsing from uri %s', uri, exc_info=True)
       fp = io.StringIO('')
   else:
-    document = ls.workspace.get_document(uri)
+    document = ls.workspace.get_text_document(uri)
     try:
       fp = io.StringIO(document.source)
     except IOError:
@@ -1313,7 +1313,7 @@ async def open(
 
   For buildout, it is a wrapper over _open which uses language server's workspace
   """
-  document = ls.workspace.get_document(uri)
+  document = ls.workspace.get_text_document(uri)
   logger.debug("open %s", uri)
   if not force_open_as_buildout_profile:
     # First, try to read as a template, because buildout profiles can be templates.
