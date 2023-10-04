@@ -678,7 +678,7 @@ async def test_open_extends_cache(server: LanguageServer):
   )
   # check the cache is effective, the same file is included twice,
   # but we load it only once.
-  assert server.workspace.get_document.call_count == 4  # type: ignore
+  assert server.workspace.get_text_document.call_count == 4  # type: ignore
 
 
 async def test_open_extends_cache_clear(server: LanguageServer):
@@ -693,10 +693,10 @@ async def test_open_extends_cache_clear(server: LanguageServer):
   assert 'option' in symbol.referenced_section
 
   clearCache('file:///extended/extended.cfg')
-  original_get_document = server.workspace.get_document
+  original_get_text_document = server.workspace.get_text_document
 
   def getModifiedDocument(uri: str):
-    doc = original_get_document(uri)
+    doc = original_get_text_document(uri)
     if uri == 'file:///extended/extended.cfg':
       doc._source = textwrap.dedent('''\
           [extended_option]
@@ -706,7 +706,7 @@ async def test_open_extends_cache_clear(server: LanguageServer):
 
   with mock.patch.object(
       server.workspace,
-      'get_document',
+      'get_text_document',
       side_effect=getModifiedDocument,
   ):
     parsed = await open(
@@ -724,9 +724,9 @@ async def test_open_extends_cache_clear(server: LanguageServer):
 async def test_open_resolved_cache_clear(server: LanguageServer):
   with mock.patch.object(
       server.workspace,
-      'get_document',
-      wraps=server.workspace.get_document,
-  ) as get_document_initial:
+      'get_text_document',
+      wraps=server.workspace.get_text_document,
+  ) as get_text_document_initial:
     parsed = await open(
         ls=server,
         uri='file:///extended/two_levels.cfg',
@@ -737,15 +737,15 @@ async def test_open_resolved_cache_clear(server: LanguageServer):
     assert symbol.referenced_section is not None
     assert 'option' in symbol.referenced_section
   assert mock.call(
-      'file:///extended/extended.cfg') in get_document_initial.mock_calls
+      'file:///extended/extended.cfg') in get_text_document_initial.mock_calls
 
   clearCache('file:///extended/two_levels.cfg')
 
   with mock.patch.object(
       server.workspace,
-      'get_document',
-      wraps=server.workspace.get_document,
-  ) as get_document_after_clear_cache:
+      'get_text_document',
+      wraps=server.workspace.get_text_document,
+  ) as get_text_document_after_clear_cache:
     parsed = await open(
         ls=server,
         uri='file:///extended/two_levels.cfg',
@@ -756,9 +756,9 @@ async def test_open_resolved_cache_clear(server: LanguageServer):
     assert symbol.referenced_section is not None
     assert 'option' in symbol.referenced_section
   assert mock.call('file:///extended/two_levels.cfg'
-                   ) in get_document_after_clear_cache.mock_calls
+                   ) in get_text_document_after_clear_cache.mock_calls
   assert mock.call('file:///extended/extended.cfg'
-                   ) not in get_document_after_clear_cache.mock_calls
+                   ) not in get_text_document_after_clear_cache.mock_calls
 
 
 async def test_open_macro(server: LanguageServer):

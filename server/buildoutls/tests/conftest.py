@@ -58,7 +58,7 @@ def server() -> Any:
 
   server = FakeServer()
 
-  def get_document(uri) -> Document:
+  def get_text_document(uri) -> Document:
     parsed_uri = urllib.parse.urlparse(uri)
     assert parsed_uri.scheme == "file"
     assert parsed_uri.path[0] == '/'
@@ -67,7 +67,7 @@ def server() -> Any:
       document.path = os.path.join(root_path, parsed_uri.path[1:])
     return document
 
-  server.workspace.get_document = mock.Mock(side_effect=get_document)
+  server.workspace.get_text_document = mock.Mock(side_effect=get_text_document)
 
   def os_path_exists(path: str) -> bool:
     if path.startswith('/'):
@@ -89,7 +89,7 @@ def server() -> Any:
   server.publish_diagnostics.reset_mock()
   server.show_message.reset_mock()
   server.show_message_log.reset_mock()
-  server.workspace.get_document.reset_mock()
+  server.workspace.get_text_document.reset_mock()
 
   clearCaches()
 
