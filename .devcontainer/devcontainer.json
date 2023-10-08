@@ -1,0 +1,9 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/universal:2",
+	"features": {
+		"ghcr.io/devcontainers/features/python": {
+			"version": "3.12"
+		},
+		"ghcr.io/natescherer/devcontainers-custom-features/hypermodern-python:1": {}
+	}
+}
