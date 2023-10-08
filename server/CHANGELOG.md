@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+## Added
+
+ - support python 3.12
+ - version up dependencies
+
+## Fixed
+
+ - hover: fix crash when opening instance.cfg.in without opening a folder (by updating pygls)
+
+
 ## [0.11.0] - 2023-10-04
 
 ## Added
