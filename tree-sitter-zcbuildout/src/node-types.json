@@ -1,0 +1,177 @@
+[
+  {
+    "type": "option",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "option_name",
+          "named": true
+        },
+        {
+          "type": "option_value",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "option_value",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "option_text",
+          "named": true
+        },
+        {
+          "type": "option_with_reference",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "option_with_reference",
+    "named": true,
+    "fields": {
+      "referenced_option": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "referenced_option",
+            "named": true
+          }
+        ]
+      },
+      "referenced_section": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "referenced_section",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "profile",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "section",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "section",
+    "named": true,
+    "fields": {
+      "section_condition": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "section_condition",
+            "named": true
+          }
+        ]
+      },
+      "section_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "section_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "option",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "${",
+    "named": false
+  },
+  {
+    "type": ":",
+    "named": false
+  },
+  {
+    "type": "=",
+    "named": false
+  },
+  {
+    "type": "[",
+    "named": false
+  },
+  {
+    "type": "]",
+    "named": false
+  },
+  {
+    "type": "comment",
+    "named": true
+  },
+  {
+    "type": "option_name",
+    "named": true
+  },
+  {
+    "type": "option_text",
+    "named": true
+  },
+  {
+    "type": "referenced_option",
+    "named": true
+  },
+  {
+    "type": "referenced_section",
+    "named": true
+  },
+  {
+    "type": "section_condition",
+    "named": true
+  },
+  {
+    "type": "section_name",
+    "named": true
+  },
+  {
+    "type": "}",
+    "named": false
+  }
+]

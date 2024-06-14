@@ -1,0 +1,152 @@
+================================================================================
+one section
+================================================================================
+
+[a section title]
+foo = bar
+
+--------------------------------------------------------------------------------
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text)))))
+
+================================================================================
+many sections, some empty
+================================================================================
+
+[a section title]
+foo = bar
+[section 2]
+foo = bar
+[section 3, which is empty]
+[section4]
+foo = bar
+foo = bar
+# Interesting note about duplicates in tree-sitter:
+# https://github.com/tree-sitter/tree-sitter/issues/130
+foo = bar
+foo = bar
+
+
+# a straggler comment...
+
+--------------------------------------------------------------------------------
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text))))
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text))))
+  (section
+    (section_name))
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text)))
+    (option
+      (option_name)
+      (option_value
+        (option_text)))
+    (comment)
+    (comment)
+    (option
+      (option_name)
+      (option_value
+        (option_text)))
+    (option
+      (option_name)
+      (option_value
+        (option_text)))
+    (comment)))
+
+================================================================================
+multiline options
+================================================================================
+
+[section]
+multi1 = line1
+  line2
+
+multi2 =
+  line1
+  line2
+
+--------------------------------------------------------------------------------
+
+(profile
+  (section
+    (section_name)
+    (option
+      (option_name)
+      (option_value
+        (option_text)
+        (option_text)))
+    (option
+      (option_name)
+      (option_value
+        (option_text)
+        (option_text)))))
+
+================================================================================
+comments
+================================================================================
+
+# this is comment
+[section]
+# this is comment
+this = # is not comment
+; this is comment
+this =
+   # this is not comment
+# this is comment
+
+--------------------------------------------------------------------------------
+
+(profile
+  (comment)
+  (section
+    (section_name)
+    (comment)
+    (option
+      (option_name)
+      (option_value
+        (option_text)))
+    (comment)
+    (option
+      (option_name)
+      (option_value
+        (option_text)))
+    (comment)))
+
+================================================================================
+conditional section
+================================================================================
+
+[section1:python2]
+foo = bar
+
+--------------------------------------------------------------------------------
+
+(profile
+  (section
+    (section_name)
+    (section_condition)
+    (option
+      (option_name)
+      (option_value
+        (option_text)))))
