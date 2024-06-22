@@ -27,3 +27,6 @@ zc-buildout==3.0.1
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools
+
+## XXX https://github.com/buildout/buildout/issues/648
+setuptools==69.0

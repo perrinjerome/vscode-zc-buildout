@@ -52,3 +52,6 @@ yarl==1.9.2
 
 ## note: zc-buildout is commented out here, for tests we want to run
 ## with multiple versions, so we specify these versions in tox.ini
+
+## XXX https://github.com/buildout/buildout/issues/648
+setuptools==69.0
