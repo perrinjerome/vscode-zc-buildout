@@ -50,7 +50,7 @@ setup(
             'types-cachetools',
             'types-setuptools',
             'types-toml',
-            'yapf',
+            'ruff',
         ],
     },
     entry_points={

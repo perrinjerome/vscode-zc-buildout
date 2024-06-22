@@ -129,7 +129,7 @@ async def test_open_and_diagnostic(
   # warmup
   await open_and_get_diagnostics()
 
-  @aio_benchmark  # type: ignore
+  @aio_benchmark
   async def open_and_get_diagnostics_bench() -> None:
     if cache == 'without_cache':
       clear_caches()

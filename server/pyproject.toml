@@ -1,0 +1,42 @@
+[tool.ruff]
+indent-width = 2
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+use_parentheses = true
+line_length = 78
+known_third_party = ["pydantic", "pygls", "typing_extensions"]
+
+[tool.mypy]
+files = ["buildoutls/**/*.py"]
+mypy_path = ["stubs"]
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_return_any = true
+
+[tool.mypy-buildoutls]
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+no_implicit_reexport = true
+
+[tool.mypy-buildoutls.tests]
+disallow_incomplete_defs = false
+disallow_untyped_decorators = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+check_untyped_defs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if sys.version_info"]
+omit = ["buildoutls/bench/*"]
