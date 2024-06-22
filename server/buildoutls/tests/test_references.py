@@ -18,7 +18,7 @@ async def test_references_on_section_header(server: LanguageServer):
                           uri="file:///references/referenced.cfg"),
                       position=Position(line=4, character=10)))
 
-  reference1, reference2 = sorted(references, key=lambda l: l.range.start)
+  reference1, reference2 = sorted(references, key=lambda loc: loc.range.start)
   assert reference1.uri.endswith('/references/buildout.cfg')
   assert reference1.range == Range(start=Position(line=8, character=10),
                                    end=Position(line=8, character=29))

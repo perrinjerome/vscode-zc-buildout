@@ -567,16 +567,16 @@ async def lsp_definition(
       if symbol.referenced_option:
         locations.extend(symbol.referenced_option.locations)
       else:
-        l = symbol._buildout.section_header_locations.get(
+        loc = symbol._buildout.section_header_locations.get(
             symbol.referenced_section_name)
-        if l:
-          locations.append(l)
+        if loc:
+          locations.append(loc)
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionValue:
       assert isinstance(parsed, buildout.BuildoutProfile)
       if symbol.current_option_name == '<':
-        l = parsed.section_header_locations.get(symbol.value)
-        if l:
-          locations.append(l)
+        loc = parsed.section_header_locations.get(symbol.value)
+        if loc:
+          locations.append(loc)
       elif symbol.current_section_name == 'buildout' and symbol.current_option_name == 'extends':
         extend = symbol.value
         if not buildout._isurl(extend):

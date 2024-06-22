@@ -153,7 +153,7 @@ class BuildoutOptionDefinition:
 
   def __repr__(self) -> str:
     locations = ' '.join(
-        ['{} {}'.format(l.uri, l.range) for l in self.locations])
+        ['{} {}'.format(loc.uri, loc.range) for loc in self.locations])
     return '{} ({})'.format(self.value, locations)
 
   def overrideValue(self, value: str, location: Location) -> None:
@@ -619,8 +619,8 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     # find current option in current_section
     current_option_name = None
     for k, v in current_section_value.items():
-      for l in v.locations:
-        if (l.range.start.line <= position.line <= l.range.end.line):
+      for loc in v.locations:
+        if (loc.range.start.line <= position.line <= loc.range.end.line):
           current_option_name = k
           break
     logger.debug("current_section_name: %s current_option_name: %s",
