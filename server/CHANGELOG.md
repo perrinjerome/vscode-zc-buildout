@@ -7,23 +7,27 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+### Added
+
+ - completions: complete existing sections within `[` to override existing sections.
+
 ## [0.12.0] - 2023-10-08
 
  - support python 3.12
  - version up dependencies
 
-## Fixed
+### Fixed
 
  - hover: fix crash when opening instance.cfg.in without opening a folder (by updating pygls)
 
 
 ## [0.11.0] - 2023-10-04
 
-## Added
+### Added
 
  - code actions: support cancellation of md5sum command
 
-## Fixed
+### Fixed
 
  - hover: fix crash when opening instance.cfg.in outside of workspace folder
 

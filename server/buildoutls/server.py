@@ -346,7 +346,7 @@ async def lsp_completion(
   if parsed is None:
     return None
   symbol = await parsed.getSymbolAtPosition(params.position)
-  logger.debug("getting completions on %s", symbol)
+  logger.debug("getting completions at %s => %s", params.position, symbol)
   if symbol:
     if symbol.kind == buildout.SymbolKind.Comment:
       return None
@@ -593,6 +593,16 @@ async def lsp_completion(
                   kind=CompletionItemKind.Function,
                 )
               )
+
+    elif symbol.kind == buildout.SymbolKind.SectionDefinition:
+      for section_name in symbol._buildout:
+        items.append(
+          CompletionItem(
+            label=section_name,
+            text_edit=getDefaultTextEdit(doc, params.position, section_name),
+            kind=CompletionItemKind.Function,
+          )
+        )
 
   return items
 

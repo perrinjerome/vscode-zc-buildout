@@ -79,6 +79,12 @@ option_definition_re = re.compile(r"^(?P<option>[^=]*)\s*=\s*(?P<option_value>.*
 # Matches a comment
 comment_re = re.compile(r".*[#;].*")
 
+# Matches a partial section definition like
+#   [s
+# or
+#   []
+partial_section_header_re = re.compile(r"^\[(?P<section>[^\]]*)")
+
 # Filenames of slapos instances, that might be a buildout profile as a buildout template
 slapos_instance_profile_filename_re = re.compile(r".*\/instance[^\/]*\.cfg[^\/]*")
 
@@ -672,6 +678,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
         #   have a leading space.
         #   >  value
         section_header_match = section_header(line)  # reuse buildout's regexp
+        partial_section_header_match = partial_section_header_re.match(line)
         if section_header_match:
           return Symbol(
             kind=SymbolKind.SectionDefinition,
@@ -679,6 +686,14 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
             value=section_header_match.group("name"),
             current_section_name=section_header_match.group("name"),
           )
+        elif partial_section_header_match:
+          return Symbol(
+            kind=SymbolKind.SectionDefinition,
+            buildout=self,
+            value=partial_section_header_match.group("section"),
+            current_section_name=partial_section_header_match.group("section"),
+          )
+
         if option_value_definition_match:
           # Single line option and value. The position might be on option
           # or value

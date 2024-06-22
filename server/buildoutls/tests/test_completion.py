@@ -21,7 +21,7 @@ async def test_complete_section_reference(server: LanguageServer):
   context = CompletionContext(
     trigger_kind=CompletionTriggerKind.Invoked,
   )
-  # complete section names
+  # complete section names in ${se|}
   params = CompletionParams(
     text_document=TextDocumentIdentifier(uri="file:///completions/sections.cfg"),
     position=Position(line=13, character=13),
@@ -118,6 +118,43 @@ async def test_complete_section_reference(server: LanguageServer):
       recipe = plone.recipe.command
       option4 = value4
       ```""")
+
+  # complete section names in [se|]
+  params = CompletionParams(
+    text_document=TextDocumentIdentifier(uri="file:///completions/sections.cfg"),
+    position=Position(line=15, character=1),
+    context=context,
+  )
+  completions = await lsp_completion(server, params)
+  assert completions is not None
+  assert sorted(
+    [
+      (c.text_edit.range, c.text_edit.new_text)
+      for c in completions
+      if isinstance(c.text_edit, TextEdit)
+    ]
+  ) == [
+    (
+      Range(start=Position(line=15, character=1), end=Position(line=15, character=1)),
+      "buildout",
+    ),
+    (
+      Range(start=Position(line=15, character=1), end=Position(line=15, character=1)),
+      "section1",
+    ),
+    (
+      Range(start=Position(line=15, character=1), end=Position(line=15, character=1)),
+      "section2",
+    ),
+    (
+      Range(start=Position(line=15, character=1), end=Position(line=15, character=1)),
+      "section3",
+    ),
+    (
+      Range(start=Position(line=15, character=1), end=Position(line=15, character=1)),
+      "xsection4",
+    ),
+  ]
 
   # test completions from various positions where all sections are suggested
   for completion_position, textEditRange in (

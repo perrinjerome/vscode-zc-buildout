@@ -24,7 +24,7 @@ The automatic installation does not seem to work with theia and the python egg h
 
 ## Completions
 
-- `${` complete sections.
+- `${` or `[` complete sections.
 - `${section:` complete `section`'s options. If `section` uses a known recipe, dynamic options from the recipe are also completed.
 - `${buildout:extends}` completes filenames.
 - `${buildout:parts}` and `<=` option completes parts.
