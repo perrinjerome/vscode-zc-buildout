@@ -9,7 +9,7 @@ import packaging.version
 import pkg_resources
 
 from . import aiohttp_session
-from .types import KnownVulnerability, VersionNotFound, ProjectNotFound
+from ..types import KnownVulnerability, VersionNotFound, ProjectNotFound
 import cattrs
 
 converter = cattrs.Converter()

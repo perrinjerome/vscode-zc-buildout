@@ -57,11 +57,13 @@ from . import (
   code_actions,
   commands,
   diagnostic,
-  md5sum,
   profiling,
   recipes,
   types,
 )
+
+from .util import md5sum
+
 
 server = LanguageServer(name="zc.buildout.languageserver", version="0.9.0")
 

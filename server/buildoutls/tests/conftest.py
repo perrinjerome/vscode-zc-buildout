@@ -17,7 +17,7 @@ from ..buildout import (
   _resolved_extends_cache,
   parse,
 )
-from ..aiohttp_session import close_session
+from ..util.aiohttp_session import close_session
 
 
 @pytest.fixture(autouse=True)

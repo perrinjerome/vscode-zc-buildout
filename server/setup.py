@@ -2,7 +2,7 @@
 
 from os import path
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
 
@@ -26,7 +26,7 @@ setup(
     "Programming Language :: Python :: 3",
   ],
   keywords="zc.buildout languageserver",
-  packages=["buildoutls"],
+  packages=find_packages(),
   python_requires=">=3.8",
   install_requires=[
     "aiohttp",

@@ -53,7 +53,8 @@ from zc.buildout.configparser import (
   section_header,
 )
 
-from . import aiohttp_session, jinja, recipes
+from . import jinja, recipes
+from .util import aiohttp_session
 
 logger = logging.getLogger(__name__)
 

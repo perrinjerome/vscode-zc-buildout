@@ -19,7 +19,8 @@ from .types import (
   UpdateMD5SumCommandParams,
 )
 
-from . import buildout, pypi
+from .util import pypi
+from . import buildout
 
 logger = logging.getLogger(__name__)
 converter = get_converter()

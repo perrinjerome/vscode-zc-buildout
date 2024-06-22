@@ -16,7 +16,8 @@ from lsprotocol.types import (
 from pygls.server import LanguageServer
 from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
-from . import buildout, jinja, pypi, types
+from . import buildout, jinja, types
+from .util import pypi
 
 # this is a function to be patched in unittest
 from os.path import exists as os_path_exists

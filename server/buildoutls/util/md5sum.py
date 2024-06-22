@@ -15,8 +15,9 @@ from lsprotocol.types import (
 )
 from pygls.server import LanguageServer
 
-from . import aiohttp_session, buildout
-from .types import UpdateMD5SumCommandParams
+from . import aiohttp_session
+from .. import buildout
+from ..types import UpdateMD5SumCommandParams
 
 
 async def update_md5sum(
