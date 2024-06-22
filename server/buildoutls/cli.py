@@ -6,32 +6,30 @@ from .server import server
 
 
 def main() -> None:
-
   parser = argparse.ArgumentParser(
-      'buildoutls',
-      description='zc.buildout language server',
+    "buildoutls",
+    description="zc.buildout language server",
   )
 
   parser.add_argument(
-      '--check-install',
-      help=
-      'Utility flag to check if language server is installed on this python',
-      action='store_true',
+    "--check-install",
+    help="Utility flag to check if language server is installed on this python",
+    action="store_true",
   )
   parser.add_argument(
-      '--logfile',
-      help='Use a debug log file',
-      type=str,
+    "--logfile",
+    help="Use a debug log file",
+    type=str,
   )
   parser.add_argument(
-      '--log-pygls',
-      help='Include pygls messages in the log',
-      action='store_true',
+    "--log-pygls",
+    help="Include pygls messages in the log",
+    action="store_true",
   )
   parser.add_argument(
-      '--tcp',
-      help='listen on tcp port or hostname:port on IPv4.',
-      type=str,
+    "--tcp",
+    help="listen on tcp port or hostname:port on IPv4.",
+    type=str,
   )
 
   options = parser.parse_args()
@@ -41,21 +39,21 @@ def main() -> None:
 
   if options.logfile:
     logging.basicConfig(
-        filename=options.logfile,
-        format='%(asctime)s %(name)s %(levelname)-8s %(message)s',
-        filemode='w',
-        level=logging.DEBUG,
+      filename=options.logfile,
+      format="%(asctime)s %(name)s %(levelname)-8s %(message)s",
+      filemode="w",
+      level=logging.DEBUG,
     )
     logging.getLogger().propagate = False
     if not options.log_pygls:
-      logging.getLogger('pygls').setLevel(logging.CRITICAL)
+      logging.getLogger("pygls").setLevel(logging.CRITICAL)
 
   if options.tcp:
-    host = 'localhost'
+    host = "localhost"
     port = options.tcp
-    if ':' in options.tcp:
-      host, port = options.tcp.split(':')
-    print('Listening on {}:{}'.format(host, port))
+    if ":" in options.tcp:
+      host, port = options.tcp.split(":")
+    print("Listening on {}:{}".format(host, port))
     server.start_tcp(host, int(port))
   else:
     server.start_io()

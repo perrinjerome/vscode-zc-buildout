@@ -3,33 +3,33 @@ from typing import List, Optional, Union
 
 from lsprotocol.converters import get_converter
 from lsprotocol.types import (
-    CodeAction,
-    CodeActionKind,
-    CodeActionParams,
-    Command,
-    TextEdit,
-    WorkspaceEdit,
+  CodeAction,
+  CodeActionKind,
+  CodeActionParams,
+  Command,
+  TextEdit,
+  WorkspaceEdit,
 )
 from pygls.server import LanguageServer
 
 from .commands import COMMAND_OPEN_PYPI_PAGE, COMMAND_UPDATE_MD5SUM
 from .types import (
-    OpenPypiPageCommandParams,
-    PyPIPackageInfo,
-    UpdateMD5SumCommandParams,
+  OpenPypiPageCommandParams,
+  PyPIPackageInfo,
+  UpdateMD5SumCommandParams,
 )
+
+from . import buildout, pypi
 
 logger = logging.getLogger(__name__)
 converter = get_converter()
-
-from . import buildout, pypi
 
 pypi_client = pypi.PyPIClient()
 
 
 async def getCodeActions(
-    ls: LanguageServer,
-    params: CodeActionParams,
+  ls: LanguageServer,
+  params: CodeActionParams,
 ) -> Optional[List[Union[Command, CodeAction]]]:
   current_line = params.range.start.line
 
@@ -46,49 +46,53 @@ async def getCodeActions(
 
   try:
     value = parsed.resolve_value(
-        symbol.current_section_name,
-        symbol.current_option_name,
+      symbol.current_section_name,
+      symbol.current_option_name,
     )
   except KeyError:
     return None
   logger.debug(
-      "getting code actions resolved value=%s symbol=%s",
-      value,
-      symbol,
+    "getting code actions resolved value=%s symbol=%s",
+    value,
+    symbol,
   )
-  if symbol.current_section_name == 'versions' \
-      and symbol.current_option_name \
-      and symbol.current_option is not None:
+  if (
+    symbol.current_section_name == "versions"
+    and symbol.current_option_name
+    and symbol.current_option is not None
+  ):
     url = pypi_client.get_home_page_url(
-        symbol.current_option_name,
-        symbol.current_option.value,
+      symbol.current_option_name,
+      symbol.current_option.value,
     )
     code_actions.append(
-        CodeAction(
-            title=f"View on pypi {url}",
-            command=Command(
-                title="View on pypi",
-                command=COMMAND_OPEN_PYPI_PAGE,
-                arguments=[OpenPypiPageCommandParams(url=url)],
-            ),
-        ), )
-  elif symbol.current_option_name in ("url", "md5sum") \
-        and "url" in symbol.current_section:
+      CodeAction(
+        title=f"View on pypi {url}",
+        command=Command(
+          title="View on pypi",
+          command=COMMAND_OPEN_PYPI_PAGE,
+          arguments=[OpenPypiPageCommandParams(url=url)],
+        ),
+      ),
+    )
+  elif (
+    symbol.current_option_name in ("url", "md5sum") and "url" in symbol.current_section
+  ):
     return [
-        CodeAction(
-            title="Update md5sum",
-            kind=CodeActionKind.QuickFix,
-            command=Command(
-                title="Update md5sum",
-                command=COMMAND_UPDATE_MD5SUM,
-                arguments=[
-                    UpdateMD5SumCommandParams(
-                        document_uri=params.text_document.uri,
-                        section_name=symbol.current_section_name,
-                    )
-                ],
-            ),
-        )
+      CodeAction(
+        title="Update md5sum",
+        kind=CodeActionKind.QuickFix,
+        command=Command(
+          title="Update md5sum",
+          command=COMMAND_UPDATE_MD5SUM,
+          arguments=[
+            UpdateMD5SumCommandParams(
+              document_uri=params.text_document.uri,
+              section_name=symbol.current_section_name,
+            )
+          ],
+        ),
+      )
     ]
 
   for diagnostic in params.context.diagnostics:
@@ -97,28 +101,29 @@ async def getCodeActions(
         package_info = converter.structure(diagnostic.data, PyPIPackageInfo)
       except Exception:
         logging.debug(
-            "Unable to convert diagnostic data %s",
-            diagnostic.data,
-            exc_info=True,
+          "Unable to convert diagnostic data %s",
+          diagnostic.data,
+          exc_info=True,
         )
         return None
       if package_info.latest_version:
         edit = WorkspaceEdit(
-            changes={
-                params.text_document.uri: [
-                    TextEdit(
-                        range=diagnostic.range,
-                        new_text=' ' + package_info.latest_version,
-                    ),
-                ]
-            })
+          changes={
+            params.text_document.uri: [
+              TextEdit(
+                range=diagnostic.range,
+                new_text=" " + package_info.latest_version,
+              ),
+            ]
+          }
+        )
         code_actions.insert(
-            0,
-            CodeAction(
-                title=f"Use version {package_info.latest_version}",
-                kind=CodeActionKind.QuickFix,
-                edit=edit,
-                is_preferred=True,
-            ),
+          0,
+          CodeAction(
+            title=f"Use version {package_info.latest_version}",
+            kind=CodeActionKind.QuickFix,
+            edit=edit,
+            is_preferred=True,
+          ),
         )
   return code_actions

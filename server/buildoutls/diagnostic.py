@@ -6,142 +6,152 @@ from typing import AsyncIterable, Awaitable, List, Optional, Set, Tuple
 import packaging
 
 from lsprotocol.types import (
-    Diagnostic,
-    DiagnosticRelatedInformation,
-    DiagnosticSeverity,
-    DiagnosticTag,
-    Position,
-    Range,
+  Diagnostic,
+  DiagnosticRelatedInformation,
+  DiagnosticSeverity,
+  DiagnosticTag,
+  Position,
+  Range,
 )
 from pygls.server import LanguageServer
 from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
 from . import buildout, jinja, pypi, types
 
-logger = logging.getLogger(__name__)
-_profile_base_location_re = re.compile(
-    r'\$\{([-a-zA-Z0-9 ._]*):_profile_base_location_\}')
-
 # this is a function to be patched in unittest
 from os.path import exists as os_path_exists
+
+logger = logging.getLogger(__name__)
+_profile_base_location_re = re.compile(
+  r"\$\{([-a-zA-Z0-9 ._]*):_profile_base_location_\}"
+)
+
 
 pypi_client = pypi.PyPIClient()
 
 
 async def getDiagnostics(
-    ls: LanguageServer,
-    uri: str,
+  ls: LanguageServer,
+  uri: str,
 ) -> AsyncIterable[Diagnostic]:
-
   parsed = None
   if buildout.BuildoutProfile.looksLikeBuildoutProfile(uri):
     # parse errors
     try:
       parsed = await buildout.parse(
-          ls=ls,
-          uri=uri,
-          allow_errors=False,
+        ls=ls,
+        uri=uri,
+        allow_errors=False,
       )
     except ParsingError as e:
       if e.filename != uri:
         logger.debug("skipping error in external file %s", e.filename)
       elif isinstance(e, MissingSectionHeaderError):
         yield Diagnostic(
-            message=e.message,
-            range=Range(
-                start=Position(line=e.lineno, character=0),
-                end=Position(line=e.lineno + 1, character=0),
-            ),
-            source="buildout",
-            severity=DiagnosticSeverity.Error,
+          message=e.message,
+          range=Range(
+            start=Position(line=e.lineno, character=0),
+            end=Position(line=e.lineno + 1, character=0),
+          ),
+          source="buildout",
+          severity=DiagnosticSeverity.Error,
         )
       else:
         for (lineno, _), msg in zip(e.errors, e.message.splitlines()[1:]):
           msg = msg.split(":", 1)[1].strip()
           yield Diagnostic(
-              message=f"ParseError: {msg}",
-              range=Range(
-                  start=Position(line=lineno, character=0),
-                  end=Position(line=lineno + 1, character=0),
-              ),
-              source="buildout",
-              severity=DiagnosticSeverity.Error,
+            message=f"ParseError: {msg}",
+            range=Range(
+              start=Position(line=lineno, character=0),
+              end=Position(line=lineno + 1, character=0),
+            ),
+            source="buildout",
+            severity=DiagnosticSeverity.Error,
           )
 
   resolved_buildout = await buildout.open(
-      ls=ls,
-      uri=uri,
+    ls=ls,
+    uri=uri,
   )
   assert resolved_buildout is not None
 
   # all these checks can not be performed on a buildout profile
   # with dynamic extends, we don't know what it's in the dynamic profile.
-  has_dynamic_extends = (isinstance(resolved_buildout,
-                                    buildout.BuildoutProfile)
-                         and resolved_buildout.has_dynamic_extends)
-  has_jinja = (isinstance(resolved_buildout, buildout.BuildoutProfile)
-               and resolved_buildout.has_jinja)
+  has_dynamic_extends = (
+    isinstance(resolved_buildout, buildout.BuildoutProfile)
+    and resolved_buildout.has_dynamic_extends
+  )
+  has_jinja = (
+    isinstance(resolved_buildout, buildout.BuildoutProfile)
+    and resolved_buildout.has_jinja
+  )
   if not has_dynamic_extends and not has_jinja:
     installed_parts: Set[str] = set([])
     if isinstance(resolved_buildout, buildout.BuildoutProfile):
       if "parts" in resolved_buildout["buildout"]:
         installed_parts = set(
-            (v[0]
-             for v in resolved_buildout.getOptionValues("buildout", "parts")))
+          (v[0] for v in resolved_buildout.getOptionValues("buildout", "parts"))
+        )
 
     async for symbol in resolved_buildout.getAllOptionReferenceSymbols():
       if symbol.referenced_section is None:
         yield Diagnostic(
-            message=
-            f"Section `{symbol.referenced_section_name}` does not exist.",
-            range=symbol.section_range,
-            source="buildout",
-            severity=DiagnosticSeverity.Error,
+          message=f"Section `{symbol.referenced_section_name}` does not exist.",
+          range=symbol.section_range,
+          source="buildout",
+          severity=DiagnosticSeverity.Error,
         )
 
       elif symbol.referenced_option is None:
         # if we have a recipe, either it's a known recipe where we know
         # all options that this recipe can generate, or it's an unknown
         # recipe and in this case we assume it's OK.
-        if (symbol.referenced_section_recipe_name is not None
-            and symbol.referenced_section_recipe is None) or (
-                symbol.referenced_section_recipe is not None and
-                (symbol.referenced_section_recipe.any_options
-                 or symbol.referenced_option_name
-                 in symbol.referenced_section_recipe.generated_options)):
+        if (
+          symbol.referenced_section_recipe_name is not None
+          and symbol.referenced_section_recipe is None
+        ) or (
+          symbol.referenced_section_recipe is not None
+          and (
+            symbol.referenced_section_recipe.any_options
+            or symbol.referenced_option_name
+            in symbol.referenced_section_recipe.generated_options
+          )
+        ):
           continue
         # if a section is a macro, it's OK to self reference ${:missing}
-        if (symbol.is_same_section_reference
-            and symbol.current_section_name not in installed_parts):
+        if (
+          symbol.is_same_section_reference
+          and symbol.current_section_name not in installed_parts
+        ):
           continue
         yield Diagnostic(
-            message=
-            f"Option `{symbol.referenced_option_name}` does not exist in `{symbol.referenced_section_name}`.",
-            range=symbol.option_range,
-            source="buildout",
-            severity=DiagnosticSeverity.Warning,
+          message=f"Option `{symbol.referenced_option_name}` does not exist in `{symbol.referenced_section_name}`.",
+          range=symbol.option_range,
+          source="buildout",
+          severity=DiagnosticSeverity.Warning,
         )
 
     if isinstance(resolved_buildout, buildout.BuildoutProfile):
       for section_name, section in resolved_buildout.items():
-        if (section_name in installed_parts
-            and resolved_buildout.section_header_locations[section_name].uri
-            == uri):
+        if (
+          section_name in installed_parts
+          and resolved_buildout.section_header_locations[section_name].uri == uri
+        ):
           # check for required options
           recipe = section.getRecipe()
           if recipe:
             missing_required_options = recipe.required_options.difference(
-                section.keys())
+              section.keys()
+            )
             if missing_required_options:
               missing_required_options_text = ", ".join(
-                  ["`{}`".format(o) for o in missing_required_options])
+                ["`{}`".format(o) for o in missing_required_options]
+              )
               yield Diagnostic(
-                  message=
-                  f"Missing required options for `{recipe.name}`: {missing_required_options_text}",
-                  range=resolved_buildout.
-                  section_header_locations[section_name].range,
-                  source="buildout",
-                  severity=DiagnosticSeverity.Error,
+                message=f"Missing required options for `{recipe.name}`: {missing_required_options_text}",
+                range=resolved_buildout.section_header_locations[section_name].range,
+                source="buildout",
+                severity=DiagnosticSeverity.Error,
               )
 
         # hints with redefined options, but at "Information" level when option redefines
@@ -156,59 +166,62 @@ async def getDiagnostics(
           # ${:_profile_base_location_} should not be considered as redefining to
           # same value.
           if len(option.locations) > 1:
-            is_same_value = (_profile_base_location_re.sub(
-                option.locations[-1].uri,
-                option.values[-1],
+            is_same_value = _profile_base_location_re.sub(
+              option.locations[-1].uri,
+              option.values[-1],
             ) == _profile_base_location_re.sub(
-                option.locations[-2].uri,
-                option.values[-2],
-            ))
+              option.locations[-2].uri,
+              option.values[-2],
+            )
 
             related_information = []
             reported_related_location = set()
             overriding_default_value = False
             for other_location, other_value, other_is_default_value in zip(
-                option.locations,
-                option.values,
-                option.default_values,
+              option.locations,
+              option.values,
+              option.default_values,
             ):
               if other_is_default_value:
                 overriding_default_value = True
               hashable_location = (
-                  other_location.uri,
-                  other_location.range.start.line,
+                other_location.uri,
+                other_location.range.start.line,
               )
               if hashable_location in reported_related_location:
                 continue
               reported_related_location.add(hashable_location)
               related_information.append(
-                  DiagnosticRelatedInformation(
-                      location=other_location,
-                      message=f"default value: `{other_value}`"
-                      if other_is_default_value else f"value: `{other_value}`",
-                  ))
+                DiagnosticRelatedInformation(
+                  location=other_location,
+                  message=f"default value: `{other_value}`"
+                  if other_is_default_value
+                  else f"value: `{other_value}`",
+                )
+              )
             if is_same_value:
               yield Diagnostic(
-                  message=
-                  f"`{option_name}` already has value `{option.value}`.",
-                  range=option.locations[-1].range,
-                  source="buildout",
-                  severity=DiagnosticSeverity.Information,
-                  related_information=related_information,
-                  tags=[DiagnosticTag.Unnecessary])
+                message=f"`{option_name}` already has value `{option.value}`.",
+                range=option.locations[-1].range,
+                source="buildout",
+                severity=DiagnosticSeverity.Information,
+                related_information=related_information,
+                tags=[DiagnosticTag.Unnecessary],
+              )
             elif not overriding_default_value:
               yield Diagnostic(
-                  message=f"`{option_name}` overrides an existing value.",
-                  range=option.locations[-1].range,
-                  source="buildout",
-                  severity=DiagnosticSeverity.Hint,
-                  related_information=related_information,
+                message=f"`{option_name}` overrides an existing value.",
+                range=option.locations[-1].range,
+                source="buildout",
+                severity=DiagnosticSeverity.Hint,
+                related_information=related_information,
               )
 
       jinja_parser = jinja.JinjaParser()
       if parsed is not None and "extends" in parsed["buildout"]:
         for extend_filename, extend_range in parsed.getOptionValues(
-            "buildout", "extends"):
+          "buildout", "extends"
+        ):
           if extend_filename.startswith("${"):
             continue  # assume substitutions are OK
           jinja_parser.feed(extend_filename)
@@ -216,20 +229,21 @@ async def getDiagnostics(
             continue  # ignore anything in jinja context
           if buildout._isurl(extend_filename):
             continue
-          base = uri[:uri.rfind('/')] + '/'
+          base = uri[: uri.rfind("/")] + "/"
           if not os_path_exists(
-              urllib.parse.urlparse(urllib.parse.urljoin(
-                  base, extend_filename)).path):
+            urllib.parse.urlparse(urllib.parse.urljoin(base, extend_filename)).path
+          ):
             yield Diagnostic(
-                message=f"Extended profile `{extend_filename}` does not exist.",
-                range=extend_range,
-                source="buildout",
-                severity=DiagnosticSeverity.Error,
+              message=f"Extended profile `{extend_filename}` does not exist.",
+              range=extend_range,
+              source="buildout",
+              severity=DiagnosticSeverity.Error,
             )
 
       if "parts" in resolved_buildout["buildout"]:
         for part_name, part_range in resolved_buildout.getOptionValues(
-            "buildout", "parts"):
+          "buildout", "parts"
+        ):
           if part_name:
             if part_name.startswith("${"):
               continue  # assume substitutions are OK
@@ -240,146 +254,154 @@ async def getDiagnostics(
             if part_name not in resolved_buildout:
               if not resolved_buildout.has_dynamic_extends:
                 yield Diagnostic(
-                    message=f"Section `{part_name}` does not exist.",
-                    range=part_range,
-                    source="buildout",
-                    severity=DiagnosticSeverity.Error,
-                )
-            elif "recipe" not in resolved_buildout[part_name]:
-              yield Diagnostic(
-                  message=f"Section `{part_name}` has no recipe.",
+                  message=f"Section `{part_name}` does not exist.",
                   range=part_range,
                   source="buildout",
                   severity=DiagnosticSeverity.Error,
+                )
+            elif "recipe" not in resolved_buildout[part_name]:
+              yield Diagnostic(
+                message=f"Section `{part_name}` has no recipe.",
+                range=part_range,
+                source="buildout",
+                severity=DiagnosticSeverity.Error,
               )
 
-      if resolved_buildout.get('versions'):
+      if resolved_buildout.get("versions"):
         sem = asyncio.Semaphore(4)
-        package_version_options: List[Tuple[
-            str, str, buildout.BuildoutOptionDefinition]] = []
-        known_vulnerabilities_coros: List[Awaitable[Tuple[
-            types.KnownVulnerability, ...]]] = []
-        latest_version_coros: List[Awaitable[Optional[
-            packaging.version.Version]]] = []
-        for package_name, option in resolved_buildout['versions'].items():
+        package_version_options: List[
+          Tuple[str, str, buildout.BuildoutOptionDefinition]
+        ] = []
+        known_vulnerabilities_coros: List[
+          Awaitable[Tuple[types.KnownVulnerability, ...]]
+        ] = []
+        latest_version_coros: List[Awaitable[Optional[packaging.version.Version]]] = []
+        for package_name, option in resolved_buildout["versions"].items():
           if option.location.uri != uri:
             continue
           if package_name in (
-              '_buildout_section_name_',
-              '_profile_base_location_',
+            "_buildout_section_name_",
+            "_profile_base_location_",
           ):
             continue
 
           package_version = option.value
 
           # handle some slapos markers in versions
-          if package_version.endswith(':whl'):
+          if package_version.endswith(":whl"):
             package_version = package_version[:-4]
           if "+slapos" in package_version.lower():
             continue
 
           logger.debug(
-              'Found package %s at version %s @ %s',
+            "Found package %s at version %s @ %s",
+            package_name,
+            package_version,
+            option.location,
+          )
+          package_version_options.append((package_name, package_version, option))
+          known_vulnerabilities_coros.append(
+            pypi_client.get_known_vulnerabilities(
               package_name,
               package_version,
-              option.location,
+              sem,
+            )
           )
-          package_version_options.append(
-              (package_name, package_version, option))
-          known_vulnerabilities_coros.append(
-              pypi_client.get_known_vulnerabilities(
-                  package_name,
-                  package_version,
-                  sem,
-              ))
           latest_version_coros.append(
-              pypi_client.get_latest_version(
-                  package_name,
-                  package_version,
-                  sem,
-              ))
-        logger.debug('gathering %d known vulnerabilities',
-                     len(known_vulnerabilities_coros))
+            pypi_client.get_latest_version(
+              package_name,
+              package_version,
+              sem,
+            )
+          )
+        logger.debug(
+          "gathering %d known vulnerabilities", len(known_vulnerabilities_coros)
+        )
         known_vulnerabilities_results = await asyncio.gather(
-            *known_vulnerabilities_coros, return_exceptions=True)
-        logger.debug('gathered %s', known_vulnerabilities_results)
+          *known_vulnerabilities_coros, return_exceptions=True
+        )
+        logger.debug("gathered %s", known_vulnerabilities_results)
 
-        logger.debug('gathering %d latest versions', len(latest_version_coros))
-        latest_version_results = await asyncio.gather(*latest_version_coros,
-                                                      return_exceptions=True)
-        logger.debug('gathered %s', latest_version_results)
+        logger.debug("gathering %d latest versions", len(latest_version_coros))
+        latest_version_results = await asyncio.gather(
+          *latest_version_coros, return_exceptions=True
+        )
+        logger.debug("gathered %s", latest_version_results)
         for (
-            (package_name, package_version, option),
-            known_vulnerabilities,
-            latest_version,
+          (package_name, package_version, option),
+          known_vulnerabilities,
+          latest_version,
         ) in zip(
-            package_version_options,
-            known_vulnerabilities_results,
-            latest_version_results,
+          package_version_options,
+          known_vulnerabilities_results,
+          latest_version_results,
         ):
           if isinstance(latest_version, types.ProjectNotFound):
             yield Diagnostic(
-                message=f'Project {package_name} does not exist',
-                range=option.location.range,
-                source="buildout",
-                severity=DiagnosticSeverity.Warning,
-                data=types.PyPIPackageInfo(
-                    latest_version='',
-                    url=pypi_client.get_home_page_url(
-                        package_name,
-                        package_version,
-                    ),
-                    known_vulnerabilities=[],
+              message=f"Project {package_name} does not exist",
+              range=option.location.range,
+              source="buildout",
+              severity=DiagnosticSeverity.Warning,
+              data=types.PyPIPackageInfo(
+                latest_version="",
+                url=pypi_client.get_home_page_url(
+                  package_name,
+                  package_version,
                 ),
+                known_vulnerabilities=[],
+              ),
             )
             continue
           elif isinstance(known_vulnerabilities, types.VersionNotFound):
             yield Diagnostic(
-                message=
-                f'Version {package_version} does not exist for {package_name}',
-                range=option.location.range,
-                source="buildout",
-                severity=DiagnosticSeverity.Warning,
-                data=types.PyPIPackageInfo(
-                    latest_version=str(latest_version),
-                    url=pypi_client.get_home_page_url(
-                        package_name,
-                        package_version,
-                    ),
-                    known_vulnerabilities=[],
+              message=f"Version {package_version} does not exist for {package_name}",
+              range=option.location.range,
+              source="buildout",
+              severity=DiagnosticSeverity.Warning,
+              data=types.PyPIPackageInfo(
+                latest_version=str(latest_version),
+                url=pypi_client.get_home_page_url(
+                  package_name,
+                  package_version,
                 ),
+                known_vulnerabilities=[],
+              ),
             )
             continue
           elif isinstance(known_vulnerabilities, BaseException) or isinstance(
-              latest_version, BaseException):
+            latest_version, BaseException
+          ):
             logger.error(
-                'error with %s %s: %s / %s',
-                package_name,
-                package_version,
-                known_vulnerabilities,
-                latest_version,
+              "error with %s %s: %s / %s",
+              package_name,
+              package_version,
+              known_vulnerabilities,
+              latest_version,
             )
             continue
           if latest_version:
             severity = DiagnosticSeverity.Hint
             message = f"Newer version available ({latest_version})"
             if known_vulnerabilities:
-              message = f'{package_name} {package_version} has some known vulnerabilities:\n' + '\n\n'.join(
-                  f"{v.id}\n{v.details}\n{v.link}"
-                  for v in known_vulnerabilities)
+              message = (
+                f"{package_name} {package_version} has some known vulnerabilities:\n"
+                + "\n\n".join(
+                  f"{v.id}\n{v.details}\n{v.link}" for v in known_vulnerabilities
+                )
+              )
               severity = DiagnosticSeverity.Warning
 
             yield Diagnostic(
-                message=message,
-                range=option.location.range,
-                source="buildout",
-                severity=severity,
-                data=types.PyPIPackageInfo(
-                    latest_version=str(latest_version),
-                    url=pypi_client.get_home_page_url(
-                        package_name,
-                        package_version,
-                    ),
-                    known_vulnerabilities=known_vulnerabilities,
+              message=message,
+              range=option.location.range,
+              source="buildout",
+              severity=severity,
+              data=types.PyPIPackageInfo(
+                latest_version=str(latest_version),
+                url=pypi_client.get_home_page_url(
+                  package_name,
+                  package_version,
                 ),
+                known_vulnerabilities=known_vulnerabilities,
+              ),
             )
