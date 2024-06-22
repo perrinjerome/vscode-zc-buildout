@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 
 import attrs
 from typing_extensions import TypedDict
@@ -26,7 +26,7 @@ class VersionNotFound(Exception):
 class PyPIPackageInfo:
   latest_version: str
   url: str
-  known_vulnerabilities: List[KnownVulnerability]
+  known_vulnerabilities: Sequence[KnownVulnerability]
 
 
 # XXX command params are passed as dict in pygls 1.0
