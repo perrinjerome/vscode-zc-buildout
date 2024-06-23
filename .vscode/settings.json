@@ -12,23 +12,8 @@
   "[typescriptreact]": {
     "editor.formatOnSave": false
   },
-  "eslint.autoFixOnSave": true,
-  "eslint.validate": [
-    {
-      "language": "typescript",
-      "autoFix": true
-    }
-  ],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "editor.fontSize": 14,
-  "terminal.integrated.fontSize": 14,
-  "debug.console.fontSize": 14,
-  "window.zoomLevel": -1,
-  "python.formatting.provider": "yapf",
-  "python.linting.pylintEnabled": false,
-  "python.linting.mypyEnabled": true,
-  "python.pythonPath": "../venv/bin/python",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   }
 }
