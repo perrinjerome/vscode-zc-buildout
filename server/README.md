@@ -63,6 +63,10 @@ The automatic installation does not seem to work with theia and the python egg h
 - update a python package from `[versions]` to its latest version on pypi
 - compute the `md5sum` of an url
 
+## Semantic tokens
+
+- python code in options is highlighted.
+
 ## Template support
 
 - "current" buildout profile is guessed, then completions and diagnostics should work on any files.

@@ -12,6 +12,7 @@ from lsprotocol.types import (
   TEXT_DOCUMENT_DEFINITION,
   TEXT_DOCUMENT_DID_CHANGE,
   TEXT_DOCUMENT_DID_OPEN,
+  TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
   TEXT_DOCUMENT_DOCUMENT_LINK,
   TEXT_DOCUMENT_DOCUMENT_SYMBOL,
   TEXT_DOCUMENT_HOVER,
@@ -32,6 +33,9 @@ from lsprotocol.types import (
   DidOpenTextDocumentParams,
   DocumentLink,
   DocumentLinkParams,
+  SemanticTokens,
+  SemanticTokensLegend,
+  SemanticTokensParams,
   DocumentSymbol,
   DocumentSymbolParams,
   Hover,
@@ -59,6 +63,7 @@ from . import (
   diagnostic,
   profiling,
   recipes,
+  semantic_tokens,
   types,
 )
 
@@ -760,3 +765,14 @@ async def lsp_document_link(
           target = urllib.parse.urljoin(base, extend)
         links.append(DocumentLink(range=extend_range, target=target))
   return links
+
+
+@server.feature(
+  TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
+  SemanticTokensLegend(token_types=types.SEMANTIC_TOKEN_TYPES, token_modifiers=[]),
+)
+async def lsp_semantic_tokens_full(
+  ls: LanguageServer, params: SemanticTokensParams
+) -> SemanticTokens:
+  parsed = await buildout.parse(ls, params.text_document.uri)
+  return semantic_tokens.get_semantic_tokens(ls, parsed)

@@ -2,6 +2,14 @@
 
 from typing import Dict, Optional, Sequence, Set
 
+import enum
+
+
+class RecipeOptionKind(enum.Enum):
+  Text = enum.auto()
+  ShellScript = enum.auto()
+  PythonScript = enum.auto()
+
 
 class RecipeOption:
   """A Recipe option."""
@@ -11,6 +19,7 @@ class RecipeOption:
     documentation: str = "",
     valid_values: Sequence[str] = (),
     deprecated: Optional[str] = "",
+    kind: Optional[RecipeOptionKind] = RecipeOptionKind.Text,
   ):
     self.documentation = documentation
 
@@ -19,6 +28,9 @@ class RecipeOption:
     """
     self.deprecated = deprecated
     """Reason for the option to be deprected, if it is deprecated.
+    """
+    self.kind = kind
+    """Type of the option.
     """
 
 
@@ -205,9 +217,11 @@ Recipe(
   options={
     "command": RecipeOption(
       "Command to run when the buildout part is installed.",
+      kind=RecipeOptionKind.ShellScript,
     ),
     "update-command": RecipeOption(
       "Command to run when the buildout part is updated. This happens when buildout is run but the configuration for this buildout part has not changed.",
+      kind=RecipeOptionKind.ShellScript,
     ),
     "location": RecipeOption(
       """A list of filesystem paths that buildout should consider as being managed by this buildout part.
@@ -298,12 +312,15 @@ Recipe(
   options={
     "init": RecipeOption(
       "python code executed at initialization step",
+      kind=RecipeOptionKind.PythonScript,
     ),
     "install": RecipeOption(
       "python code executed at install step",
+      kind=RecipeOptionKind.PythonScript,
     ),
     "update": RecipeOption(
       "python code executed when updating",
+      kind=RecipeOptionKind.PythonScript,
     ),
   },
   generated_options={
@@ -359,7 +376,8 @@ You only need to use this if you want to build alternate targets. Each target mu
       """Name of the configure command that will be run to generate the Makefile.
 This defaults to `./configure` which is fine for packages that come with a configure script.
 You may wish to change this when compiling packages with a different set up.
-See the *Compiling a Perl package* section for an example."""
+See the *Compiling a Perl package* section for an example.""",
+      kind=RecipeOptionKind.ShellScript,
     ),
     "configure-options": RecipeOption("""Extra options to be given to the configure script.
 By default only the `--prefix` option is passed which is set to the part directory.
@@ -415,18 +433,22 @@ The format and semantics are the same as with the `pre-configure-hook` option.""
     ),
     "pre-configure": RecipeOption(
       """Shell command that will be executed before running `configure` script.
-It takes the same effect as `pre-configure-hook` option except it's shell command."""
+It takes the same effect as `pre-configure-hook` option except it's shell command.""",
+      kind=RecipeOptionKind.ShellScript,
     ),
     "pre-build": RecipeOption(
       """Shell command that will be executed before running `make`.
-It takes the same effect as `pre-make-hook` option except it's shell command."""
+It takes the same effect as `pre-make-hook` option except it's shell command.""",
+      kind=RecipeOptionKind.ShellScript,
     ),
     "pre-install": RecipeOption(
-      """Shell command that will be executed before running `make` install."""
+      """Shell command that will be executed before running `make` install.""",
+      kind=RecipeOptionKind.ShellScript,
     ),
     "post-install": RecipeOption(
       """Shell command that will be executed after running `make` install.
-It takes the same effect as `post-make-hook` option except it's shell command."""
+It takes the same effect as `post-make-hook` option except it's shell command.""",
+      kind=RecipeOptionKind.ShellScript,
     ),
     "keep-compile-dir": RecipeOption(
       """Switch to optionally keep the temporary directory where the package was compiled.
@@ -589,10 +611,13 @@ If the option isn’t given at all, then all scripts defined by the named eggs w
         """The name of a script to generate that allows access to a Python interpreter that has the path set based on the eggs installed."""
       ),
       "extra-paths": RecipeOption("""Extra paths to include in a generated script."""),
-      "initialization": RecipeOption("""Specify some Python initialization code.
+      "initialization": RecipeOption(
+        """Specify some Python initialization code.
 This is very limited. 
 
-In particular, be aware that leading whitespace is stripped from the code given."""),
+In particular, be aware that leading whitespace is stripped from the code given.""",
+        kind=RecipeOptionKind.PythonScript,
+      ),
       "arguments": RecipeOption(
         """Specify some arguments to be passed to entry points as Python source."""
       ),
@@ -796,7 +821,8 @@ Specify some Python initialization code to include within the generated
 ``sitecustomize.py`` script (Buildout >= 1.5) or within the instance script
 (Buildout < 1.5). This is very limited. In particular, be aware that leading
 whitespace is stripped from the code given. *added in version 4.2.14*
-"""
+""",
+      kind=RecipeOptionKind.PythonScript,
     ),
     "wsgi": RecipeOption(
       """

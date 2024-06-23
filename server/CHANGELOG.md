@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning][semver].
 
 ### Added
 
+ - semantic_tokens: highlight python code in options
  - completions: complete existing sections within `[` to override existing sections.
  - hover: improve hover of known recipes
  - Add support for plone.recipe.zope2instance
