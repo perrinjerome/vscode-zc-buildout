@@ -717,3 +717,845 @@ Recipe(
   },
   required_options=("command-line", "wrapper-path"),
 )
+
+
+Recipe(
+  name="plone.recipe.zope2instance",
+  url="https://pypi.org/project/plone.recipe.zope2instance/",
+  description="""The `plone.recipe.zope2instance` is a recipe to setup and configure a Zope 2 instance.
+
+This recipe creates and configures a Zope instance in parts. (Despite its name it nowadays only works for Zope 4+.) It also installs a control script, which is like zopectl, in the bin/ directory. The name of the control script is the name of the part in buildout. By default various runtime and log information will be stored inside the var/ directory.
+
+You can use it with a part like this:
+
+    [instance]
+    recipe = plone.recipe.zope2instance
+    user = admin:admin
+    http-address = 8080
+    eggs = my.distribution
+    zcml = my.distribution
+""",
+  required_options=("eggs",),
+  options={
+    "user": RecipeOption(
+      "Manager user and password in `user:password` format.",
+    ),
+    "eggs": RecipeOption(
+      "The list of distributions you want to make available to the instance.",
+    ),
+    "zcml": RecipeOption("""
+Install ZCML slugs for the distributions listed, separated by whitespace. You
+can specify the type of slug by appending '-' and the type of slug you want
+to create. Some examples: ``my.distribution`` ``my.distribution-meta``.
+"""),
+    "http-address": RecipeOption("""
+Set the address of the HTTP server.
+Can be either a port or a socket address.
+Defaults to 0.0.0.0:8080.
+"""),
+    "ip-address": RecipeOption(
+      """
+The default IP address on which Zope's various server protocol
+implementations will listen for requests. If this is unset, Zope will listen
+on all IP addresses supported by the machine. This directive can be
+overridden on a per-server basis in the servers section. Defaults to not
+setting an ip-address. Used for ZServer only, not WSGI.
+""",
+    ),
+    "threads": RecipeOption("""
+Specify the number of worker threads used to service requests.
+The default is 4 for WSGI (since this is the waitress default) and 2 for ZServer.
+"""),
+    "zodb-cache-size": RecipeOption("""
+Set the ZODB cache size, i.e. the number of objects which the ZODB cache
+will try to hold. Defaults to 30000.
+"""),
+    "zserver-threads": RecipeOption(
+      """
+Deprecated, use `threads` instead.
+Specify the number of threads that Zope's ZServer web server will use to
+service requests. The recipes default is 2. Used for ZServer only, not WSGI.
+""",
+      deprecated="use `threads` instead.",
+    ),
+    "environment-vars": RecipeOption(
+      """
+Define arbitrary key-value pairs for use as environment variables during
+Zope's run cycle. Example::
+
+    environment-vars =
+      TZ US/Eastern
+      zope_i18n_allowed_languages en
+      zope_i18n_compile_mo_files true
+
+    """
+    ),
+    "initialization": RecipeOption(
+      """
+Specify some Python initialization code to include within the generated
+``sitecustomize.py`` script (Buildout >= 1.5) or within the instance script
+(Buildout < 1.5). This is very limited. In particular, be aware that leading
+whitespace is stripped from the code given. *added in version 4.2.14*
+"""
+    ),
+    "wsgi": RecipeOption(
+      """
+By default this recipe creates a Python script that uses ``waitress`` as a
+WSGI server. When running Python 2 you can disable WSGI and use ZServer by
+setting ``wsgi = off`` and including ZServer in the ``eggs`` specification
+list. Example::
+
+  wsgi = off
+  eggs =
+    ...
+    ZServer
+
+You can use other PasteDeploy-compatible WSGI servers by passing a path
+to a WSGI configuration file here and including the WSGI server's egg in the
+``eggs`` specification. Example::
+
+  wsgi = ${buildout:directory}/etc/gunicorn.ini
+  eggs =
+    ...
+    gunicorn
+
+The WSGI configuration file will not be created for you in this case,
+unlike the built-in ``waitress`` support. You have to provide it yourself.
+"""
+    ),
+    "max-request-body-size": RecipeOption(
+      """
+Specify the maximum request body size in bytes
+The default is 1073741824 (since this is the waitress default)
+"""
+    ),
+    "resources": RecipeOption(
+      """
+  Specify a central resource directory. Example::
+
+    resources = ${buildout:directory}/resources
+"""
+    ),
+    "locales": RecipeOption(
+      """
+Specify a locales directory. Example::
+
+    locales = ${buildout:directory}/locales
+
+This registers a locales directory with extra or different translations.
+If you want to override a few translations from the `plone` domain in the
+English language, you can add a ``en/LC_MESSAGES/plone.po`` file in this
+directory, with standard headers at the top, followed by something like
+this
+
+  #. Default: "You are here:"
+  msgid "you_are_here"
+  msgstr "You are very welcome here:"
+
+Translations for other message ids are not affected and will continue
+to work.
+"""
+    ),
+    "verbose-security": RecipeOption(
+      """
+  Set to `on` to turn on verbose security (and switch to the Python security
+  implementation). Defaults to `off` (and the C security implementation).
+"""
+    ),
+    "debug-exceptions": RecipeOption(
+      """
+WSGI only: set to ``on`` to disable exception views including
+``standard_error_message``. Exceptions other than ``Unauthorized`` or
+``ConflictError`` can then travel up into the WSGI stack. Use this option
+if you want more convenient error debugging offered by WSGI middleware
+such as the `werkzeug debugger
+<https://werkzeug.palletsprojects.com/en/0.15.x/debug/>`_. See the `Zope
+WSGI documentation <https://zope.readthedocs.io/en/latest/wsgi.html>`_ for
+examples.
+"""
+    ),
+    "profile": RecipeOption(
+      """
+Set to ``on`` enables `repoze.profile <https://github.com/repoze/repoze.profile>`_.
+Defaults to ``off``,
+If switched on there are further options prefixed with ``profile_`` to configure it as below.
+You will need to add the `repoze.profile` package, either by adding it to your eggs section directly or by using the extra `plone.recipe.zope2instance[profile]`.
+"""
+    ),
+    "profile_log_filename": RecipeOption(
+      """
+Filename of the raw profile data.
+Default to ``profile-SECTIONNAME.raw``.
+This file contains the raw profile data for further analysis.
+""",
+    ),
+    "profile_cachegrind_filename": RecipeOption(
+      """
+If the package ``pyprof2calltree`` is installed, another file is written.
+It is meant for consumation with any cachegrind compatible application.
+Defaults to ``cachegrind.out.SECTIONNAME``.
+"""
+    ),
+    "profile_discard_first_request": RecipeOption(
+      """
+  Defaults to ``true``.
+  See `repoze.profile docs <https://repozeprofile.readthedocs.io/en/latest/#configuration-via-python>`_ for details.
+""",
+    ),
+    "profile_path": RecipeOption(
+      """
+Defaults to ``/__profile__``.
+The path for through the web access to the last profiled request.
+""",
+    ),
+    "profile_flush_at_shutdown": RecipeOption(
+      """ 
+Defaults to ``true``.
+See `repoze.profile docs <https://repozeprofile.readthedocs.io/en/latest/#configuration-via-python>`_ for details.
+""",
+    ),
+    "profile_unwind": RecipeOption(
+      """
+Defaults to ``false``.
+See `repoze.profile docs <https://repozeprofile.readthedocs.io/en/latest/#configuration-via-python>`_ for details.
+
+If you have only one application process, it can open the database files
+directly without running a database server process.
+""",
+    ),
+    "file-storage": RecipeOption(
+      """ 
+The filename where the ZODB data file will be stored.
+Defaults to `${buildout:directory}/var/filestorage/Data.fs`.
+""",
+    ),
+    "blob-storage": RecipeOption(
+      """
+
+## With filestorage
+                                 
+The name of the directory where the ZODB blob data will be stored, defaults
+to `${buildout:directory}/var/blobstorage`.
+
+## With ZEO
+
+The location of the blob zeocache, defaults to `var/blobcache`. If
+`shared-blob` is on it defaults to `${buildout:directory}/var/blobstorage`.
+
+"""
+    ),
+    "zeo-address": RecipeOption(
+      """
+Set the address of the ZEO server. Defaults to 8100. You can set
+more than one address (white space delimited). Alternative addresses will
+be used if the primary address is down.
+""",
+    ),
+    "zeo-client": RecipeOption(
+      """
+Set to 'on' to make this instance a ZEO client. In this case, setting the
+zeo-address option is required, and the file-storage option has no effect.
+To set up a ZEO server, you can use the plone.recipe.zeoserver recipe.
+Defaults to 'off'.
+""",
+    ),
+    "shared-blob": RecipeOption(
+      """
+Defaults to `off`. Set this to `on` if the ZEO server and the instance have
+access to the same directory. Either by being on the same physical machine or
+by virtue of a network file system like NFS. Make sure this instances
+`blob-storage` is set to the same directory used for the ZEO servers
+`blob-storage`. In this case the instance will not stream the blob file
+through the ZEO connection, but just send the information of the file
+location to the ZEO server, resulting in faster execution and less memory
+overhead.
+""",
+    ),
+    "zeo-client-read-only-fallback": RecipeOption(
+      """
+A flag indicating whether a read-only remote storage should be acceptable as
+a fallback when no writable storages are available. Defaults to false.
+""",
+    ),
+    "read-only": RecipeOption(
+      "Set zeo client as read only *added in version 4.2.12*",
+    ),
+    "zeo-username": RecipeOption(
+      """
+Enable ZEO authentication and use the given username when accessing the
+ZEO server. It is obligatory to also specify a zeo-password.
+""",
+    ),
+    "zeo-password": RecipeOption(
+      """
+Password to use when connecting to a ZEO server with authentication
+enabled.
+""",
+    ),
+    "zeo-realm": RecipeOption(
+      """
+Authentication realm to use when authentication with a ZEO server. Defaults
+to 'ZEO'.
+""",
+    ),
+    "rel-storage": RecipeOption(
+      """
+Allows to set a RelStorage instead of a FileStorage.
+
+Contains settings separated by newlines, with these values:
+
+- type: any database type supported (postgresql, oracle, mysql)
+- RelStorage specific keys, like `cache-servers` and `poll-interval`
+- all other keys are passed on to the database-specific RelStorage adapter.
+
+Example::
+
+  rel-storage =
+    type oracle
+    dsn (DESCRIPTION=(ADDRESS=(HOST=s01))(CONNECT_DATA=(SERVICE_NAME=d01)))
+    user tarek
+    password secret
+""",
+    ),
+    "event-log": RecipeOption(
+      """
+The filename of the event log. Defaults to ${buildout:directory}/var/log/${partname}.log
+Setting this value to 'disable' will make the <eventlog> section to be omitted,
+disabling logging events by default to a .log file.
+""",
+    ),
+    "event-log-level": RecipeOption(
+      """
+Set the level of the console output for the event log. Level may be any of
+CRITICAL, ERROR, WARN, INFO, DEBUG, or ALL. Defaults to INFO.
+""",
+    ),
+    "event-log-max-size": RecipeOption(
+      """
+Maximum size of event log file. Enables log rotation.
+Used for ZServer only, not WSGI.
+""",
+    ),
+    "event-log-old-files": RecipeOption(
+      """
+Number of previous log files to retain when log rotation is enabled.
+Defaults to 1. Used for ZServer only, not WSGI.
+""",
+    ),
+    "event-log-custom": RecipeOption(
+      """
+  A custom section for the eventlog, to be able to use another
+  event logger than `logfile`. Used for ZServer only, not WSGI.
+""",
+    ),
+    "mailinglogger": RecipeOption(
+      """
+A mailinglogger section added into the event log.
+Used for ZServer only, not WSGI. Example snippet::
+
+  <mailing-logger>
+    level error
+    flood-level 10
+    smtp-server smtp.mydomain.com
+    from logger@mydomain.com
+    to errors@mydomain.com
+    subject [My domain error] [%(hostname)s] %(line)s
+  </mailing-logger>
+
+You will need to add `mailinglogger` to your buildout's egg section to make this work.
+""",
+    ),
+    "access-log": RecipeOption(
+      """
+The filename for the Z2 access log. Defaults to var/log/${partname}-Z2.log
+(var/log/${partname}-access.log) for WSGI).
+You can disable access logging by setting this value to 'disable'.
+For ZServer this will omit the `<logger access>` section in `zope.conf`.
+For WSGI, the logging handler will be a `NullHandler <https://docs.python.org/3/library/logging.handlers.html#nullhandler>`_.
+"""
+    ),
+    "z2-log": RecipeOption(
+      """
+The filename for the Z2 access log. Defaults to var/log/${partname}-Z2.log
+(var/log/${partname}-access.log) for WSGI).
+You can disable access logging by setting this value to 'disable'.
+For ZServer this will omit the `<logger access>` section in `zope.conf`.
+For WSGI, the logging handler will be a `NullHandler <https://docs.python.org/3/library/logging.handlers.html#nullhandler>`_.
+"""
+    ),
+    "access-log-level": RecipeOption(
+      """
+Set the log level for the access log. Level may be any of CRITICAL, ERROR,
+WARN, INFO, DEBUG, or ALL. Defaults to WARN (INFO for WSGI).
+""",
+    ),
+    "z2-log-level": RecipeOption(
+      """
+Set the log level for the access log. Level may be any of CRITICAL, ERROR,
+WARN, INFO, DEBUG, or ALL. Defaults to WARN (INFO for WSGI).
+""",
+    ),
+    "access-log-max-size": RecipeOption(
+      """
+  Maximum size of access log file. Enables log rotation.
+  Used for ZServer only, not WSGI.
+""",
+    ),
+    "access-log-old-files": RecipeOption(
+      """
+  Number of previous log files to retain when log rotation is enabled.
+  Defaults to 1. Used for ZServer only, not WSGI.
+""",
+    ),
+    "access-log-custom": RecipeOption(
+      """
+  Like `event-log-custom`, a custom section for the access logger, to be able
+  to use another event logger than `logfile`. Used for ZServer only, not WSGI.
+""",
+    ),
+    "sentry_dsn": RecipeOption(
+      """
+  Provide a Sentry DSN here to enable basic Sentry logging documented
+  in `<https://docs.sentry.io/platforms/python/logging/>`_. You will need to add the
+  Python Sentry SDK, either by adding it to your eggs section directly or by adding
+  `plone.recipe.zope2instance[sentry]`.
+  Available for WSGI only.
+""",
+    ),
+    "sentry_level": RecipeOption(
+      """
+Set the logging level for Sentry breadcrumbs.
+Available for WSGI only.
+""",
+    ),
+    "sentry_event_level": RecipeOption(
+      """
+Set the logging level for Sentry events.
+Available for WSGI only.
+""",
+    ),
+    "sentry_ignore": RecipeOption(
+      """
+Set the (space separated list of) logger names that are ignored by Sentry.
+Available for WSGI only.
+""",
+    ),
+    "sentry_max_value_length": RecipeOption(
+      """
+Set the maximum size of traceback messages sent to Sentry. If your tracebacks
+get truncated, increase this above the sentry-sdk default of 1024.
+Available for WSGI only.
+""",
+    ),
+    "access-log-handler": RecipeOption(
+      """
+  The (dotted) name of an importable Python logging handler like
+  `logging.handlers.RotatingFileHandler`.
+
+  Default: `FileHandler`
+""",
+    ),
+    "access-log-args": RecipeOption(
+      """
+  A python tuple which usually refers to the logging filename and opening mode
+  of the file like `("access.log", "a")`.  Note that you a Python tuple with
+  only one element (e.g. only the filename) must have a trailing comma like
+  `("access.log", )` The `access-log-args` is used to specify the positional
+  parameters for the logging handler configured through `access-log-handler`.
+
+  Default: `(r"access.log", "a")`
+""",
+    ),
+    "access-log-kwargs": RecipeOption(
+      """
+  A python dictionary used for passing keyword argument for the logging handler
+  configured through `access-log-handler` e.g.  `{"when": "h", "interval": 1}`.
+
+  Default: `{}`
+""",
+    ),
+    "event-log-handler": RecipeOption(
+      """Same as `access-log-handler` but for the configuration of the event log of Plone.
+""",
+    ),
+    "event-log-args": RecipeOption(
+      """Same as `access-log-args` but for the configuration of the event log of Plone.
+""",
+    ),
+    "event-log-kwargs": RecipeOption(
+      """Same as `access-log-kwargs` but for the configuration of the event log of Plone.
+""",
+    ),
+    "products": RecipeOption(
+      """
+A list of paths where Zope 2 products are installed. The first path takes
+precedence in case the same product is found in more than one directory.
+Zope 2 products are deprecated and won't work any longer in a future version
+of Zope/Plone.
+""",
+    ),
+    "extra-paths": RecipeOption(
+      """
+A list of paths where additional Python packages are installed. The paths
+are searched in the given order after all egg and products paths.
+""",
+    ),
+    "site-zcml": RecipeOption(
+      """
+If you want a custom `site.zcml` file, put its content here. If this option
+is used the `zcml` and `zcml-additional` options are ignored.
+""",
+    ),
+    "zcml-additional": RecipeOption(
+      """
+Extra ZCML statements that should be included in the generated `site.zcml`
+file.
+""",
+    ),
+    "zeo-client-cache-size": RecipeOption(
+      """
+Set the size of the ZEO client cache. Defaults to '128MB'. The ZEO cache is
+a disk based cache shared between application threads. It is stored either in
+temporary files or, in case you activate persistent cache files with the
+option `client` (see below), in the folder designated by the `zeo-var`
+option.
+""",
+    ),
+    "zeo-client-client": RecipeOption(
+      """
+Set the persistent cache name that is used to construct the cache
+filenames. This enables the ZEO cache to persist across application restarts.
+Persistent cache files are disabled by default.
+""",
+    ),
+    "zeo-client-blob-cache-size": RecipeOption(
+      """
+Set the maximum size of the ZEO blob cache, in bytes.  If not set, then
+the cache size isn't checked and the blob directory will grow without bound.
+""",
+    ),
+    "zeo-client-blob-cache-size-check": RecipeOption(
+      """
+Set the ZEO check size as percent of `zeo-client-blob-cache-size` (for
+example, `10` for 10%). The ZEO cache size will be checked when this many
+bytes have been loaded into the cache. Defaults to 10% of the blob cache
+size. This option is ignored if `shared-blob` is enabled.
+""",
+    ),
+    "zeo-client-drop-cache-rather-verify": RecipeOption(
+      """
+Indicates that the cache should be dropped rather than verified when
+the verification optimization is not available (e.g. when the ZEO server
+restarted). Defaults to 'False'.
+""",
+    ),
+    "zeo-storage": RecipeOption(
+      """
+Set the storage number of the ZEO storage. Defaults to '1'.
+""",
+    ),
+    "zeo-var": RecipeOption(
+      """
+Used in the ZEO storage snippets to configure the ZEO var folder, which
+  is used to store persistent ZEO client cache files. Defaults to the system
+  temporary folder.
+""",
+    ),
+    "wsgi-ini-template": RecipeOption(
+      """
+By default `plone.recipe.zope2instances` uses a hard-coded template for the
+generated WSGI configuration in `parts/<partname>/etc/wsgi.ini`. The template
+is defined as `wsgi_ini_template` variable within the `recipe.py
+<https://github.com/plone/plone.recipe.zope2instance/blob/master/src/plone/recipe/zope2instance/recipe.py>`_
+file.
+
+You can override the template with a custom template file using this option.
+
+Example::
+
+    wsgi-ini-template = /path/to/wsgi_template.ini
+
+The available variables for variable substition can be found within the existing template (see above).
+""",
+    ),
+    "asyncore-use-poll": RecipeOption(
+      """
+By default `false`. If you want the `waitress.asyncore.loop` flag to use poll()
+instead of the default select() set to `true`.
+""",
+    ),
+    "before-storage": RecipeOption(
+      """
+Wraps the base storage in a "before storage" which sets it in
+read-only mode from the time given (or "now" for the current time).
+
+This option is normally used together with demo-storage for a
+normally running site in order for changes to be made to the
+database.
+""",
+    ),
+    "client-home": RecipeOption(
+      """
+Sets the clienthome for the generated instance.
+Defaults to ${buildout:directory}/var/<name of the section>.
+""",
+    ),
+    "clear-untrusted-proxy-headers": RecipeOption(
+      """
+This tells Waitress to remove any untrusted proxy headers
+("Forwarded", "X-Forwarded-For", "X-Forwarded-By",
+"X-Forwarded-Host", "X-Forwarded-Port", "X-Forwarded-Proto").
+The default in waitress 1 is false, but waitress 2 changes this to true.
+We explicitly default to false.
+When you set it to true, you may need to set other ``wsgi.ini`` options like
+``trusted_proxy_headers`` and ``trusted_proxy``.
+Setting those is not supported by the recipe yet.
+Used for WSGI only, not ZServer.
+""",
+    ),
+    "default-zpublisher-encoding": RecipeOption(
+      """
+This controls what character set is used to encode unicode data that reaches
+ZPublisher without any other specified encoding. This defaults to 'utf-8'.
+Plone requires this to be set to `utf-8`.
+""",
+    ),
+    "demo-storage": RecipeOption(
+      """
+If 'on' it enables the demo storage. By default, this is a
+memory-based storage option; changes are not persisted (see the
+demo-file-storage option to use a persistent storage for changes
+made during the demonstration).
+
+To use with a base storage option configured with a blob-storage,
+you must set a demo-blob-storage.
+""",
+    ),
+    "demo-file-storage": RecipeOption(
+      """
+If provided, the filename where the ZODB data file for changes
+committed during a demonstration will be stored.
+""",
+    ),
+    "demo-blob-storage": RecipeOption(
+      """
+If provided, the name of the directory where demonstration ZODB blob
+data will be stored.
+
+This storage may be connected to a demonstration file storage, or
+used with the default memory-based demo storage (in this case you
+might want to use a temporary directory).
+""",
+    ),
+    "storage-wrapper": RecipeOption(
+      """
+Template for arbitrary configuration to be wrapped around the main storage.
+%s will be replaced with the existing storage configuration.
+""",
+    ),
+    "effective-user": RecipeOption(
+      """
+The name of the effective user for the Zope process. Defaults to not setting
+an effective user.
+""",
+    ),
+    "enable-product-installation": RecipeOption(
+      """
+Enable the persistent product registry by setting this to ``on``. By default
+the registry is turned ``off``. Enabling the registry is deprecated.
+""",
+    ),
+    "ftp-address": RecipeOption(
+      """
+Give a port for the FTP server. This enables the FTP server.
+Used for ZServer only, not WSGI.
+""",
+    ),
+    "http-force-connection-close": RecipeOption(
+      """
+Set to `on` to enforce Zope to set ``Connection: close header``.
+This is useful if for example a 304 leaves the connection open with
+Varnish in front and Varnish tries to reuse the connection.
+""",
+    ),
+    "http-fast-listen": RecipeOption(
+      """
+Set to `off` to defer opening of the HTTP socket until the end of the Zope
+startup phase. Defaults to on.
+""",
+    ),
+    "icp-address": RecipeOption(
+      """
+Give a port for the ICP server. This enables the ICP server.
+Used for ZServer only, not WSGI.
+""",
+    ),
+    "import-directory": RecipeOption(
+      """
+Used to configure the import directory for instance.
+Defaults to `<client-home>/import`.
+""",
+    ),
+    "port-base": RecipeOption(
+      """
+Offset applied to the port numbers used for ZServer configurations. For
+example, if the http-server port is 8080 and the port-base is 1000, the HTTP
+server will listen on port 9080. This makes it easy to change the complete
+set of ports used by a Zope server process. Zope defaults to 0.
+""",
+    ),
+    "python-check-interval": RecipeOption(
+      """
+An integer telling the Python interpreter to check for asynchronous events
+every number of instructions. This affects how often thread switches occur.
+Defaults to 1000.
+""",
+    ),
+    "relative-paths": RecipeOption(
+      """
+Set this to `true` to make the generated scripts use relative
+paths. You can also enable this in the `[buildout]` section.
+""",
+    ),
+    "scripts": RecipeOption(
+      """
+Add this parameter with no arguments to suppress script generation.
+Otherwise (i.e. without this parameter), scripts for packages added
+to the `eggs` parameter will be generated. You may also configure
+per package. E.g.::
+
+  [instance]
+  recipe = plone.recipe.zope2instance
+  eggs =
+    Plone
+    mr.migrator
+    my.package
+  scripts = my_package_script
+
+In the above example, only `my_package_script` will be generated. Keep in
+mind that the egg containing the script (``my.package`` in the example) must
+be listed explicitly in the eggs option, even if it is a dependency of an
+already listed egg.
+""",
+    ),
+    "template-cache": RecipeOption(
+      """
+Used to configure the cache for page-template files. Chameleon will write
+compile page-templates into this directory and use it as a cache.
+See https://chameleon.readthedocs.io/en/latest/configuration.html for more info.
+Valid options are off or on or a directory-location.
+Defaults to ${buildout:directory}/var/cache (it also confirms to what var is set to).
+""",
+    ),
+    "var": RecipeOption(
+      """
+Used to configure the base directory for all things going into var.
+Defaults to ${buildout:directory}/var.
+""",
+    ),
+    "webdav-address": RecipeOption(
+      """
+Give a port for the WebDAV server.  This enables the WebDAV server.
+Used for ZServer only, not WSGI.
+""",
+    ),
+    "webdav-force-connection-close": RecipeOption(
+      """
+Valid options are off and on. Defaults to off.
+Used for ZServer only, not WSGI.
+""",
+    ),
+    "pipeline": RecipeOption(
+      """
+The main application pipeline served by the wsgi server.
+By default the pipeline is::
+
+  translogger
+  egg:Zope#httpexceptions
+  zope
+
+The ``translogger`` line in the pipeline will be removed
+if ``z2-log`` is set to ``disabled`` or if it is not set
+and ``access-log`` is set to ``disabled`` (case insensitive).
+Used for WSGI only, not ZServer.
+""",
+    ),
+    "zlib-storage": RecipeOption(
+      """
+Adds support for file compression on a file storage database. The
+option accepts the values 'active' (compress new records) or
+'passive' (do not compress new records). Both options support
+already compressed records.
+
+You can use the 'passive' setting while you prepare a number of
+connected clients for compressed records.
+""",
+    ),
+    "zodb-cache-size-bytes": RecipeOption(
+      """
+Set the ZODB cache sizes in bytes. This feature is still experimental.
+""",
+    ),
+    "zodb-temporary-storage": RecipeOption(
+      """
+If given Zope's default temporary storage definition will be replaced by
+the lines of this parameter. If set to "off" or "false", no temporary storage
+definition will be created. This prevents startup issues for basic Zope 4
+sites as it does not ship with the required packages by default anymore.
+""",
+    ),
+    "zope-conf": RecipeOption(
+      """
+A relative or absolute path to a `zope.conf` file. If this is given, many of
+the options in the recipe will be ignored.
+""",
+    ),
+    "zope-conf-imports": RecipeOption(
+      """
+You can define custom sections within zope.conf using the ZConfig API.
+But, in order for Zope to understand your custom sections, you'll have to
+import the python packages that define these custom sections using `%import`
+syntax.
+
+Example::
+
+  zope-conf-imports =
+    mailinglogger
+    eea.graylogger
+""",
+    ),
+    "zope-conf-additional": RecipeOption(
+      """
+Give additional lines to `zope.conf`. Make sure you indent any lines after
+the one with the parameter.
+
+Example::
+
+  zope-conf-additional =
+    locale fr_FR
+    http-realm Slipknot
+""",
+    ),
+    "zopectl-umask": RecipeOption(
+      """
+Manually set the umask for the zopectl process.
+
+Example::
+
+  zopectl-umask = 002
+""",
+    ),
+    "http-header-max-length": RecipeOption(
+      """
+Manually set the maximum size of received HTTP header being processed by Zope.
+The request is discarded and considered as a DoS attack if the header size exceeds
+this limit. Default: 8192. Used for ZServer only, not WSGI.
+
+Example::
+
+  http-header-max-length = 16384
+
+""",
+    ),
+  },
+)
