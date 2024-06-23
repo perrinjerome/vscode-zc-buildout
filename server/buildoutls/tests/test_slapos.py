@@ -224,7 +224,21 @@ async def test_hover_slapos_instance(server: LanguageServer):
     ),
   )
   assert hover is not None
-  assert hover.contents == "```\nslapos.recipe.cmmi\n```"
+  assert (
+    hover.contents
+    == """## `slapos.recipe.cmmi`
+
+---
+The recipe provides the means to compile and install source distributions using configure and make and other similar tools.
+
+---
+```ini
+recipe = slapos.recipe.cmmi
+version = 2.4.41
+url = https://archive.apache.org/dist/httpd/httpd-${:version}.tar.bz2
+md5sum = dfc674f8f454e3bc2d4ccd73ad3b5f1e
+```"""
+  )
 
   hover = await lsp_hover(
     server,
@@ -236,7 +250,7 @@ async def test_hover_slapos_instance(server: LanguageServer):
     ),
   )
   assert hover is not None
-  assert hover.contents == "```\n\n```"
+  assert hover.contents == ""
 
   hover = await lsp_hover(
     server,
@@ -248,7 +262,7 @@ async def test_hover_slapos_instance(server: LanguageServer):
     ),
   )
   assert hover is not None
-  assert hover.contents == "```\n\n```"
+  assert hover.contents == ""
 
   hover = await lsp_hover(
     server,

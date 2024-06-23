@@ -52,6 +52,7 @@ The automatic installation does not seem to work with theia and the python egg h
 ## Hover
 
 - Hover on an option show the option value.
+- Hover on a recipe shows the recipe documentation
 
 ## Find references
 

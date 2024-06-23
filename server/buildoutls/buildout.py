@@ -195,6 +195,25 @@ class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
       return recipes.registry.get(recipe_option.value)
     return None
 
+  @property
+  def documentation(self):
+    """Documentation of the section, including the recipe documentation and
+    the options.
+    """
+    documentation = ""
+    defined_items = [(k, v) for (k, v) in self.items() if v and not v.default_value]
+    if defined_items:
+      documentation = "```ini\n{}\n```".format(
+        "\n".join("{} = {}".format(k, v.value) for (k, v) in defined_items),
+      )
+    if self.get("recipe"):
+      recipe = self.getRecipe()
+      if recipe:
+        documentation = f"{recipe.documentation}\n\n---\n{documentation}"
+      else:
+        documentation = f'## `{self["recipe"].value}`\n\n---\n{documentation}'
+    return documentation
+
   if TYPE_CHECKING:
 
     def copy(self) -> "_BuildoutSection": ...

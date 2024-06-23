@@ -352,22 +352,6 @@ async def lsp_completion(
       return None
     if symbol.kind == buildout.SymbolKind.SectionReference:
       for buildout_section_name, section_items in symbol._buildout.items():
-        documentation = "```ini\n{}\n```".format(
-          "\n".join(
-            "{} = {}".format(k, v.value)
-            for (k, v) in section_items.items()
-            if v and not v.default_value
-          ),
-        )
-        if section_items.get("recipe"):
-          recipe = section_items.getRecipe()
-          if recipe:
-            documentation = f"{recipe.documentation}\n\n---\n{documentation}"
-          else:
-            documentation = (
-              f'## `{section_items["recipe"].value}`\n\n---\n{documentation}'
-            )
-
         items.append(
           CompletionItem(
             label=buildout_section_name,
@@ -380,7 +364,7 @@ async def lsp_completion(
             kind=CompletionItemKind.Class,
             documentation=MarkupContent(
               kind=MarkupKind.Markdown,
-              value=documentation,
+              value=section_items.documentation,
             ),
           )
         )
@@ -735,16 +719,27 @@ async def lsp_hover(
   symbol = await parsed.getSymbolAtPosition(params.position)
   hover_text = ""
   if symbol:
-    if symbol.kind == buildout.SymbolKind.OptionReference:
+    if symbol.kind == buildout.SymbolKind.SectionDefinition:
+      assert symbol.current_section
+      hover_text = symbol.current_section.documentation
+    elif symbol.kind == buildout.SymbolKind.BuildoutOptionKey:
+      if symbol.current_option_name and symbol.current_section_recipe:
+        if option := symbol.current_section_recipe.options.get(
+          symbol.current_option_name
+        ):
+          hover_text = option.documentation
+    elif symbol.kind == buildout.SymbolKind.BuildoutOptionValue:
+      if symbol.current_option_name == "recipe" and symbol.current_section_recipe:
+        hover_text = symbol.current_section_recipe.documentation
+    elif symbol.kind == buildout.SymbolKind.OptionReference:
       assert symbol.referenced_section_name
       if symbol.referenced_option:
-        hover_text = symbol.referenced_option.value
-    if symbol.kind == buildout.SymbolKind.SectionReference:
-      assert symbol.referenced_section_name
-      recipe = symbol.referenced_section_recipe
-      if recipe:
-        hover_text = recipe.name
-  return Hover(contents=f"```\n{hover_text}\n```")
+        hover_text = f"```\n{symbol.referenced_option.value}\n```"
+    elif symbol.kind == buildout.SymbolKind.SectionReference:
+      if symbol.referenced_section:
+        hover_text = symbol.referenced_section.documentation
+
+  return Hover(contents=hover_text)
 
 
 @server.feature(TEXT_DOCUMENT_DOCUMENT_LINK)

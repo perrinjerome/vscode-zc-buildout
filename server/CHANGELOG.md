@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Added
 
  - completions: complete existing sections within `[` to override existing sections.
+ - hover: improve hover of known recipes
  - Add support for plone.recipe.zope2instance
 
 ## [0.12.0] - 2023-10-08
