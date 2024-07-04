@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+## [0.13.0] - 2024-07-04
+
 ### Added
 
  - semantic_tokens: highlight python code in options
@@ -242,7 +244,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 [keepachangelog]: https://keepachangelog.com/en/1.0.0/
 [semver]: https://semver.org/spec/v2.0.0.html
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.12.0...main
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.13.0...main
+[0.13.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.10.0...v0.10.1
