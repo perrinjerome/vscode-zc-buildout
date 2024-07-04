@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning][semver].
  - hover: improve hover of known recipes
  - Add support for plone.recipe.zope2instance
 
+### Fixed
+
+ - completions: don't add an extra newline when completing `${buildout:parts}`
+
+
 ## [0.12.0] - 2023-10-08
 
  - support python 3.12

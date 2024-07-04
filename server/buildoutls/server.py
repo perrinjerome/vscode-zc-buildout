@@ -572,7 +572,7 @@ async def lsp_completion(
                   text_edit=getDefaultTextEdit(
                     doc,
                     params.position,
-                    section + "\n",
+                    section,
                   ),
                   kind=CompletionItemKind.Function,
                 )
