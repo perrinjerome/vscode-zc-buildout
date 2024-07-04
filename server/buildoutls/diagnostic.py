@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import logging
 import re
@@ -16,7 +17,7 @@ from lsprotocol.types import (
 from pygls.server import LanguageServer
 from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
-from . import buildout, jinja, types
+from . import buildout, jinja, types, recipes
 from .util import pypi
 
 # this is a function to be patched in unittest
@@ -132,14 +133,45 @@ async def getDiagnostics(
           severity=DiagnosticSeverity.Warning,
         )
 
+    logger.info(f"🤔🤔🤔 {type(resolved_buildout)}")
     if isinstance(resolved_buildout, buildout.BuildoutProfile):
       for section_name, section in resolved_buildout.items():
+        recipe = section.getRecipe()
+        if recipe:
+          # check python syntax for options made of python source code
+          for option_name, option_value in section.items():
+            logger.info(
+              f"checking {option_name=} {option_value=} %s"
+              % recipe.options.get(option_name)
+            )
+            if option_type := recipe.options.get(option_name):
+              if option_type.kind == recipes.RecipeOptionKind.PythonScript:
+                try:
+                  ast.parse(option_value.value)
+                except SyntaxError as e:
+                  logger.exception(f"could not parse {e=}")
+                  indentation = 4  # TODO
+                  start = Position(
+                    line=option_value.location.range.start.line + (e.lineno or 0),
+                    character=indentation + (e.offset or 0) - 1,
+                  )
+                  end = Position(
+                    line=option_value.location.range.start.line
+                    + max(0, (getattr(e, "end_lineno", 0))),
+                    character=indentation + getattr(e, "end_offset", 0) - 1,
+                  )
+                  yield Diagnostic(
+                    message=f"{type(e).__name__}: {e.msg}",
+                    range=Range(start=start, end=end),
+                    source="buildout",
+                    severity=DiagnosticSeverity.Error,
+                  )
+
         if (
           section_name in installed_parts
           and resolved_buildout.section_header_locations[section_name].uri == uri
         ):
           # check for required options
-          recipe = section.getRecipe()
           if recipe:
             missing_required_options = recipe.required_options.difference(
               section.keys()
