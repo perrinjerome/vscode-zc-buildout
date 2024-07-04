@@ -13,6 +13,8 @@ class JinjaStatement(str, enum.Enum):
   Macro = "macro"
   Call = "call"
   Filter = "filter"
+  Raw = "raw"
+  EndRaw = "endraw"
 
 
 jinja_statements = set(JinjaStatement)
@@ -46,6 +48,7 @@ class JinjaParser:
     self.is_error = False
     self._stack: List[JinjaStatement] = []
     self._current_line_was_in_jinja = False
+    self._in_raw = False
     self._in_comment = False
     self._in_multiline_expression = False
     self._in_multiline_statement = False
@@ -54,7 +57,7 @@ class JinjaParser:
   def feed(self, line: str) -> None:
     """Feeds a line and update the state."""
     self._current_line_was_in_jinja = False
-    self.has_expression = bool(expression_re.search(line))
+    self.has_expression = bool(expression_re.search(line)) and not self._in_raw
     expression_re_match = expression_re.search(line)
     if expression_re_match:
       if expression_re_match.start() == 0 and expression_re_match.end() == len(
@@ -72,15 +75,22 @@ class JinjaParser:
 
     statement_match = statement_re.match(line)
     if statement_match:
-      self._current_line_was_in_jinja = True
+      self._current_line_was_in_jinja = not self._in_raw
       statement = statement_match.group("statement")
-      if statement in jinja_statements:
+      if statement == JinjaStatement.Raw:
+        self._in_raw = True
+      elif statement == JinjaStatement.EndRaw:
+        self._in_raw = False
+      elif statement in jinja_statements:
         self._stack.append(JinjaStatement(statement))
       elif statement in end_block_statement:
         self.is_error = True
         if self._stack:
           popped = self._stack.pop()
           self.is_error = end_block_statement[statement] != popped
+
+    if self._in_raw:
+      return
 
     if multiline_expression_start_re.match(line) or self._in_multiline_expression:
       self._current_line_was_in_jinja = True

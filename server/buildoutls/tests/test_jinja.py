@@ -78,6 +78,12 @@ def test_is_in_jinja() -> None:
     ("line ", True),
     ("comment #}", True),
     ("after multi line comment", False),
+    # raw
+    ("{% raw %}", True),
+    ("in raw", False),
+    ("{% set jinja_ignored_in_raw = True %}", False),
+    ("{% endraw %}", True),
+    ("{% set jinja_detected_after_in_raw = True %}", True),
   ):
     parser.feed(line)
     assert parser.is_in_jinja == is_in_jinja
