@@ -185,6 +185,21 @@ class BuildoutOptionDefinition:
     copied.default_values = self.default_values
     return copied
 
+  def value_at_location(self, location: Location) -> str:
+    value = None
+    for option_value, option_location in zip(self.values, self.locations):
+      if (
+        location.uri == option_location.uri
+        and location.range.start >= option_location.range.start
+        and location.range.end <= location.range.end
+      ):
+        value = option_value
+    if value is None:
+      raise ValueError(f"no value at {location}")
+    return option_value
+
+  # TODO: raw value with indentation
+
 
 class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
   """Section of a buildout."""
