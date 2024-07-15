@@ -56,4 +56,4 @@ yarl==1.9.4
 ## with multiple versions, so we specify these versions in tox.ini
 
 ## XXX https://github.com/buildout/buildout/issues/648
-setuptools==69.0
+setuptools==70.0.0
