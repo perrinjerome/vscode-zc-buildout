@@ -28,4 +28,4 @@ zc-buildout==3.0.1
 # setuptools
 
 ## XXX https://github.com/buildout/buildout/issues/648
-setuptools==69.0
+setuptools==70.0.0
