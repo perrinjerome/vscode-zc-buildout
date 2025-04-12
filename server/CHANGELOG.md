@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## Unreleased
 
+### Added
+
+  - updated dependencies, add support for python 3.13, drop support for python 3.8
+
+
 ## [0.13.0] - 2024-07-04
 
 ### Added

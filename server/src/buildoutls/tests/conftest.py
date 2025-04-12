@@ -40,6 +40,7 @@ def server() -> Any:
       "..",
       "..",
       "..",
+      "..",
       "profiles",
     )
   )
