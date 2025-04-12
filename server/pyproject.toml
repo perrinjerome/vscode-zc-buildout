@@ -1,6 +1,6 @@
 [project]
 name = "zc.buildout.languageserver"
-version = "0.13.0"
+version = "0.14.0"
 description = "A language server for zc.buildout"
 readme = "README.md"
 
