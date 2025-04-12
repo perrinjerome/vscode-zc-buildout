@@ -21,9 +21,9 @@ jobs:
         run: |
           cd server
           pip install -r requirements.txt -r test-requirements.txt
-          pytest buildoutls/bench/slapos.py --benchmark-json ../benchmark-data.json
+          pytest src/buildoutls/bench/slapos.py --benchmark-json ../benchmark-data.json
       - name: Download previous benchmark data
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ./cache
           key: ${{ runner.os }}-benchmark

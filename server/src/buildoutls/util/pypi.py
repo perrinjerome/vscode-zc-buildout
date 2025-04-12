@@ -84,7 +84,7 @@ class PyPIClient:
     current = pkg_resources.parse_version(version)
     latest = pkg_resources.parse_version(project_data["info"]["version"])
     if latest > current:
-      return cast(packaging.version.Version, latest)
+      return latest
     return None
 
   async def get_known_vulnerabilities(

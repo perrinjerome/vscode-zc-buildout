@@ -44,11 +44,14 @@ def clear_caches() -> None:
 
 @pytest.fixture
 def no_pypi_diagnostics() -> Any:
-  with mock.patch(
-    "buildoutls.diagnostic.pypi.PyPIClient.get_known_vulnerabilities",
-    return_value=(),
-  ), mock.patch(
-    "buildoutls.diagnostic.pypi.PyPIClient.get_latest_version", return_value=None
+  with (
+    mock.patch(
+      "buildoutls.diagnostic.pypi.PyPIClient.get_known_vulnerabilities",
+      return_value=(),
+    ),
+    mock.patch(
+      "buildoutls.diagnostic.pypi.PyPIClient.get_latest_version", return_value=None
+    ),
   ):
     yield
 

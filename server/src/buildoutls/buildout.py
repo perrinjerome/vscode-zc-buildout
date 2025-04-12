@@ -211,7 +211,7 @@ class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
       if recipe:
         documentation = f"{recipe.documentation}\n\n---\n{documentation}"
       else:
-        documentation = f'## `{self["recipe"].value}`\n\n---\n{documentation}'
+        documentation = f"## `{self['recipe'].value}`\n\n---\n{documentation}"
     return documentation
 
   if TYPE_CHECKING:

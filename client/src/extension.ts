@@ -51,7 +51,7 @@ function isPythonVersionCompatible(python: string): boolean {
   try {
     child_process.execFileSync(python, [
       "-c",
-      "import sys; sys.exit(sys.version_info[:2] < (3, 7))",
+      "import sys; sys.exit(sys.version_info[:2] < (3, 9))",
     ]);
     return true;
   } catch {
@@ -119,7 +119,7 @@ export async function activate() {
 
   if (!isPythonVersionCompatible(settings.python.executable)) {
     vscode.window.showErrorMessage(
-      "zc.buildout extension: Invalid python version, needs python >= 3.7"
+      "zc.buildout extension: Invalid python version, needs python >= 3.9"
     );
     return false;
   }
