@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][keepachangelog],
 and this project adheres to [Semantic Versioning][semver].
 
+## [0.15.0] - 2024-09-25
+
+### Added
+
+  - updated dependencies
+
 ## [0.14.0] - 2024-05-12
 
 ### Added
@@ -249,8 +255,9 @@ and this project adheres to [Semantic Versioning][semver].
 
 [keepachangelog]: https://keepachangelog.com/en/1.0.0/
 [semver]: https://semver.org/spec/v2.0.0.html
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.14.0...main
-[0.14.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.12.0...v0.14.0
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.15.0...main
+[0.14.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.14.0...v0.15.0
+[0.14.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.10.1...v0.11.0
