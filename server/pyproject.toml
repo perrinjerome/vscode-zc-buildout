@@ -46,7 +46,7 @@ buildoutls = "buildoutls.cli:main"
 
 [project.urls]
 "Source code" = "https://github.com/perrinjerome/vscode-zc-buildout/"
-"Changelog" = "https://github.com/perrinjerome/vscode-zc-buildout/tree/main/CHANGELOG.md"
+"Changelog" = "https://github.com/perrinjerome/vscode-zc-buildout/tree/main/server/CHANGELOG.md"
 
 [build-system]
 requires = ['setuptools']
