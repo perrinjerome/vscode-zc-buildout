@@ -108,11 +108,11 @@ async def parseAndSendDiagnostics(
 @server.command(commands.COMMAND_OPEN_PYPI_PAGE)
 async def command_open_pypi_page(
   ls: LanguageServer,
-  args: List[types.OpenPypiPageCommandParams],
+  arg: types.OpenPypiPageCommandParams,
 ) -> None:
   await ls.window_show_document_async(
     ShowDocumentParams(
-      uri=args[0]["url"],
+      uri=arg["url"],
       external=True,
     )
   )
@@ -121,9 +121,9 @@ async def command_open_pypi_page(
 @server.command(commands.COMMAND_UPDATE_MD5SUM)
 async def command_update_md5sum(
   ls: LanguageServer,
-  args: List[types.UpdateMD5SumCommandParams],
+  arg: types.UpdateMD5SumCommandParams,
 ) -> None:
-  await md5sum.update_md5sum(ls, args[0])
+  await md5sum.update_md5sum(ls, arg)
 
 
 @server.feature(

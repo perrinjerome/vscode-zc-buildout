@@ -398,7 +398,7 @@ async def test_diagnostic_and_versions_code_action_package_not_exists(
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
   await command_open_pypi_page(
-    server, cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments)
+    server, *cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments)
   )
   server.window_show_document_async.assert_called_with(
     ShowDocumentParams(
@@ -460,7 +460,7 @@ async def test_diagnostic_and_versions_code_action_latest_version(
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
   await command_open_pypi_page(
-    server, cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments)
+    server, *cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments)
   )
 
 
@@ -518,7 +518,7 @@ async def test_update_md5sum_code_action(
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
   await command_update_md5sum(
-    server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
+    server, *cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
   server.workspace_apply_edit.assert_called_once_with(
     ApplyWorkspaceEditParams(
@@ -588,7 +588,7 @@ async def test_update_md5sum_code_action_without_md5sum_option(
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
   await command_update_md5sum(
-    server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
+    server, *cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
   server.workspace_apply_edit.assert_called_once_with(
     ApplyWorkspaceEditParams(
@@ -659,7 +659,7 @@ async def test_update_md5sum_code_action_cancelled(
   server.work_done_progress.tokens = collections.defaultdict(cancelled_future)
 
   await command_update_md5sum(
-    server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
+    server, *cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
   server.workspace_apply_edit.assert_not_called()
 
@@ -752,7 +752,7 @@ async def test_update_md5sum_code_action_with_substitutions(
   assert isinstance(code_actions[0].command, Command)
   assert code_actions[0].command.arguments
   await command_update_md5sum(
-    server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
+    server, *cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
   server.workspace_apply_edit.assert_called_once_with(
     ApplyWorkspaceEditParams(

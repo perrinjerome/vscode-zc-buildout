@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [unreleased] -
 
+### Fixed
+
+  - fix regression with command handling introduced in 0.16.0.
 
 ## [0.16.0] - 2025-10-19
 
