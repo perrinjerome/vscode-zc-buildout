@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][semver].
 ### Added
 
   - update pygls to version 2
+  - support python3.14
 
 ## [0.15.0] - 2025-09-25
 
