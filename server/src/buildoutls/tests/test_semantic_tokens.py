@@ -2,7 +2,7 @@ from lsprotocol.types import (
   TextDocumentIdentifier,
   SemanticTokensParams,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from ..server import lsp_semantic_tokens_full
 

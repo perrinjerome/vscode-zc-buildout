@@ -28,6 +28,7 @@ from lsprotocol.types import (
   CompletionItemTag,
   CompletionOptions,
   CompletionParams,
+  Diagnostic,
   DidChangeTextDocumentParams,
   DidChangeWatchedFilesParams,
   DidOpenTextDocumentParams,
@@ -45,6 +46,7 @@ from lsprotocol.types import (
   MarkupContent,
   MarkupKind,
   Position,
+  PublishDiagnosticsParams,
   Range,
   ShowDocumentParams,
   ReferenceOptions,
@@ -53,8 +55,8 @@ from lsprotocol.types import (
   TextDocumentPositionParams,
   TextEdit,
 )
-from pygls.server import LanguageServer
-from pygls.workspace import Document
+from pygls.lsp.server import LanguageServer
+from pygls.workspace import TextDocument
 
 from . import (
   buildout,
@@ -95,10 +97,12 @@ async def parseAndSendDiagnostics(
   ls: LanguageServer,
   uri: str,
 ) -> None:
-  diagnostics = []
+  diagnostics: list[Diagnostic] = []
   async for diag in diagnostic.getDiagnostics(ls, uri):
     diagnostics.append(diag)
-  ls.publish_diagnostics(uri, diagnostics)
+  ls.text_document_publish_diagnostics(
+    PublishDiagnosticsParams(uri=uri, diagnostics=diagnostics)
+  )
 
 
 @server.command(commands.COMMAND_OPEN_PYPI_PAGE)
@@ -106,7 +110,7 @@ async def command_open_pypi_page(
   ls: LanguageServer,
   args: List[types.OpenPypiPageCommandParams],
 ) -> None:
-  await ls.show_document_async(
+  await ls.window_show_document_async(
     ShowDocumentParams(
       uri=args[0]["url"],
       external=True,
@@ -241,7 +245,7 @@ async def lsp_completion(
   doc = ls.workspace.get_text_document(params.text_document.uri)
 
   def getSectionReferenceCompletionTextEdit(
-    doc: Document,
+    doc: TextDocument,
     pos: Position,
     new_text: str,
   ) -> TextEdit:
@@ -273,7 +277,7 @@ async def lsp_completion(
     )
 
   def getOptionReferenceTextEdit(
-    doc: Document,
+    doc: TextDocument,
     pos: Position,
     new_text: str,
   ) -> TextEdit:
@@ -308,7 +312,7 @@ async def lsp_completion(
     )
 
   def getDefaultTextEdit(
-    doc: Document,
+    doc: TextDocument,
     pos: Position,
     new_text: str,
   ) -> TextEdit:
@@ -653,7 +657,7 @@ async def lsp_references(
 ) -> List[Location]:
   references: List[Location] = []
   if params.work_done_token:
-    server.progress.begin(
+    server.work_done_progress.begin(
       params.work_done_token,
       WorkDoneProgressBegin(title="Finding references", cancellable=True),
     )
@@ -709,7 +713,7 @@ async def lsp_references(
                   assert loc.uri == profile.uri
                   references.append(loc)
   if params.work_done_token:
-    server.progress.end(params.work_done_token, WorkDoneProgressEnd())
+    server.work_done_progress.end(params.work_done_token, WorkDoneProgressEnd())
   return references
 
 

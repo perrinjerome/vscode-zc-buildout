@@ -5,10 +5,11 @@ import urllib.parse
 from typing import Any
 from unittest import mock
 
-import pytest
 import aioresponses
-from pygls.workspace import Document, Workspace
 import pygls.progress
+import pytest
+from lsprotocol.types import TextDocumentSyncKind
+from pygls.workspace import TextDocument, Workspace
 
 from ..buildout import (
   _extends_dependency_graph,
@@ -45,31 +46,37 @@ def server() -> Any:
     )
   )
 
+  window_show_document_async = mock.AsyncMock()
+  text_document_publish_diagnostics = mock.Mock()
+  window_show_message = mock.Mock()
+  window_log_message = mock.Mock()
+  workspace_apply_edit = mock.Mock()
+  work_done_progress = mock.create_autospec(pygls.progress.Progress)
+  work_done_progress.tokens = collections.defaultdict(concurrent.futures.Future)
+
   class FakeServer:
     """We don't need real server to unit test features."""
 
     def __init__(self):
-      self.workspace = Workspace("", None)
+      self.workspace = Workspace("", TextDocumentSyncKind.Full)
       self.workspace._root_path = (
         root_path if root_path.endswith("/") else root_path + "/"
       )
       self.workspace._root_uri = "file:///"
-
-    show_document_async = mock.AsyncMock()
-    publish_diagnostics = mock.Mock()
-    show_message = mock.Mock()
-    show_message_log = mock.Mock()
-    apply_edit = mock.Mock()
-    progress = mock.create_autospec(pygls.progress.Progress)
-    progress.tokens = collections.defaultdict(concurrent.futures.Future)
+      self.window_show_document_async = window_show_document_async
+      self.text_document_publish_diagnostics = text_document_publish_diagnostics
+      self.window_show_message = window_show_message
+      self.window_log_message = window_log_message
+      self.workspace_apply_edit = workspace_apply_edit
+      self.work_done_progress = work_done_progress
 
   server = FakeServer()
 
-  def get_text_document(uri) -> Document:
+  def get_text_document(uri) -> TextDocument:
     parsed_uri = urllib.parse.urlparse(uri)
     assert parsed_uri.scheme == "file"
     assert parsed_uri.path[0] == "/"
-    document = Document(uri=uri)
+    document = TextDocument(uri=uri)
     if not os.path.exists(document.path):
       document.path = os.path.join(root_path, parsed_uri.path[1:])
     return document
@@ -94,9 +101,9 @@ def server() -> Any:
   clearCaches()
   with os_path_exists_patcher:
     yield server
-  server.publish_diagnostics.reset_mock()
-  server.show_message.reset_mock()
-  server.show_message_log.reset_mock()
+  server.text_document_publish_diagnostics.reset_mock()
+  server.window_show_message.reset_mock()
+  server.window_log_message.reset_mock()
   server.workspace.get_text_document.reset_mock()
 
   clearCaches()

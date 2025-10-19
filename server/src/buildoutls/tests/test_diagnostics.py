@@ -7,6 +7,7 @@ from lsprotocol.types import (
   Diagnostic,
   DiagnosticSeverity,
   Position,
+  PublishDiagnosticsParams,
   Range,
 )
 
@@ -16,11 +17,13 @@ from ..server import parseAndSendDiagnostics
 async def test_diagnostics_syntax_error(server) -> None:
   # syntax error
   await parseAndSendDiagnostics(server, "file:///diagnostics/syntax_error.cfg")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/syntax_error.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/syntax_error.cfg",
+      diagnostics=[mock.ANY],
+    )
   )
-  (diagnostic,) = server.publish_diagnostics.call_args[0][1]
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert diagnostic.range == Range(
     start=Position(line=2, character=0), end=Position(line=3, character=0)
   )
@@ -30,11 +33,13 @@ async def test_diagnostics_syntax_error(server) -> None:
 async def test_diagnostics_missing_section_error(server) -> None:
   # missing section error (a parse error handled differently)
   await parseAndSendDiagnostics(server, "file:///diagnostics/missing_section_error.cfg")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/missing_section_error.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/missing_section_error.cfg",
+      diagnostics=[mock.ANY],
+    )
   )
-  (diagnostic,) = server.publish_diagnostics.call_args[0][1]
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert diagnostic.range == Range(
     start=Position(line=0, character=0), end=Position(line=1, character=0)
   )
@@ -47,12 +52,14 @@ async def test_diagnostics_missing_section_error(server) -> None:
 async def test_diagnostics_non_existent_sections(server) -> None:
   # warnings for reference to non existent options
   await parseAndSendDiagnostics(server, "file:///diagnostics/reference.cfg")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/reference.cfg",
-    [mock.ANY, mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/reference.cfg",
+      diagnostics=[mock.ANY, mock.ANY],
+    )
   )
   diagnostics: Sequence[Diagnostic] = sorted(
-    server.publish_diagnostics.call_args[0][1],
+    server.text_document_publish_diagnostics.call_args[0][0].diagnostics,
     key=lambda d: d.range.start,
   )
   assert diagnostics[0].severity == DiagnosticSeverity.Error
@@ -73,12 +80,17 @@ async def test_diagnostics_non_existent_sections_multiple_references_per_line(
 ) -> None:
   # harder version, two errors on same line
   await parseAndSendDiagnostics(server, "file:///diagnostics/harder.cfg")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/harder.cfg",
-    [mock.ANY] * 8,
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/harder.cfg",
+      diagnostics=[mock.ANY] * 8,
+    )
   )
   diagnostics = sorted(
-    cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
+    cast(
+      List[Diagnostic],
+      server.text_document_publish_diagnostics.call_args[0][0].diagnostics,
+    ),
     key=lambda d: d.range.start,
   )
   assert diagnostics[0].severity == DiagnosticSeverity.Error
@@ -132,15 +144,21 @@ async def test_diagnostics_non_existent_sections_unknown_extends(
   await parseAndSendDiagnostics(
     server, "file:///diagnostics/non_existant_sections_unknown_extends.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/non_existant_sections_unknown_extends.cfg", []
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/non_existant_sections_unknown_extends.cfg",
+      diagnostics=[],
+    )
   )
-  server.publish_diagnostics.reset_mock()
+  server.text_document_publish_diagnostics.reset_mock()
   await parseAndSendDiagnostics(
     server, "file:///diagnostics/non_existant_sections_unknown_extends_jinja.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/non_existant_sections_unknown_extends_jinja.cfg", []
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/non_existant_sections_unknown_extends_jinja.cfg",
+      diagnostics=[],
+    )
   )
 
 
@@ -149,22 +167,27 @@ async def test_diagnostics_non_existent_sections_jinja(server) -> None:
     server,
     "file:///diagnostics/jinja-sections.cfg",
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/jinja-sections.cfg", []
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/jinja-sections.cfg",
+      diagnostics=[],
+    )
   )
-  server.publish_diagnostics.reset_mock()
+  server.text_document_publish_diagnostics.reset_mock()
 
 
 async def test_diagnostics_required_recipe_option(server) -> None:
   await parseAndSendDiagnostics(
     server, "file:///diagnostics/recipe_required_option.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/recipe_required_option.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/recipe_required_option.cfg",
+      diagnostics=[mock.ANY],
+    )
   )
   diagnostics = sorted(
-    cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
+    server.text_document_publish_diagnostics.call_args[0][0].diagnostics,
     key=lambda d: d.range.start,
   )
   assert diagnostics[0].severity == DiagnosticSeverity.Error
@@ -181,31 +204,31 @@ async def test_diagnostics_extends_does_not_exist(server) -> None:
   await parseAndSendDiagnostics(
     server, "file:///diagnostics/extends_does_not_exist.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/extends_does_not_exist.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/extends_does_not_exist.cfg",
+      diagnostics=[mock.ANY],
+    )
   )
-  diagnostics = sorted(
-    cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
-    key=lambda d: d.range.start,
-  )
-  assert diagnostics[0].severity == DiagnosticSeverity.Error
-  assert (
-    diagnostics[0].message == "Extended profile `does/not/exists.cfg` does not exist."
-  )
-  assert diagnostics[0].range == Range(
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
+  assert diagnostic.range == Range(
     start=Position(line=2, character=4), end=Position(line=2, character=23)
   )
+  assert diagnostic.message == "Extended profile `does/not/exists.cfg` does not exist."
 
 
 async def test_diagnostics_template(server) -> None:
   # syntax error
   await parseAndSendDiagnostics(server, "file:///template.in")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///template.in",
-    [mock.ANY, mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///template.in",
+      diagnostics=[mock.ANY, mock.ANY],
+    )
   )
-  diagnostic1, diagnostic2 = server.publish_diagnostics.call_args[0][1]
+  diagnostic1, diagnostic2 = server.text_document_publish_diagnostics.call_args[0][
+    0
+  ].diagnostics
   assert diagnostic1.range == Range(
     start=Position(line=4, character=25), end=Position(line=4, character=32)
   )
@@ -219,12 +242,14 @@ async def test_diagnostics_template(server) -> None:
 
 async def test_diagnostics_buildout_parts(server) -> None:
   await parseAndSendDiagnostics(server, "file:///diagnostics/buildout_parts.cfg")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/buildout_parts.cfg",
-    [mock.ANY, mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/buildout_parts.cfg",
+      diagnostics=[mock.ANY, mock.ANY],
+    )
   )
   diagnostic1, diagnostic2 = sorted(
-    cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1]),
+    server.text_document_publish_diagnostics.call_args[0][0].diagnostics,
     key=lambda d: d.range.start,
   )
   assert diagnostic1.message == "Section `b` has no recipe."
@@ -243,10 +268,13 @@ async def test_diagnostics_buildout_parts_section_name_with_dot(server) -> None:
   await parseAndSendDiagnostics(
     server, "file:///diagnostics/buildout_parts_section_name_with_dot.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/buildout_parts_section_name_with_dot.cfg", [mock.ANY]
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/buildout_parts_section_name_with_dot.cfg",
+      diagnostics=[mock.ANY],
+    )
   )
-  (diagnostic,) = server.publish_diagnostics.call_args[0][1]
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert diagnostic.message == "Section `c.d` has no recipe."
   assert diagnostic.range == Range(
     start=Position(line=1, character=12), end=Position(line=1, character=15)
@@ -255,12 +283,14 @@ async def test_diagnostics_buildout_parts_section_name_with_dot(server) -> None:
 
 async def test_diagnostics_option_redefinition(server) -> None:
   await parseAndSendDiagnostics(server, "file:///diagnostics/option_redefinition.cfg")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/option_redefinition.cfg",
-    [mock.ANY, mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/option_redefinition.cfg",
+      diagnostics=[mock.ANY, mock.ANY],
+    ),
   )
-  diagnostic_override, diagnostic_already_has_value = cast(
-    List[Diagnostic], server.publish_diagnostics.call_args[0][1]
+  diagnostic_override, diagnostic_already_has_value = (
+    server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   )
 
   assert repr(diagnostic_override.range) == "5:3-5:18"
@@ -303,11 +333,13 @@ async def test_diagnostics_option_redefinition_extended(server) -> None:
   await parseAndSendDiagnostics(
     server, "file:///diagnostics/extended/option_redefinition.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/extended/option_redefinition.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/extended/option_redefinition.cfg",
+      diagnostics=[mock.ANY],
+    ),
   )
-  (diagnostic,) = cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1])
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert repr(diagnostic.range) == "4:8-4:10"
   assert diagnostic.message == "`recipe` already has value `x`."
 
@@ -316,11 +348,13 @@ async def test_diagnostics_option_redefinition_default_value(server) -> None:
   await parseAndSendDiagnostics(
     server, "file:///diagnostics/option_redefinition_default_value.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/option_redefinition_default_value.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/option_redefinition_default_value.cfg",
+      diagnostics=[mock.ANY],
+    ),
   )
-  (diagnostic,) = cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1])
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert repr(diagnostic.range) == "1:13-1:15"
   assert diagnostic.message == "`allow-hosts` already has value `*`."
   assert diagnostic.related_information
@@ -341,12 +375,15 @@ async def test_diagnostics_option_redefined_hints_macro(server) -> None:
     server,
     "file:///diagnostics/option_redefinition_macro.cfg",
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/option_redefinition_macro.cfg", [mock.ANY, mock.ANY]
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/option_redefinition_macro.cfg",
+      diagnostics=[mock.ANY, mock.ANY],
+    ),
   )
-  duser, danother_user = cast(
-    List[Diagnostic], server.publish_diagnostics.call_args[0][1]
-  )
+  duser, danother_user = server.text_document_publish_diagnostics.call_args[0][
+    0
+  ].diagnostics
   assert repr(duser.range) == "5:5-5:9"
   assert duser.severity == DiagnosticSeverity.Hint
   assert duser.message == "`foo` overrides an existing value."
@@ -385,11 +422,15 @@ async def test_diagnostics_option_redefined_hints_extends(server) -> None:
     server,
     "file:///diagnostics/option_redefinition_extend_profile_base_location.cfg",
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///diagnostics/option_redefinition_extend_profile_base_location.cfg",
-    [mock.ANY, mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///diagnostics/option_redefinition_extend_profile_base_location.cfg",
+      diagnostics=[mock.ANY, mock.ANY],
+    ),
   )
-  dsection, dmacro = cast(List[Diagnostic], server.publish_diagnostics.call_args[0][1])
+  dsection, dmacro = server.text_document_publish_diagnostics.call_args[0][
+    0
+  ].diagnostics
 
   assert repr(dsection.range) == "5:8-5:46"
   assert dsection.severity == DiagnosticSeverity.Hint
@@ -439,4 +480,6 @@ async def test_diagnostics_option_redefined_hints_extends(server) -> None:
 async def test_diagnostics_ok(server, url) -> None:
   # no false positives
   await parseAndSendDiagnostics(server, url)
-  server.publish_diagnostics.assert_called_once_with(url, [])
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(uri=url, diagnostics=[])
+  )

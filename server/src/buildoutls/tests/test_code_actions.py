@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 import collections
 import concurrent.futures
 import json
 import pathlib
 import textwrap
+from typing import List, cast
 from unittest import mock
-from typing import cast, List
 
-import pytest
 import aioresponses
+import pytest
 from lsprotocol.types import (
+  ApplyWorkspaceEditParams,
   CodeAction,
   CodeActionContext,
   CodeActionKind,
@@ -18,6 +20,7 @@ from lsprotocol.types import (
   Diagnostic,
   DiagnosticSeverity,
   Position,
+  PublishDiagnosticsParams,
   Range,
   ShowDocumentParams,
   TextDocumentIdentifier,
@@ -27,11 +30,11 @@ from lsprotocol.types import (
 
 from ..commands import COMMAND_OPEN_PYPI_PAGE, COMMAND_UPDATE_MD5SUM
 from ..server import (
-  server,
   command_open_pypi_page,
   command_update_md5sum,
   lsp_code_action,
   parseAndSendDiagnostics,
+  server,
 )
 from ..types import OpenPypiPageCommandParams, UpdateMD5SumCommandParams
 
@@ -124,11 +127,8 @@ def sampleproject_9_9_9_json_response(
 
 def _dump_and_load(param: CodeActionParams) -> CodeActionParams:
   """Simulate a code action params going through pygls protocol."""
-  dumped = json.dumps(param, default=server.lsp._serialize_message)
-  return cast(
-    CodeActionParams,
-    server.lsp._converter.structure(json.loads(dumped), CodeActionParams),
-  )
+  dumped = json.dumps(param, default=server.protocol._serialize_message)
+  return server.protocol._converter.structure(json.loads(dumped), CodeActionParams)
 
 
 async def test_diagnostic_and_versions_code_action_newer_version_available(
@@ -140,12 +140,14 @@ async def test_diagnostic_and_versions_code_action_newer_version_available(
     server,
     "file:///code_actions/newer_version_available.cfg",
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///code_actions/newer_version_available.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///code_actions/newer_version_available.cfg",
+      diagnostics=[mock.ANY],
+    ),
   )
   diagnostic: Diagnostic
-  (diagnostic,) = server.publish_diagnostics.call_args[0][1]
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert diagnostic.severity == DiagnosticSeverity.Hint
   assert diagnostic.range == Range(
     start=Position(line=1, character=15), end=Position(line=1, character=21)
@@ -210,12 +212,14 @@ async def test_diagnostic_and_versions_code_action_known_vulnerabilities(
   await parseAndSendDiagnostics(
     server, "file:///code_actions/known_vulnerabilities.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///code_actions/known_vulnerabilities.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///code_actions/known_vulnerabilities.cfg",
+      diagnostics=[mock.ANY],
+    ),
   )
   diagnostic: Diagnostic
-  (diagnostic,) = server.publish_diagnostics.call_args[0][1]
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert diagnostic.severity == DiagnosticSeverity.Warning
   assert diagnostic.range == Range(
     start=Position(line=1, character=15), end=Position(line=1, character=21)
@@ -282,12 +286,14 @@ async def test_diagnostic_and_versions_code_action_version_not_exists(
   await parseAndSendDiagnostics(
     server, "file:///code_actions/package_version_not_exists.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///code_actions/package_version_not_exists.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///code_actions/package_version_not_exists.cfg",
+      diagnostics=[mock.ANY],
+    ),
   )
   diagnostic: Diagnostic
-  (diagnostic,) = server.publish_diagnostics.call_args[0][1]
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert diagnostic.severity == DiagnosticSeverity.Warning
   assert repr(diagnostic.range) == "1:15-1:20"
 
@@ -347,12 +353,14 @@ async def test_diagnostic_and_versions_code_action_package_not_exists(
   server, notfound_0_0_1_json_response, notfound_json_response
 ) -> None:
   await parseAndSendDiagnostics(server, "file:///code_actions/package_not_exists.cfg")
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///code_actions/package_not_exists.cfg",
-    [mock.ANY],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///code_actions/package_not_exists.cfg",
+      diagnostics=[mock.ANY],
+    ),
   )
   diagnostic: Diagnostic
-  (diagnostic,) = server.publish_diagnostics.call_args[0][1]
+  (diagnostic,) = server.text_document_publish_diagnostics.call_args[0][0].diagnostics
   assert diagnostic.severity == DiagnosticSeverity.Warning
   assert repr(diagnostic.range) == "1:10-1:16"
 
@@ -392,7 +400,7 @@ async def test_diagnostic_and_versions_code_action_package_not_exists(
   await command_open_pypi_page(
     server, cast(List[OpenPypiPageCommandParams], code_actions[0].command.arguments)
   )
-  server.show_document_async.assert_called_with(
+  server.window_show_document_async.assert_called_with(
     ShowDocumentParams(
       uri="https://pypi.org/project/notfound/0.0.1/",
       external=True,
@@ -419,9 +427,11 @@ async def test_diagnostic_and_versions_code_action_latest_version(
     server,
     "file:///code_actions/latest_version.cfg",
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///code_actions/latest_version.cfg",
-    [],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///code_actions/latest_version.cfg",
+      diagnostics=[],
+    ),
   )
 
   code_action_params = CodeActionParams(
@@ -510,32 +520,34 @@ async def test_update_md5sum_code_action(
   await command_update_md5sum(
     server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
-  server.apply_edit.assert_called_once_with(
-    WorkspaceEdit(
-      changes={
-        "file:///code_actions/update_md5sum.cfg": [
-          TextEdit(
-            range=Range(
-              start=Position(
-                line=2,
-                character=8,
+  server.workspace_apply_edit.assert_called_once_with(
+    ApplyWorkspaceEditParams(
+      edit=WorkspaceEdit(
+        changes={
+          "file:///code_actions/update_md5sum.cfg": [
+            TextEdit(
+              range=Range(
+                start=Position(
+                  line=2,
+                  character=8,
+                ),
+                end=Position(
+                  line=2,
+                  character=14,
+                ),
               ),
-              end=Position(
-                line=2,
-                character=14,
-              ),
+              new_text=" 5d41402abc4b2a76b9719d911017c592",
             ),
-            new_text=" 5d41402abc4b2a76b9719d911017c592",
-          ),
-        ],
-      },
+          ],
+        },
+      ),
     ),
   )
 
-  server.progress.create_async.assert_awaited_once()
-  server.progress.begin.assert_called_once()
-  server.progress.report.assert_called()
-  server.progress.end.assert_called_once()
+  server.work_done_progress.create_async.assert_awaited_once()
+  server.work_done_progress.begin.assert_called_once()
+  server.work_done_progress.report.assert_called()
+  server.work_done_progress.end.assert_called_once()
 
 
 async def test_update_md5sum_code_action_without_md5sum_option(
@@ -578,25 +590,27 @@ async def test_update_md5sum_code_action_without_md5sum_option(
   await command_update_md5sum(
     server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
-  server.apply_edit.assert_called_once_with(
-    WorkspaceEdit(
-      changes={
-        "file:///code_actions/update_md5sum_without_md5sum_option.cfg": [
-          TextEdit(
-            range=Range(
-              start=Position(
-                line=2,
-                character=0,
+  server.workspace_apply_edit.assert_called_once_with(
+    ApplyWorkspaceEditParams(
+      edit=WorkspaceEdit(
+        changes={
+          "file:///code_actions/update_md5sum_without_md5sum_option.cfg": [
+            TextEdit(
+              range=Range(
+                start=Position(
+                  line=2,
+                  character=0,
+                ),
+                end=Position(
+                  line=2,
+                  character=0,
+                ),
               ),
-              end=Position(
-                line=2,
-                character=0,
-              ),
+              new_text="md5sum = 5d41402abc4b2a76b9719d911017c592\n",
             ),
-            new_text="md5sum = 5d41402abc4b2a76b9719d911017c592\n",
-          ),
-        ],
-      },
+          ],
+        },
+      ),
     ),
   )
 
@@ -642,12 +656,12 @@ async def test_update_md5sum_code_action_cancelled(
     f.cancel()
     return f
 
-  server.progress.tokens = collections.defaultdict(cancelled_future)
+  server.work_done_progress.tokens = collections.defaultdict(cancelled_future)
 
   await command_update_md5sum(
     server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
-  server.apply_edit.assert_not_called()
+  server.workspace_apply_edit.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -740,24 +754,26 @@ async def test_update_md5sum_code_action_with_substitutions(
   await command_update_md5sum(
     server, cast(List[UpdateMD5SumCommandParams], code_actions[0].command.arguments)
   )
-  server.apply_edit.assert_called_once_with(
-    WorkspaceEdit(
-      changes={
-        "file:///code_actions/update_md5sum_code_action_with_substitutions.cfg": [
-          TextEdit(
-            range=Range(
-              start=Position(
-                line=3,
-                character=8,
+  server.workspace_apply_edit.assert_called_once_with(
+    ApplyWorkspaceEditParams(
+      edit=WorkspaceEdit(
+        changes={
+          "file:///code_actions/update_md5sum_code_action_with_substitutions.cfg": [
+            TextEdit(
+              range=Range(
+                start=Position(
+                  line=3,
+                  character=8,
+                ),
+                end=Position(
+                  line=4,
+                  character=0,
+                ),
               ),
-              end=Position(
-                line=4,
-                character=0,
-              ),
+              new_text=" 5d41402abc4b2a76b9719d911017c592",
             ),
-            new_text=" 5d41402abc4b2a76b9719d911017c592",
-          ),
-        ],
-      },
+          ],
+        },
+      ),
     ),
   )

@@ -5,13 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog][keepachangelog],
 and this project adheres to [Semantic Versioning][semver].
 
-## [0.15.0] - 2024-09-25
+## [unreleased] -
+
+### Added
+
+  - update pygls to version 2
+
+## [0.15.0] - 2025-09-25
 
 ### Added
 
   - updated dependencies
 
-## [0.14.0] - 2024-05-12
+## [0.14.0] - 2025-05-12
 
 ### Added
 

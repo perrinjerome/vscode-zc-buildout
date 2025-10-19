@@ -5,7 +5,7 @@ from lsprotocol.types import (
   ReferenceParams,
   ReferenceContext,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from ..server import lsp_references
 

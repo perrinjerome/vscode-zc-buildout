@@ -13,7 +13,7 @@ from lsprotocol.types import (
   Position,
   Range,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
 from . import buildout, jinja, types

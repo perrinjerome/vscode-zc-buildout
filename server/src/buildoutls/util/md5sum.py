@@ -3,17 +3,19 @@ import time
 import uuid
 
 from lsprotocol.types import (
+  ApplyWorkspaceEditParams,
   Location,
   MessageType,
   Position,
   Range,
+  ShowMessageParams,
   TextEdit,
   WorkDoneProgressBegin,
   WorkDoneProgressEnd,
   WorkDoneProgressReport,
   WorkspaceEdit,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from . import aiohttp_session
 from .. import buildout
@@ -30,8 +32,8 @@ async def update_md5sum(
   url = profile.resolve_value(params["section_name"], "url")
 
   token = str(uuid.uuid4())
-  await ls.progress.create_async(token)
-  ls.progress.begin(
+  await ls.work_done_progress.create_async(token)
+  ls.work_done_progress.begin(
     token,
     WorkDoneProgressBegin(
       cancellable=True,
@@ -44,11 +46,13 @@ async def update_md5sum(
 
   async with aiohttp_session.get_session().get(url) as resp:
     if not resp.ok:
-      ls.show_message(
-        f"Could not update md5sum: {url} had status code {resp.status}",
-        MessageType.Error,
+      ls.window_show_message(
+        ShowMessageParams(
+          message=f"Could not update md5sum: {url} had status code {resp.status}",
+          type=MessageType.Error,
+        )
       )
-      ls.progress.end(token, WorkDoneProgressEnd(kind="end"))
+      ls.work_done_progress.end(token, WorkDoneProgressEnd(kind="end"))
       return
 
     download_total_size = int(resp.headers.get("content-length", "-1"))
@@ -59,14 +63,14 @@ async def update_md5sum(
 
       elapsed_time = time.time() - start
       percentage = downloaded_size / download_total_size * 100
-      ls.progress.report(
+      ls.work_done_progress.report(
         token,
         WorkDoneProgressReport(
           message=f"{percentage:0.2f}% in {elapsed_time:0.2f}s",
           percentage=max(0, int(percentage)),
         ),
       )
-      if ls.progress.tokens[token].cancelled():
+      if ls.work_done_progress.tokens[token].cancelled():
         break
 
   hexdigest = m.hexdigest()
@@ -92,17 +96,19 @@ async def update_md5sum(
     )
     new_text = f"md5sum = {hexdigest}\n"
 
-  if not ls.progress.tokens[token].cancelled():
-    ls.progress.end(token, WorkDoneProgressEnd())
-    ls.apply_edit(
-      WorkspaceEdit(
-        changes={
-          md5sum_location.uri: [
-            TextEdit(
-              range=md5sum_location.range,
-              new_text=new_text,
-            )
-          ]
-        }
-      )
+  if not ls.work_done_progress.tokens[token].cancelled():
+    ls.work_done_progress.end(token, WorkDoneProgressEnd())
+    ls.workspace_apply_edit(
+      ApplyWorkspaceEditParams(
+        edit=WorkspaceEdit(
+          changes={
+            md5sum_location.uri: [
+              TextEdit(
+                range=md5sum_location.range,
+                new_text=new_text,
+              ),
+            ],
+          },
+        ),
+      ),
     )

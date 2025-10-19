@@ -41,8 +41,8 @@ from typing import (
 
 import aiohttp.client_exceptions
 from lsprotocol.types import Location, Position, Range
-from pygls.server import LanguageServer
-from pygls.workspace import Document
+from pygls.lsp.server import LanguageServer
+from pygls.workspace import TextDocument
 from typing_extensions import TypeAlias
 from zc.buildout.buildout import _buildout_default_options
 from zc.buildout.configparser import (
@@ -1313,7 +1313,7 @@ async def _parse(
 
 async def getProfileForTemplate(
   ls: LanguageServer,
-  document: Document,
+  document: TextDocument,
 ) -> Optional[URI]:
   """Find the profile for template.
 
