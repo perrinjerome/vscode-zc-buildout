@@ -7,9 +7,8 @@ import pytest
 import aioresponses
 from aiohttp.client_exceptions import ClientConnectionError
 from lsprotocol.types import Location, Position, Range
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
-from buildoutls.buildout import clearCache
 
 from ..buildout import (
   BuildoutProfile,
@@ -17,6 +16,7 @@ from ..buildout import (
   RecursiveIncludeError,
   Symbol,
   SymbolKind,
+  clearCache,
   _parse,
   open,
 )

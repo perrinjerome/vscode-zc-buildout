@@ -4,12 +4,13 @@ from lsprotocol.types import (
   CompletionTriggerKind,
   Location,
   Position,
+  PublishDiagnosticsParams,
   Range,
   TextDocumentIdentifier,
   TextDocumentPositionParams,
   TextEdit,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from ..buildout import BuildoutProfile, open
 from ..server import (
@@ -401,15 +402,19 @@ async def test_diagnostic_instance(server) -> None:
   await parseAndSendDiagnostics(
     server, "file:///slapos/instance_as_buildout_profile/instance.cfg"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///slapos/instance_as_buildout_profile/instance.cfg",
-    [],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///slapos/instance_as_buildout_profile/instance.cfg",
+      diagnostics=[],
+    ),
   )
-  server.publish_diagnostics.reset_mock()
+  server.text_document_publish_diagnostics.reset_mock()
   await parseAndSendDiagnostics(
     server, "file:///slapos/instance_as_jinja/instance.cfg.in"
   )
-  server.publish_diagnostics.assert_called_once_with(
-    "file:///slapos/instance_as_jinja/instance.cfg.in",
-    [],
+  server.text_document_publish_diagnostics.assert_called_once_with(
+    PublishDiagnosticsParams(
+      uri="file:///slapos/instance_as_jinja/instance.cfg.in",
+      diagnostics=[],
+    ),
   )

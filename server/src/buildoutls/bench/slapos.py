@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 from lsprotocol.types import Diagnostic
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 from pygls.workspace import Workspace
 
 from ..buildout import (
@@ -60,7 +60,6 @@ def no_pypi_diagnostics() -> Any:
 @no_type_check
 @pytest.fixture(scope="function")
 def aio_benchmark(benchmark):
-  import asyncio
   import threading
 
   class Sync2Async:
@@ -121,10 +120,8 @@ async def test_open_and_diagnostic(
 ) -> None:
   doc_uri = (slapos_working_copy / profile_relative_path).as_uri()
   workspace = Workspace(slapos_working_copy.as_uri())
-  ls = LanguageServer(
-    name="zc.buildout.languageserver", version="dev", loop=asyncio.new_event_loop()
-  )
-  ls.lsp._workspace = workspace
+  ls = LanguageServer(name="zc.buildout.languageserver", version="dev")
+  ls.protocol._workspace = workspace
 
   async def open_and_get_diagnostics() -> List[Diagnostic]:
     diags: List[Diagnostic] = []

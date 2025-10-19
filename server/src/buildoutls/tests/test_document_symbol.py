@@ -5,7 +5,7 @@ from lsprotocol.types import (
   Range,
   TextDocumentIdentifier,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from ..server import lsp_symbols
 

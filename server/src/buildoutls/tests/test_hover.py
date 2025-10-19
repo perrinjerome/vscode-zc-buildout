@@ -3,7 +3,7 @@ from lsprotocol.types import (
   TextDocumentIdentifier,
   TextDocumentPositionParams,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from ..server import lsp_hover
 

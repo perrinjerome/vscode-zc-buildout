@@ -12,7 +12,7 @@ from lsprotocol.types import (
   TextDocumentIdentifier,
   TextEdit,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from ..server import lsp_completion
 

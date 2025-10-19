@@ -10,7 +10,7 @@ from lsprotocol.types import (
   TextEdit,
   WorkspaceEdit,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from .commands import COMMAND_OPEN_PYPI_PAGE, COMMAND_UPDATE_MD5SUM
 from .types import (
