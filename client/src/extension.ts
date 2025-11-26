@@ -65,7 +65,7 @@ function makeLanguageServerClient(pythonExecutable: string) {
     args: ["-m", "buildoutls"].concat(
       vscode.workspace
         .getConfiguration()
-        .get("zc-buildout.language.server.arguments")
+        .get("zc-buildout.language.server.arguments") || []
     ),
   };
 
