@@ -282,7 +282,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 [keepachangelog]: https://keepachangelog.com/en/1.0.0/
 [semver]: https://semver.org/spec/v2.0.0.html
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.17.0...main
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.17.1...main
+[0.17.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.16.1...v0.17.0
 [0.16.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.15.0...v0.16.0
