@@ -729,8 +729,9 @@ async def lsp_hover(
   hover_text = ""
   if symbol:
     if symbol.kind == buildout.SymbolKind.SectionDefinition:
-      assert symbol.current_section
-      hover_text = symbol.current_section.documentation
+      if symbol.current_section_name:
+        if current_section := symbol._buildout.get(symbol.current_section_name):
+          hover_text = current_section.documentation
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionKey:
       if symbol.current_option_name and symbol.current_section_recipe:
         if option := symbol.current_section_recipe.options.get(
