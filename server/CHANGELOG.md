@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [unreleased] -
 
+### Fixed
+
+  - hover: fix crash when hovering on jinja section names like `[{{ section }}]`
+
 ## [0.17.1] - 2025-12-22
 
 ### Fixed

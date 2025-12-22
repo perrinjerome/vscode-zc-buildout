@@ -90,3 +90,17 @@ command = echo install section1
     )
     assert hover is not None
     assert hover.contents == ""
+
+
+async def test_hover_jinja_section_name(server: LanguageServer):
+  # hovering on a jinja section name like [{{ section }}] should not crash
+  hover = await lsp_hover(
+    server,
+    TextDocumentPositionParams(
+      text_document=TextDocumentIdentifier(
+        uri="file:///diagnostics/jinja-sections.cfg"
+      ),
+      position=Position(line=6, character=3),  # on [{{ section }}]
+    ),
+  )
+  assert hover is not None
