@@ -1021,11 +1021,12 @@ async def parse(
   else:
     document = ls.workspace.get_text_document(uri)
     try:
-      fp = io.StringIO(document.source)
-    except IOError:
+      src = document.source
+    except (UnicodeDecodeError, IOError):
       if not allow_errors:
         raise
-      fp = io.StringIO("")
+      src = ""
+    fp = io.StringIO(src)
   parsed = await _parse(
     fp,
     uri,

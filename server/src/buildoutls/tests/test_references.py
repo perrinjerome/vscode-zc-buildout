@@ -1,3 +1,4 @@
+import pytest
 from lsprotocol.types import (
   Position,
   Range,
@@ -10,6 +11,7 @@ from pygls.lsp.server import LanguageServer
 from ..server import lsp_references
 
 
+@pytest.mark.usefixtures("bad_encoding_file")
 async def test_references_on_section_header(server: LanguageServer):
   references = await lsp_references(
     server,
@@ -33,6 +35,7 @@ async def test_references_on_section_header(server: LanguageServer):
   )
 
 
+@pytest.mark.usefixtures("bad_encoding_file")
 async def test_references_on_option_definition(server: LanguageServer):
   # ${referenced_section1:value1} is referenced once
   references = await lsp_references(
@@ -61,6 +64,7 @@ async def test_references_on_option_definition(server: LanguageServer):
   assert references == []
 
 
+@pytest.mark.usefixtures("bad_encoding_file")
 async def test_references_on_option_reference(server: LanguageServer):
   references = await lsp_references(
     server,
@@ -77,6 +81,7 @@ async def test_references_on_option_reference(server: LanguageServer):
   )
 
 
+@pytest.mark.usefixtures("bad_encoding_file")
 async def test_references_on_section_reference(server: LanguageServer):
   references = await lsp_references(
     server,
@@ -93,6 +98,7 @@ async def test_references_on_section_reference(server: LanguageServer):
   )
 
 
+@pytest.mark.usefixtures("bad_encoding_file")
 async def test_references_from_parts(server: LanguageServer):
   references = await lsp_references(
     server,

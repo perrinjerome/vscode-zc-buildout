@@ -124,3 +124,24 @@ async def template(server) -> Any:
     uri="file:///buildout.cfg",
   )
   return await parsed.getTemplate(server, "template.in")
+
+
+@pytest.fixture(params=[True, False])
+def bad_encoding_file(request: pytest.FixtureRequest):
+  """Fixture that optionally creates a bad_encoding.cfg file.
+
+  Parameterized to run tests both with and without the file.
+  """
+  import pathlib
+
+  profiles_dir = pathlib.Path(__file__).resolve().parents[4] / "profiles"
+  bad_file = None
+  if request.param:
+    bad_file = profiles_dir / "bad_encoding.cfg"
+    bad_file.write_bytes(b"\xff\xfe[section]\noption = value\n")
+
+  try:
+    yield request.param
+  finally:
+    if bad_file:
+      bad_file.unlink()

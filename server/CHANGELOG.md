@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [unreleased] -
 
+### Fixed
+
+  - references: prevent error when a non -UTF8 cfg file exists in the workspace
+
 ## [0.17.0] - 2025-11-26
 
 ### Fixed
