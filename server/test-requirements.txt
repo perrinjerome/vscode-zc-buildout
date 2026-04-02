@@ -44,7 +44,7 @@ types-pygments==2.19.0.20250809
 types-setuptools==80.9.0.20250822
 types-toml==0.10.8.20240310
 typing-extensions==4.15.0
-wheel==0.45.1
+wheel==0.46.2
 yarl==1.20.1
 zc-buildout==4.1.12
 
