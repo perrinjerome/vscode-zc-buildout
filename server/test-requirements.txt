@@ -30,7 +30,7 @@ pluggy==1.6.0
 propcache==0.3.2
 py-cpuinfo==9.0.0
 pygls==2.0.0
-pygments==2.19.2
+pygments==2.20.0
 pylint==3.3.8
 pytest==8.4.2
 pytest-asyncio==1.2.0

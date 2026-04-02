@@ -17,7 +17,7 @@ multidict==6.6.4
 packaging==25.0
 propcache==0.3.2
 pygls==2.0.0
-pygments==2.19.2
+pygments==2.20.0
 typing-extensions==4.15.0
 wheel==0.45.1
 yarl==1.20.1
