@@ -11,7 +11,7 @@ attrs==25.3.0
 cachetools==6.2.0
 cattrs==25.2.0
 frozenlist==1.7.0
-idna==3.10
+idna==3.15
 lsprotocol==2025.0.0
 multidict==6.6.4
 packaging==25.0
