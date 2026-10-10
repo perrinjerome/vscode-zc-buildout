@@ -91,9 +91,9 @@
     "lint-fix": "eslint . --ext .js,.ts --fix"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/preset-typescript": "^7.6.0",
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@babel/preset-typescript": "^8.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^12.12.0",
     "@types/sinon": "^9.0.4",
