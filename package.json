@@ -3,7 +3,7 @@
   "description": "A vscode extension and language server for zc.buildout",
   "author": "Jérome Perrin",
   "license": "SEE LICENSE IN LICENSE.txt",
-  "version": "0.17.2",
+  "version": "0.18.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/perrinjerome/vscode-zc-buildout"
@@ -111,5 +111,8 @@
     "tslint": "^5.8.0",
     "typescript": "^4.5.5",
     "vscode-tmgrammar-test": "^0.1.1"
+  },
+  "allowScripts": {
+    "@vscode/vsce-sign@2.1.0": true
   }
 }

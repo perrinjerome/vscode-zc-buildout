@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning][semver].
 
 ## [unreleased] -
 
+## [0.18.0] - 2026-10-21
+
+### Added
+
+  - support python3.15
+  - updated dependencies
+
 ## [0.17.2] - 2025-12-22
 
 ### Fixed
@@ -288,7 +295,8 @@ and this project adheres to [Semantic Versioning][semver].
 
 [keepachangelog]: https://keepachangelog.com/en/1.0.0/
 [semver]: https://semver.org/spec/v2.0.0.html
-[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.17.2...main
+[unreleased]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.18.0...main
+[0.18.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.17.2...v0.18.0
 [0.17.2]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.17.1...v0.17.2
 [0.17.1]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/perrinjerome/vscode-zc-buildout/compare/v0.16.1...v0.17.0
