@@ -18,7 +18,6 @@ def start_profiling(ls: LanguageServer, params: Any) -> None:
 
 
 def stop_profiling(ls: LanguageServer, params: Any) -> None:
-  global _profiler
   _profiler.disable()
 
   s = io.StringIO()
