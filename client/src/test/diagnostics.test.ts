@@ -39,7 +39,7 @@ function toRange(sLine: number, sChar: number, eLine: number, eChar: number) {
 
 async function testDiagnostics(
   docUri: vscode.Uri,
-  expectedDiagnostics: vscode.Diagnostic[]
+  expectedDiagnostics: vscode.Diagnostic[],
 ) {
   await activateExtension(docUri);
 
@@ -50,7 +50,7 @@ async function testDiagnostics(
       break;
     }
     console.log(
-      `${new Date()}: did not get diagnostics, retrying in 2 seconds`
+      `${new Date()}: did not get diagnostics, retrying in 2 seconds`,
     );
     await sleep(2000);
   }
