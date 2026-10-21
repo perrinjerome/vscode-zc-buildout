@@ -2,7 +2,6 @@
 
 import enum
 import re
-from typing import List
 
 
 # https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-control-structures
@@ -46,7 +45,7 @@ class JinjaParser:
     self.has_expression = False
     self.is_in_comment = False
     self.is_error = False
-    self._stack: List[JinjaStatement] = []
+    self._stack: list[JinjaStatement] = []
     self._current_line_was_in_jinja = False
     self._in_raw = False
     self._in_comment = False

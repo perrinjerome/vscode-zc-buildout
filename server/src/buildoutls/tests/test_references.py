@@ -2,9 +2,9 @@ import pytest
 from lsprotocol.types import (
   Position,
   Range,
-  TextDocumentIdentifier,
-  ReferenceParams,
   ReferenceContext,
+  ReferenceParams,
+  TextDocumentIdentifier,
 )
 from pygls.lsp.server import LanguageServer
 

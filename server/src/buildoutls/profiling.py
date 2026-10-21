@@ -24,5 +24,5 @@ def stop_profiling(ls: LanguageServer, params: Any) -> None:
   s = io.StringIO()
   ps = pstats.Stats(_profiler, stream=s).sort_stats(pstats.SortKey.CUMULATIVE)
   ps.print_stats()
-  logger.warn(s.getvalue())
+  logger.warning(s.getvalue())
   ls.window_log_message(LogMessageParams(message=s.getvalue(), type=MessageType.Info))

@@ -2,9 +2,9 @@ import textwrap
 
 from lsprotocol.types import (
   CompletionContext,
+  CompletionItemTag,
   CompletionParams,
   CompletionTriggerKind,
-  CompletionItemTag,
   MarkupContent,
   MarkupKind,
   Position,

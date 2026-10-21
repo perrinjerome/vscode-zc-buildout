@@ -1,14 +1,12 @@
 import io
 import textwrap
-from typing import List
 from unittest import mock
 
-import pytest
 import aioresponses
+import pytest
 from aiohttp.client_exceptions import ClientConnectionError
 from lsprotocol.types import Location, Position, Range
 from pygls.lsp.server import LanguageServer
-
 
 from ..buildout import (
   BuildoutProfile,
@@ -16,8 +14,8 @@ from ..buildout import (
   RecursiveIncludeError,
   Symbol,
   SymbolKind,
-  clearCache,
   _parse,
+  clearCache,
   open,
 )
 
@@ -378,7 +376,7 @@ async def test_BuildoutProfile_getSymbolAtPosition_Comment(
 async def test_BuildoutProfile_getAllOptionReferenceSymbols(
   buildout: BuildoutProfile,
 ) -> None:
-  symbols: List[Symbol] = []
+  symbols: list[Symbol] = []
   async for symbol in buildout.getAllOptionReferenceSymbols():
     symbols.append(symbol)
   assert [
@@ -490,7 +488,7 @@ async def test_BuildoutTemplate_getSymbolAtPosition_None(
 async def test_BuildoutTemplate_getAllOptionReferenceSymbols(
   template: BuildoutTemplate,
 ) -> None:
-  symbols: List[Symbol] = []
+  symbols: list[Symbol] = []
   async for symbol in template.getAllOptionReferenceSymbols():
     symbols.append(symbol)
 

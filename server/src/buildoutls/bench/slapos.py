@@ -1,7 +1,7 @@
 import asyncio
 import pathlib
 import subprocess
-from typing import Any, List, no_type_check
+from typing import Any, no_type_check
 from unittest import mock
 
 import pytest
@@ -123,8 +123,8 @@ async def test_open_and_diagnostic(
   ls = LanguageServer(name="zc.buildout.languageserver", version="dev")
   ls.protocol._workspace = workspace
 
-  async def open_and_get_diagnostics() -> List[Diagnostic]:
-    diags: List[Diagnostic] = []
+  async def open_and_get_diagnostics() -> list[Diagnostic]:
+    diags: list[Diagnostic] = []
     await open(ls, doc_uri)
     async for diag in getDiagnostics(ls, doc_uri):
       diags.append(diag)

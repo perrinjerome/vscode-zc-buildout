@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import re
 import urllib.parse
-from typing import AsyncIterable, Awaitable, List, Optional, Set, Tuple
-import packaging
+from collections.abc import AsyncIterable, Awaitable
 
+# this is a function to be patched in unittest
+from os.path import exists as os_path_exists
+
+import packaging
 from lsprotocol.types import (
   Diagnostic,
   DiagnosticRelatedInformation,
@@ -18,9 +23,6 @@ from zc.buildout.configparser import MissingSectionHeaderError, ParsingError
 
 from . import buildout, jinja, types
 from .util import pypi
-
-# this is a function to be patched in unittest
-from os.path import exists as os_path_exists
 
 logger = logging.getLogger(__name__)
 _profile_base_location_re = re.compile(
@@ -87,12 +89,12 @@ async def getDiagnostics(
     and resolved_buildout.has_jinja
   )
   if not has_dynamic_extends and not has_jinja:
-    installed_parts: Set[str] = set([])
+    installed_parts: set[str] = set()
     if isinstance(resolved_buildout, buildout.BuildoutProfile):
       if "parts" in resolved_buildout["buildout"]:
-        installed_parts = set(
-          (v[0] for v in resolved_buildout.getOptionValues("buildout", "parts"))
-        )
+        installed_parts = {
+          v[0] for v in resolved_buildout.getOptionValues("buildout", "parts")
+        }
 
     async for symbol in resolved_buildout.getAllOptionReferenceSymbols():
       if symbol.referenced_section is None:
@@ -146,7 +148,7 @@ async def getDiagnostics(
             )
             if missing_required_options:
               missing_required_options_text = ", ".join(
-                ["`{}`".format(o) for o in missing_required_options]
+                [f"`{o}`" for o in missing_required_options]
               )
               yield Diagnostic(
                 message=f"Missing required options for `{recipe.name}`: {missing_required_options_text}",
@@ -270,13 +272,13 @@ async def getDiagnostics(
 
       if resolved_buildout.get("versions"):
         sem = asyncio.Semaphore(4)
-        package_version_options: List[
-          Tuple[str, str, buildout.BuildoutOptionDefinition]
+        package_version_options: list[
+          tuple[str, str, buildout.BuildoutOptionDefinition]
         ] = []
-        known_vulnerabilities_coros: List[
-          Awaitable[Tuple[types.KnownVulnerability, ...]]
+        known_vulnerabilities_coros: list[
+          Awaitable[tuple[types.KnownVulnerability, ...]]
         ] = []
-        latest_version_coros: List[Awaitable[Optional[packaging.version.Version]]] = []
+        latest_version_coros: list[Awaitable[packaging.version.Version | None]] = []
         for package_name, option in resolved_buildout["versions"].items():
           if option.location.uri != uri:
             continue
@@ -289,8 +291,7 @@ async def getDiagnostics(
           package_version = option.value
 
           # handle some slapos markers in versions
-          if package_version.endswith(":whl"):
-            package_version = package_version[:-4]
+          package_version = package_version.removesuffix(":whl")
           if "+slapos" in package_version.lower():
             continue
 

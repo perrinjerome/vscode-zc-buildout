@@ -14,6 +14,8 @@
 #
 ##############################################################################
 
+from __future__ import annotations
+
 import collections
 import copy
 import enum
@@ -24,18 +26,11 @@ import pathlib
 import re
 import textwrap
 import urllib.parse
+from collections.abc import AsyncIterator, Iterator
+from re import Match
 from typing import (
   TYPE_CHECKING,
-  AsyncIterator,
-  Dict,
-  Iterator,
-  List,
-  Match,
-  Optional,
-  Set,
   TextIO,
-  Tuple,
-  Union,
   cast,
 )
 
@@ -141,9 +136,9 @@ class BuildoutOptionDefinition:
     location: Location,
     default_value: bool = False,
   ):
-    self.locations: Tuple[Location, ...] = (location,)
-    self.values: Tuple[str, ...] = (value,)
-    self.default_values: Tuple[bool, ...] = (default_value,)
+    self.locations: tuple[Location, ...] = (location,)
+    self.values: tuple[str, ...] = (value,)
+    self.default_values: tuple[bool, ...] = (default_value,)
 
   @property
   def value(self) -> str:
@@ -158,8 +153,8 @@ class BuildoutOptionDefinition:
     return self.default_values[-1]
 
   def __repr__(self) -> str:
-    locations = " ".join(["{} {}".format(loc.uri, loc.range) for loc in self.locations])
-    return "{} ({})".format(self.value, locations)
+    locations = " ".join([f"{loc.uri} {loc.range}" for loc in self.locations])
+    return f"{self.value} ({locations})"
 
   def overrideValue(self, value: str, location: Location) -> None:
     """Add a value to the list of values."""
@@ -170,7 +165,7 @@ class BuildoutOptionDefinition:
   def updateValue(
     self,
     value: str,
-    location: Optional[Location] = None,
+    location: Location | None = None,
   ) -> None:
     """Replace the current value, used internally to clean up extra whitespaces."""
     self.values = self.values[:-1] + (value,)
@@ -178,7 +173,7 @@ class BuildoutOptionDefinition:
     if location is not None:
       self.locations = self.locations[:-1] + (location,)
 
-  def copy(self) -> "BuildoutOptionDefinition":
+  def copy(self) -> BuildoutOptionDefinition:
     copied = BuildoutOptionDefinition(self.value, self.locations[0])
     copied.locations = self.locations
     copied.values = self.values
@@ -186,10 +181,10 @@ class BuildoutOptionDefinition:
     return copied
 
 
-class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
+class _BuildoutSection(dict[str, BuildoutOptionDefinition]):
   """Section of a buildout."""
 
-  def getRecipe(self) -> Optional[recipes.Recipe]:
+  def getRecipe(self) -> recipes.Recipe | None:
     recipe_option = self.get("recipe")
     if recipe_option is not None:
       return recipes.registry.get(recipe_option.value)
@@ -204,7 +199,7 @@ class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
     defined_items = [(k, v) for (k, v) in self.items() if v and not v.default_value]
     if defined_items:
       documentation = "```ini\n{}\n```".format(
-        "\n".join("{} = {}".format(k, v.value) for (k, v) in defined_items),
+        "\n".join(f"{k} = {v.value}" for (k, v) in defined_items),
       )
     if self.get("recipe"):
       recipe = self.getRecipe()
@@ -216,7 +211,7 @@ class _BuildoutSection(Dict[str, BuildoutOptionDefinition]):
 
   if TYPE_CHECKING:
 
-    def copy(self) -> "_BuildoutSection": ...
+    def copy(self) -> _BuildoutSection: ...
 
 
 # Inherit from OrderDict so that we can instanciate BuildoutSection.
@@ -271,13 +266,13 @@ class Symbol:
 
   def __init__(
     self,
-    buildout: "BuildoutProfile",
+    buildout: BuildoutProfile,
     kind: SymbolKind,
     value: str,
-    current_section_name: Optional[str] = None,
-    current_option_name: Optional[str] = None,
-    referenced_section_name: Optional[str] = None,
-    referenced_option_name: Optional[str] = None,
+    current_section_name: str | None = None,
+    current_option_name: str | None = None,
+    referenced_section_name: str | None = None,
+    referenced_option_name: str | None = None,
     is_same_section_reference: bool = False,
   ):
     self._buildout = buildout
@@ -309,23 +304,23 @@ class Symbol:
     return self._buildout[self.current_section_name]
 
   @property
-  def current_option(self) -> Optional[BuildoutOptionDefinition]:
+  def current_option(self) -> BuildoutOptionDefinition | None:
     if self.current_option_name:
       return self.current_section.get(self.current_option_name)
     return None
 
   @property
-  def current_section_recipe(self) -> Optional[recipes.Recipe]:
+  def current_section_recipe(self) -> recipes.Recipe | None:
     return self.current_section.getRecipe() if self.current_section else None
 
   @property
-  def referenced_section(self) -> Optional[BuildoutSection]:
+  def referenced_section(self) -> BuildoutSection | None:
     if self.referenced_section_name:
       return self._buildout.get(self.referenced_section_name)
     return None
 
   @property
-  def referenced_section_recipe_name(self) -> Optional[str]:
+  def referenced_section_recipe_name(self) -> str | None:
     if self.referenced_section:
       recipe = self.referenced_section.get("recipe")
       if recipe:
@@ -333,14 +328,14 @@ class Symbol:
     return None
 
   @property
-  def referenced_section_recipe(self) -> Optional[recipes.Recipe]:
+  def referenced_section_recipe(self) -> recipes.Recipe | None:
     referenced_section_recipe_name = self.referenced_section_recipe_name
     if referenced_section_recipe_name:
       return recipes.registry.get(referenced_section_recipe_name)
     return None
 
   @property
-  def referenced_option(self) -> Optional[BuildoutOptionDefinition]:
+  def referenced_option(self) -> BuildoutOptionDefinition | None:
     referenced_section = self.referenced_section
     if referenced_section and self.referenced_option_name:
       return referenced_section.get(self.referenced_option_name)
@@ -363,8 +358,8 @@ class BuildoutTemplate:
     self,
     uri: URI,
     source: str,
-    buildout: "BuildoutProfile",
-    second_level_buildout: Optional["BuildoutProfile"] = None,
+    buildout: BuildoutProfile,
+    second_level_buildout: BuildoutProfile | None = None,
   ):
     self.uri = uri
     self.source = source
@@ -373,7 +368,7 @@ class BuildoutTemplate:
     # where the $${ substitution values are read
     self.second_level_buildout = second_level_buildout
 
-  def copy(self) -> "BuildoutTemplate":
+  def copy(self) -> BuildoutTemplate:
     return self.__class__(
       self.uri,
       self.source,
@@ -384,9 +379,9 @@ class BuildoutTemplate:
   def _getSymbolAtPosition(
     self,
     position: Position,
-    current_section_name: Optional[str] = None,
-    current_option_name: Optional[str] = None,
-  ) -> Optional[Symbol]:
+    current_section_name: str | None = None,
+    current_option_name: str | None = None,
+  ) -> Symbol | None:
     lines = self.source.splitlines()
     # extract line for the position.
     line = ""
@@ -483,7 +478,7 @@ class BuildoutTemplate:
 
     return None
 
-  async def getSymbolAtPosition(self, position: Position) -> Optional[Symbol]:
+  async def getSymbolAtPosition(self, position: Position) -> Symbol | None:
     """Return the symbol at given position."""
     return self._getSymbolAtPosition(position)
 
@@ -532,10 +527,10 @@ class BuildoutTemplate:
         yield symbol
 
 
-class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
+class BuildoutProfile(dict[str, BuildoutSection], BuildoutTemplate):
   """A parsed buildout file, without extends."""
 
-  def copy(self) -> "BuildoutProfile":
+  def copy(self) -> BuildoutProfile:
     copied = self.__class__(self.uri, self.source)
     copied.section_header_locations = self.section_header_locations.copy()
     copied.has_dynamic_extends = self.has_dynamic_extends
@@ -551,7 +546,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
       source=source,
       buildout=self,
     )
-    self.section_header_locations: Dict[str, Location] = collections.OrderedDict()
+    self.section_header_locations: dict[str, Location] = collections.OrderedDict()
     """The locations for each section, keyed by section names.
     """
     self.has_dynamic_extends = False
@@ -567,7 +562,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     self,
     ls: LanguageServer,
     uri: URI,
-  ) -> Optional[BuildoutTemplate]:
+  ) -> BuildoutTemplate | None:
     """Returns the template from this uri, if it is a template for this profile.
 
     One exception is for profiles names software.cfg or buildout.cfg - we just assume
@@ -577,7 +572,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
 
     # uri can be passed as relative or absolute. Let's build a set of absolute
     # and relative uris.
-    uris = set((uri,))
+    uris = {uri}
 
     if not _isurl(uri):
       base = self.uri[: self.uri.rfind("/")] + "/"
@@ -638,7 +633,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               )
     return None
 
-  async def getSymbolAtPosition(self, position: Position) -> Optional[Symbol]:
+  async def getSymbolAtPosition(self, position: Position) -> Symbol | None:
     """Return the symbol at given position."""
 
     lines = self.source.splitlines()
@@ -746,7 +741,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
               current_section_name=current_section_name,
               current_option_name=current_option_name,
             )
-        elif not (line.startswith(" ") or line.startswith("\t")):
+        elif not (line.startswith((" ", "\t"))):
           # Option without value
           if not line.startswith("["):
             return Symbol(
@@ -797,7 +792,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
     self,
     section_name: str,
     option_name: str,
-  ) -> Iterator[Tuple[str, Range]]:
+  ) -> Iterator[tuple[str, Range]]:
     """Iterate on all values of an option
 
     When we have:
@@ -869,10 +864,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
   def looksLikeBuildoutProfile(uri: URI) -> bool:
     """Check if this URI looks like a buildout profile URI."""
     return (
-      uri.endswith(".cfg")
-      or uri.endswith(".cfg.in")
-      or uri.endswith(".cfg.j2")
-      or uri.endswith(".cfg.jinja2")
+      uri.endswith((".cfg", ".cfg.in", ".cfg.j2", ".cfg.jinja2"))
     )
 
   def resolve_value(self, section_name: str, option_name: str) -> str:
@@ -893,7 +885,7 @@ class BuildoutProfile(Dict[str, BuildoutSection], BuildoutTemplate):
       section_name: str,
       option_name: str,
       value: str,
-      seen: Set[Tuple[str, str]],
+      seen: set[tuple[str, str]],
     ) -> str:
       if (section_name, option_name) in seen:
         return value
@@ -928,24 +920,24 @@ class ResolvedBuildout(BuildoutProfile):
 
   if TYPE_CHECKING:
 
-    def copy(self) -> "ResolvedBuildout": ...
+    def copy(self) -> ResolvedBuildout: ...
 
 
 ### cache ###
 
 # a cache of un-resolved buildouts by uri
-_parse_cache: Dict[URI, BuildoutProfile] = {}
+_parse_cache: dict[URI, BuildoutProfile] = {}
 # a cache of resolved buildouts by uri. This is the cache that will be used for most operations
 # such as completions, code actions etc.
-_resolved_buildout_cache: Dict[URI, ResolvedBuildout] = {}
+_resolved_buildout_cache: dict[URI, ResolvedBuildout] = {}
 # a cache of resolved buildouts by list of uris. This is an intermediate cache used to rebuild
 # quickly the cach from _resolved__buildout_cache, because the cache from _resolved__buildout_cache
 # needs to be flushed each time the document at `uri` is modified. This cache is only flushed if
 # ${buildout:extends} is modified.
-_resolved_extends_cache: Dict[Tuple[URI, ...], BuildoutProfile] = {}
+_resolved_extends_cache: dict[tuple[URI, ...], BuildoutProfile] = {}
 # a mapping of dependencies between extends, so that we can clear caches when
 # a profile is modified.
-_extends_dependency_graph: Dict[URI, Set[URI]] = collections.defaultdict(set)
+_extends_dependency_graph: dict[URI, set[URI]] = collections.defaultdict(set)
 
 
 def clearCache(uri: URI) -> None:
@@ -958,7 +950,7 @@ def clearCache(uri: URI) -> None:
   _clearExtendCache(uri, set())
 
 
-def _clearExtendCache(uri: URI, done: Set[URI]) -> None:
+def _clearExtendCache(uri: URI, done: set[URI]) -> None:
   """Clear the `extends` cache for URI.
 
   This is to be called for all URIs extended by `uri`.
@@ -1022,7 +1014,7 @@ async def parse(
     document = ls.workspace.get_text_document(uri)
     try:
       src = document.source
-    except (UnicodeDecodeError, IOError):
+    except (OSError, UnicodeDecodeError):
       if not allow_errors:
         raise
       src = ""
@@ -1159,11 +1151,11 @@ async def _parse(
     sections.setdefault("slap-network-information", slap_network_information)
 
   jinja_parser = jinja.JinjaParser()
-  cursect: Optional[Dict[str, BuildoutOptionDefinition]] = None
+  cursect: dict[str, BuildoutOptionDefinition] | None = None
   blockmode = False
-  optname: Optional[str] = None
+  optname: str | None = None
   lineno = -1
-  e: Optional[ParsingError] = None
+  e: ParsingError | None = None
   while True:
     line = fp.readline()
     if not line:
@@ -1193,7 +1185,7 @@ async def _parse(
       option_def = cursect[optname]
       # update current option in case of multi line option
       option_def.updateValue(
-        value=("%s\n%s" % (option_def.value, line)),
+        value=(f"{option_def.value}\n{line}"),
         location=Location(
           uri=option_def.location.uri,
           range=Range(
@@ -1315,7 +1307,7 @@ async def _parse(
 async def getProfileForTemplate(
   ls: LanguageServer,
   document: TextDocument,
-) -> Optional[URI]:
+) -> URI | None:
   """Find the profile for template.
 
   For example when there's a buildout.cfg containing:
@@ -1334,8 +1326,7 @@ async def getProfileForTemplate(
     path = pathlib.Path(document.path).parent
     for _ in range(3):  # look for buildouts up to 3 levels
       # we sort just to have stable behavior
-      for profile in sorted(path.glob("*.cfg")):
-        yield profile
+      yield from sorted(path.glob("*.cfg"))
       path = path.parent
 
   if slapos_instance_profile_filename_re.match(uri) or not uri.endswith(".cfg"):
@@ -1374,7 +1365,7 @@ async def open(
   uri: URI,
   allow_errors: bool = True,
   force_open_as_buildout_profile: bool = False,
-) -> Optional[Union[BuildoutTemplate, ResolvedBuildout]]:
+) -> BuildoutTemplate | ResolvedBuildout | None:
   """Open an URI and returnes either a buildout or a profile connected to buildout.
 
   In the case of slapos buildout templates (instance.cfg.in), it is both. This is
@@ -1411,7 +1402,7 @@ async def _open(
   ls: LanguageServer,
   base: str,
   uri: URI,
-  seen: List[str],
+  seen: list[str],
   allow_errors: bool,
 ) -> ResolvedBuildout:
   """Open a configuration file and return the result as a dictionary,
@@ -1454,7 +1445,7 @@ async def _open(
     )
     if extends:
       # buildout:extends, as absolute URI that we can use as cache key
-      absolute_extends: Tuple[URI, ...] = tuple(
+      absolute_extends: tuple[URI, ...] = tuple(
         urllib.parse.urljoin(base, x) for x in extends
       )
       if absolute_extends in _resolved_extends_cache:
@@ -1560,7 +1551,7 @@ def _do_extend_raw(
   name: str,
   section: BuildoutSection,
   buildout: BuildoutProfile,
-  doing: List[str],
+  doing: list[str],
 ) -> BuildoutSection:
   """Extends macros:
 
@@ -1573,7 +1564,7 @@ def _do_extend_raw(
   if name == "buildout":
     return section
   if name in doing:
-    raise RecursiveMacroError("Infinite extending loop %r" % name)
+    raise RecursiveMacroError(f"Infinite extending loop {name!r}")
   doing.append(name)
 
   try:
@@ -1588,7 +1579,7 @@ def _do_extend_raw(
         continue
       raw = buildout.get(iname)
       if raw is None:
-        raise MissingExtendedSection("No section named %r" % iname)
+        raise MissingExtendedSection(f"No section named {iname!r}")
       result.update(
         {k: v.copy() for (k, v) in _do_extend_raw(iname, raw, buildout, doing).items()}
       )

@@ -1,7 +1,8 @@
 import asyncio
 import datetime
 import logging
-from typing import AsyncIterable, Dict, Optional, Tuple, cast
+from collections.abc import AsyncIterable
+from typing import Optional, cast
 
 import aiohttp
 import cachetools
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 # type aliases
 Project = str
 VersionStr = str
-ProjectAndVersionStr = Tuple[Project, VersionStr]
+ProjectAndVersionStr = tuple[Project, VersionStr]
 OptionalVersion = Optional[packaging.version.Version]
 
 
@@ -26,14 +27,14 @@ class PyPIClient:
   def __init__(self, package_index_url: str = "https://pypi.org"):
     self._package_index_url = package_index_url
     self.__get_latest_version_cache = cast(
-      Dict[ProjectAndVersionStr, OptionalVersion],
+      dict[ProjectAndVersionStr, OptionalVersion],
       cachetools.TTLCache(
         maxsize=2 << 10,
         ttl=datetime.timedelta(hours=2).total_seconds(),
       ),
     )
     self.__get_known_vulnerabilities_cache = cast(
-      Dict[ProjectAndVersionStr, Tuple[KnownVulnerability, ...]],
+      dict[ProjectAndVersionStr, tuple[KnownVulnerability, ...]],
       cachetools.TTLCache(
         maxsize=2 << 10,
         ttl=datetime.timedelta(hours=2).total_seconds(),
@@ -91,7 +92,7 @@ class PyPIClient:
     project: str,
     version: str,
     semaphore: asyncio.Semaphore,
-  ) -> Tuple[KnownVulnerability, ...]:
+  ) -> tuple[KnownVulnerability, ...]:
     try:
       return self.__get_known_vulnerabilities_cache[project, version]
     except KeyError:
@@ -113,11 +114,10 @@ class PyPIClient:
   ) -> AsyncIterable[KnownVulnerability]:
     try:
       # https://warehouse.pypa.io/api-reference/json.html#release
-      async with semaphore:
-        async with aiohttp_session.get_session().get(
-          f"{self._package_index_url}/pypi/{project}/{version}/json",
-        ) as resp:
-          project_data = await resp.json()
+      async with semaphore, aiohttp_session.get_session().get(
+        f"{self._package_index_url}/pypi/{project}/{version}/json",
+      ) as resp:
+        project_data = await resp.json()
     except (aiohttp.ClientError, ValueError, asyncio.TimeoutError):
       logger.warning(
         "Error fetching project release %s %s",
