@@ -1,4 +1,4 @@
-from typing import List, Sequence
+from collections.abc import Sequence
 
 import attrs
 from typing_extensions import TypedDict
@@ -6,9 +6,9 @@ from typing_extensions import TypedDict
 
 @attrs.define
 class KnownVulnerability:
-  aliases: List[str]
+  aliases: list[str]
   details: str
-  fixed_in: List[str]
+  fixed_in: list[str]
   id: str
   link: str
   source: str

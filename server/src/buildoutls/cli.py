@@ -53,7 +53,7 @@ def main() -> None:
     port = options.tcp
     if ":" in options.tcp:
       host, port = options.tcp.split(":")
-    print("Listening on {}:{}".format(host, port))
+    print(f"Listening on {host}:{port}")
     server.start_tcp(host, int(port))
   else:
     server.start_io()

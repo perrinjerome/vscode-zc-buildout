@@ -1,8 +1,9 @@
 """Registry of well-known recipes."""
 
-from typing import Dict, Optional, Sequence, Set
+from __future__ import annotations
 
 import enum
+from collections.abc import Sequence
 
 
 class RecipeOptionKind(enum.Enum):
@@ -18,8 +19,8 @@ class RecipeOption:
     self,
     documentation: str = "",
     valid_values: Sequence[str] = (),
-    deprecated: Optional[str] = "",
-    kind: Optional[RecipeOptionKind] = RecipeOptionKind.Text,
+    deprecated: str | None = "",
+    kind: RecipeOptionKind | None = RecipeOptionKind.Text,
   ):
     self.documentation = documentation
 
@@ -42,8 +43,8 @@ class Recipe:
     name: str = "",
     description: str = "",
     url: str = "",
-    options: Optional[Dict[str, RecipeOption]] = None,
-    generated_options: Optional[Dict[str, RecipeOption]] = None,
+    options: dict[str, RecipeOption] | None = None,
+    generated_options: dict[str, RecipeOption] | None = None,
     required_options: Sequence[str] = (),
     template_options: Sequence[str] = (),
     any_options: bool = False,
@@ -51,11 +52,11 @@ class Recipe:
     self.name = name
     self.description = description
     self.url = url
-    self.options: Dict[str, RecipeOption] = options or {}
+    self.options: dict[str, RecipeOption] = options or {}
     self.generated_options = generated_options or {}
-    self.required_options: Set[str] = set(required_options)
+    self.required_options: set[str] = set(required_options)
     # Template options are filenames which are using buildout substitution.
-    self.template_options: Set[str] = set(template_options)
+    self.template_options: set[str] = set(template_options)
     # Flag for recipe which can generates arbitrary options. If true, we can
     # not know if referenced options exist or not during diagnostics.
     self.any_options = any_options
@@ -64,10 +65,10 @@ class Recipe:
   @property
   def documentation(self) -> str:
     """Documentation of the recipe"""
-    return "## `{}`\n\n---\n{}".format(self.name, self.description)
+    return f"## `{self.name}`\n\n---\n{self.description}"
 
 
-registry: Dict[str, Recipe] = {}
+registry: dict[str, Recipe] = {}
 
 Recipe(
   name="slapos.recipe.template",

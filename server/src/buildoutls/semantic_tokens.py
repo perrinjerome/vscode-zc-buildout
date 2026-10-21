@@ -1,16 +1,16 @@
-from typing import List, Optional
-import logging
-import itertools
+from __future__ import annotations
 
-from lsprotocol.types import SemanticTokens
+import itertools
+import logging
+
 import pygments.lexers
 import pygments.token
+from lsprotocol.types import SemanticTokens
 
 from .buildout import BuildoutProfile
 from .recipes import RecipeOptionKind
 from .server import LanguageServer
 from .types import SEMANTIC_TOKEN_TYPES
-
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 token_type_by_type = {t: SEMANTIC_TOKEN_TYPES.index(t) for t in SEMANTIC_TOKEN_TYPES}
 
 
-def get_token_type(token_pygment_type: pygments.token._TokenType) -> Optional[int]:
+def get_token_type(token_pygment_type: pygments.token._TokenType) -> int | None:
   if token_pygment_type in pygments.token.Comment:
     return token_type_by_type["comment"]
   if token_pygment_type in pygments.token.String:
@@ -45,7 +45,7 @@ def get_semantic_tokens(
   ls: LanguageServer,
   parsed: BuildoutProfile,
 ) -> SemanticTokens:
-  data: List[int] = []
+  data: list[int] = []
 
   delta_line = delta_start = last_block_end = 0
   for section_value in parsed.values():

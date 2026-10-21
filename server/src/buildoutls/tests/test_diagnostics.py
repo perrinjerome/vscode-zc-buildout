@@ -1,5 +1,6 @@
 import textwrap
-from typing import List, Sequence, cast
+from collections.abc import Sequence
+from typing import cast
 from unittest import mock
 
 import pytest
@@ -88,7 +89,7 @@ async def test_diagnostics_non_existent_sections_multiple_references_per_line(
   )
   diagnostics = sorted(
     cast(
-      List[Diagnostic],
+      list[Diagnostic],
       server.text_document_publish_diagnostics.call_args[0][0].diagnostics,
     ),
     key=lambda d: d.range.start,

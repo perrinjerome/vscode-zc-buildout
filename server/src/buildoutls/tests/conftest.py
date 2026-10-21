@@ -1,11 +1,14 @@
 import collections
 import concurrent.futures
+import inspect
 import os
 import urllib.parse
 from typing import Any
 from unittest import mock
 
+import aiohttp
 import aioresponses
+import aioresponses.core
 import pygls.progress
 import pytest
 from lsprotocol.types import TextDocumentSyncKind
@@ -28,7 +31,18 @@ async def close_aiohttp_session():
 
 
 @pytest.fixture
-def mocked_responses():
+def mocked_responses(monkeypatch: pytest.MonkeyPatch):
+  if "stream_writer" in inspect.signature(aiohttp.ClientResponse).parameters:
+
+    class MockStreamWriter:
+      output_size = 0
+
+    class CompatibleClientResponse(aiohttp.ClientResponse):
+      def __init__(self, *args: Any, **kwargs: Any):
+        kwargs.setdefault("stream_writer", MockStreamWriter())
+        super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(aioresponses.core, "ClientResponse", CompatibleClientResponse)
   with aioresponses.aioresponses() as m:
     yield m
 

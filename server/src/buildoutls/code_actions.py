@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import logging
-from typing import List, Optional, Union
 
 from lsprotocol.converters import get_converter
 from lsprotocol.types import (
@@ -12,15 +13,14 @@ from lsprotocol.types import (
 )
 from pygls.lsp.server import LanguageServer
 
+from . import buildout
 from .commands import COMMAND_OPEN_PYPI_PAGE, COMMAND_UPDATE_MD5SUM
 from .types import (
   OpenPypiPageCommandParams,
   PyPIPackageInfo,
   UpdateMD5SumCommandParams,
 )
-
 from .util import pypi
-from . import buildout
 
 logger = logging.getLogger(__name__)
 converter = get_converter()
@@ -31,10 +31,10 @@ pypi_client = pypi.PyPIClient()
 async def getCodeActions(
   ls: LanguageServer,
   params: CodeActionParams,
-) -> Optional[List[Union[Command, CodeAction]]]:
+) -> list[Command | CodeAction] | None:
   current_line = params.range.start.line
 
-  code_actions: List[Union[Command, CodeAction]] = []
+  code_actions: list[Command | CodeAction] = []
 
   parsed = await buildout.open(ls, params.text_document.uri)
   if not isinstance(parsed, buildout.BuildoutProfile):
@@ -101,7 +101,7 @@ async def getCodeActions(
       try:
         package_info = converter.structure(diagnostic.data, PyPIPackageInfo)
       except Exception:
-        logging.debug(
+        logger.debug(
           "Unable to convert diagnostic data %s",
           diagnostic.data,
           exc_info=True,

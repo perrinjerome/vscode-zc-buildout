@@ -1,6 +1,6 @@
 from lsprotocol.types import (
-  TextDocumentIdentifier,
   SemanticTokensParams,
+  TextDocumentIdentifier,
 )
 from pygls.lsp.server import LanguageServer
 
@@ -19,7 +19,6 @@ async def test_semantic_tokens_full(server: LanguageServer):
   )
   assert tokens is not None
   assert tokens.data == (
-    # fmt:off
     []
     # ${ok:init}
     + [3, 2, 6, 3, 0]  # import
@@ -77,4 +76,3 @@ async def test_semantic_tokens_full(server: LanguageServer):
     + [2, 2, 6, 3, 0]  # import
     + [0, 7, 21, 6, 0]  # again_another_install
   )
-  # fmt: on

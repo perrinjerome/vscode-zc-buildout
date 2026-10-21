@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import itertools
 import logging
 import os
 import pathlib
 import re
 import urllib.parse
-from typing import Iterable, List, Optional, Tuple, Union
+from collections.abc import Iterable
 
 from lsprotocol.types import (
   TEXT_DOCUMENT_CODE_ACTION,
@@ -12,11 +14,11 @@ from lsprotocol.types import (
   TEXT_DOCUMENT_DEFINITION,
   TEXT_DOCUMENT_DID_CHANGE,
   TEXT_DOCUMENT_DID_OPEN,
-  TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
   TEXT_DOCUMENT_DOCUMENT_LINK,
   TEXT_DOCUMENT_DOCUMENT_SYMBOL,
   TEXT_DOCUMENT_HOVER,
   TEXT_DOCUMENT_REFERENCES,
+  TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
   WORKSPACE_DID_CHANGE_WATCHED_FILES,
   CodeAction,
   CodeActionKind,
@@ -34,26 +36,26 @@ from lsprotocol.types import (
   DidOpenTextDocumentParams,
   DocumentLink,
   DocumentLinkParams,
-  SemanticTokens,
-  SemanticTokensLegend,
-  SemanticTokensParams,
   DocumentSymbol,
   DocumentSymbolParams,
   Hover,
-  WorkDoneProgressBegin,
-  WorkDoneProgressEnd,
   Location,
   MarkupContent,
   MarkupKind,
   Position,
   PublishDiagnosticsParams,
   Range,
-  ShowDocumentParams,
   ReferenceOptions,
   ReferenceParams,
+  SemanticTokens,
+  SemanticTokensLegend,
+  SemanticTokensParams,
+  ShowDocumentParams,
   SymbolKind,
   TextDocumentPositionParams,
   TextEdit,
+  WorkDoneProgressBegin,
+  WorkDoneProgressEnd,
 )
 from pygls.lsp.server import LanguageServer
 from pygls.workspace import TextDocument
@@ -68,9 +70,7 @@ from . import (
   semantic_tokens,
   types,
 )
-
 from .util import md5sum
-
 
 server = LanguageServer(name="zc.buildout.languageserver", version="0.9.0")
 
@@ -84,7 +84,7 @@ reference_re = re.compile(
 logger = logging.getLogger(__name__)
 
 
-def getOptionValue(option: Union[buildout.BuildoutOptionDefinition, str]) -> str:
+def getOptionValue(option: buildout.BuildoutOptionDefinition | str) -> str:
   # Options read with our patch remember the position and have their values in
   # .value but options added by buildout for default values does not.
   # We normalize this here.
@@ -137,7 +137,7 @@ async def command_update_md5sum(
 )
 async def lsp_code_action(
   ls: LanguageServer, params: CodeActionParams
-) -> Optional[List[Union[Command, CodeAction]]]:
+) -> list[Command | CodeAction] | None:
   return await code_actions.getCodeActions(ls, params)
 
 
@@ -171,8 +171,8 @@ async def did_change_watched_file(
 async def lsp_symbols(
   ls: LanguageServer,
   params: DocumentSymbolParams,
-) -> List[DocumentSymbol]:
-  symbols: List[DocumentSymbol] = []
+) -> list[DocumentSymbol]:
+  symbols: list[DocumentSymbol] = []
 
   parsed = await buildout.parse(
     ls=ls,
@@ -185,7 +185,7 @@ async def lsp_symbols(
     # don't include implicit sections such as [buildout] unless defined in this profile.
     if section_header_location.uri != params.text_document.uri:
       continue
-    children: List[DocumentSymbol] = []
+    children: list[DocumentSymbol] = []
     for option_name, option_value in section_value.items():
       if option_value.default_value:
         continue
@@ -200,7 +200,7 @@ async def lsp_symbols(
       detail = getOptionValue(option_value)
       if len(detail.splitlines()) > 1:
         #  vscode does not like too long multi-lines detail
-        detail = "{} ...".format(detail.splitlines()[0])
+        detail = f"{detail.splitlines()[0]} ..."
       children.append(
         DocumentSymbol(
           name=option_name,
@@ -240,8 +240,8 @@ async def lsp_symbols(
 async def lsp_completion(
   ls: LanguageServer,
   params: CompletionParams,
-) -> Optional[List[CompletionItem]]:
-  items: List[CompletionItem] = []
+) -> list[CompletionItem] | None:
+  items: list[CompletionItem] = []
   doc = ls.workspace.get_text_document(params.text_document.uri)
 
   def getSectionReferenceCompletionTextEdit(
@@ -381,7 +381,7 @@ async def lsp_completion(
       # complete referenced option:
       #   [section]
       #   option = ${another_section:|
-      valid_option_references: Iterable[Tuple[str, str]] = []
+      valid_option_references: Iterable[tuple[str, str]] = []
 
       # We include the options of `another_section`
       if symbol.referenced_section:
@@ -573,7 +573,7 @@ async def lsp_completion(
             )
         if symbol.current_option_name == "parts":
           # complete parts = | with sections
-          for section in parsed.keys():
+          for section in parsed:
             if section != "buildout":
               items.append(
                 CompletionItem(
@@ -604,13 +604,13 @@ async def lsp_completion(
 async def lsp_definition(
   ls: LanguageServer,
   params: TextDocumentPositionParams,
-) -> List[Location]:
+) -> list[Location]:
   parsed = await buildout.open(ls, params.text_document.uri)
   if parsed is None:
     return []
   symbol = await parsed.getSymbolAtPosition(params.position)
   logger.debug("definition @%s -> %s", params.position, symbol)
-  locations: List[Location] = []
+  locations: list[Location] = []
   if symbol:
     if symbol.kind in (
       buildout.SymbolKind.SectionReference,
@@ -654,8 +654,8 @@ async def lsp_definition(
 async def lsp_references(
   server: LanguageServer,
   params: ReferenceParams,
-) -> List[Location]:
-  references: List[Location] = []
+) -> list[Location]:
+  references: list[Location] = []
   if params.work_done_token:
     server.work_done_progress.begin(
       params.work_done_token,
@@ -707,11 +707,10 @@ async def lsp_references(
           # find references in <= macros
           for options in profile.values():
             for option_key, option_value in options.items():
-              if option_key == "<":
-                if option_value.value == searched_section:
-                  loc = option_value.locations[-1]
-                  assert loc.uri == profile.uri
-                  references.append(loc)
+              if option_key == "<" and option_value.value == searched_section:
+                loc = option_value.locations[-1]
+                assert loc.uri == profile.uri
+                references.append(loc)
   if params.work_done_token:
     server.work_done_progress.end(params.work_done_token, WorkDoneProgressEnd())
   return references
@@ -721,7 +720,7 @@ async def lsp_references(
 async def lsp_hover(
   ls: LanguageServer,
   params: TextDocumentPositionParams,
-) -> Optional[Hover]:
+) -> Hover | None:
   parsed = await buildout.open(ls, params.text_document.uri)
   if parsed is None:
     return None
@@ -729,15 +728,21 @@ async def lsp_hover(
   hover_text = ""
   if symbol:
     if symbol.kind == buildout.SymbolKind.SectionDefinition:
-      if symbol.current_section_name:
-        if current_section := symbol._buildout.get(symbol.current_section_name):
-          hover_text = current_section.documentation
+      if symbol.current_section_name and (
+        current_section := symbol._buildout.get(symbol.current_section_name)
+      ):
+        hover_text = current_section.documentation
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionKey:
-      if symbol.current_option_name and symbol.current_section_recipe:
-        if option := symbol.current_section_recipe.options.get(
-          symbol.current_option_name
-        ):
-          hover_text = option.documentation
+      if (
+        symbol.current_option_name
+        and symbol.current_section_recipe
+        and (
+          option := symbol.current_section_recipe.options.get(
+            symbol.current_option_name
+          )
+        )
+      ):
+        hover_text = option.documentation
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionValue:
       if symbol.current_option_name == "recipe" and symbol.current_section_recipe:
         hover_text = symbol.current_section_recipe.documentation
@@ -745,9 +750,10 @@ async def lsp_hover(
       assert symbol.referenced_section_name
       if symbol.referenced_option:
         hover_text = f"```\n{symbol.referenced_option.value}\n```"
-    elif symbol.kind == buildout.SymbolKind.SectionReference:
-      if symbol.referenced_section:
-        hover_text = symbol.referenced_section.documentation
+    elif (
+      symbol.kind == buildout.SymbolKind.SectionReference and symbol.referenced_section
+    ):
+      hover_text = symbol.referenced_section.documentation
 
   return Hover(contents=hover_text)
 
@@ -756,8 +762,8 @@ async def lsp_hover(
 async def lsp_document_link(
   ls: LanguageServer,
   params: DocumentLinkParams,
-) -> List[DocumentLink]:
-  links: List[DocumentLink] = []
+) -> list[DocumentLink]:
+  links: list[DocumentLink] = []
   uri = params.text_document.uri
   parsed_buildout = await buildout.parse(ls, uri)
   base = uri[: uri.rfind("/")] + "/"

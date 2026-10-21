@@ -1,16 +1,16 @@
 import asyncio
 import datetime
 import logging
-from typing import AsyncIterable, Dict, Optional, Tuple, cast
+from collections.abc import AsyncIterable
+from typing import Optional, cast
 
 import aiohttp
 import cachetools
-import packaging.version
-import pkg_resources
-
-from . import aiohttp_session
-from ..types import KnownVulnerability, VersionNotFound, ProjectNotFound
 import cattrs
+import packaging.version
+
+from ..types import KnownVulnerability, ProjectNotFound, VersionNotFound
+from . import aiohttp_session
 
 converter = cattrs.Converter()
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # type aliases
 Project = str
 VersionStr = str
-ProjectAndVersionStr = Tuple[Project, VersionStr]
+ProjectAndVersionStr = tuple[Project, VersionStr]
 OptionalVersion = Optional[packaging.version.Version]
 
 
@@ -27,14 +27,14 @@ class PyPIClient:
   def __init__(self, package_index_url: str = "https://pypi.org"):
     self._package_index_url = package_index_url
     self.__get_latest_version_cache = cast(
-      Dict[ProjectAndVersionStr, OptionalVersion],
+      dict[ProjectAndVersionStr, OptionalVersion],
       cachetools.TTLCache(
         maxsize=2 << 10,
         ttl=datetime.timedelta(hours=2).total_seconds(),
       ),
     )
     self.__get_known_vulnerabilities_cache = cast(
-      Dict[ProjectAndVersionStr, Tuple[KnownVulnerability, ...]],
+      dict[ProjectAndVersionStr, tuple[KnownVulnerability, ...]],
       cachetools.TTLCache(
         maxsize=2 << 10,
         ttl=datetime.timedelta(hours=2).total_seconds(),
@@ -81,8 +81,8 @@ class PyPIClient:
       raise ProjectNotFound(project)
     if version not in project_data["releases"]:
       version = "0"
-    current = pkg_resources.parse_version(version)
-    latest = pkg_resources.parse_version(project_data["info"]["version"])
+    current = packaging.version.parse(version)
+    latest = packaging.version.parse(project_data["info"]["version"])
     if latest > current:
       return latest
     return None
@@ -92,7 +92,7 @@ class PyPIClient:
     project: str,
     version: str,
     semaphore: asyncio.Semaphore,
-  ) -> Tuple[KnownVulnerability, ...]:
+  ) -> tuple[KnownVulnerability, ...]:
     try:
       return self.__get_known_vulnerabilities_cache[project, version]
     except KeyError:
@@ -114,11 +114,13 @@ class PyPIClient:
   ) -> AsyncIterable[KnownVulnerability]:
     try:
       # https://warehouse.pypa.io/api-reference/json.html#release
-      async with semaphore:
-        async with aiohttp_session.get_session().get(
+      async with (
+        semaphore,
+        aiohttp_session.get_session().get(
           f"{self._package_index_url}/pypi/{project}/{version}/json",
-        ) as resp:
-          project_data = await resp.json()
+        ) as resp,
+      ):
+        project_data = await resp.json()
     except (aiohttp.ClientError, ValueError, asyncio.TimeoutError):
       logger.warning(
         "Error fetching project release %s %s",
@@ -129,14 +131,12 @@ class PyPIClient:
     else:
       if "info" not in project_data:
         raise VersionNotFound((project, version))
-      parsed_version = pkg_resources.parse_version(version)
+      parsed_version = packaging.version.parse(version)
       for vulnerability in (
         converter.structure(v, KnownVulnerability)
         for v in project_data.get("vulnerabilities", ())
       ):
-        for fixed_in in (
-          pkg_resources.parse_version(f) for f in vulnerability.fixed_in
-        ):
+        for fixed_in in (packaging.version.parse(f) for f in vulnerability.fixed_in):
           if fixed_in > parsed_version:
             yield vulnerability
             break

@@ -36,7 +36,6 @@ test = [
     "pytest",
     "types-cachetools",
     "types-pygments",
-    "types-setuptools",
     "types-toml",
     "ruff",
 ]
@@ -54,6 +53,9 @@ build-backend = 'setuptools.build_meta'
 
 [tool.ruff]
 indent-width = 2
+extend-exclude = [
+    "stubs"
+]
 
 [tool.isort]
 multi_line_output = 3
@@ -63,7 +65,7 @@ line_length = 78
 known_third_party = ["pydantic", "pygls", "typing_extensions"]
 
 [tool.mypy]
-files = ["buildoutls/**/*.py"]
+files = ["src"]
 mypy_path = ["stubs"]
 warn_redundant_casts = true
 warn_unused_configs = true
