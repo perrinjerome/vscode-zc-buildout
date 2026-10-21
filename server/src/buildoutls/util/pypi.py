@@ -5,12 +5,11 @@ from typing import AsyncIterable, Dict, Optional, Tuple, cast
 
 import aiohttp
 import cachetools
-import packaging.version
-import pkg_resources
-
-from . import aiohttp_session
-from ..types import KnownVulnerability, VersionNotFound, ProjectNotFound
 import cattrs
+import packaging.version
+
+from ..types import KnownVulnerability, ProjectNotFound, VersionNotFound
+from . import aiohttp_session
 
 converter = cattrs.Converter()
 
@@ -81,8 +80,8 @@ class PyPIClient:
       raise ProjectNotFound(project)
     if version not in project_data["releases"]:
       version = "0"
-    current = pkg_resources.parse_version(version)
-    latest = pkg_resources.parse_version(project_data["info"]["version"])
+    current = packaging.version.parse(version)
+    latest = packaging.version.parse(project_data["info"]["version"])
     if latest > current:
       return latest
     return None
@@ -129,13 +128,13 @@ class PyPIClient:
     else:
       if "info" not in project_data:
         raise VersionNotFound((project, version))
-      parsed_version = pkg_resources.parse_version(version)
+      parsed_version = packaging.version.parse(version)
       for vulnerability in (
         converter.structure(v, KnownVulnerability)
         for v in project_data.get("vulnerabilities", ())
       ):
         for fixed_in in (
-          pkg_resources.parse_version(f) for f in vulnerability.fixed_in
+          packaging.version.parse(f) for f in vulnerability.fixed_in
         ):
           if fixed_in > parsed_version:
             yield vulnerability
