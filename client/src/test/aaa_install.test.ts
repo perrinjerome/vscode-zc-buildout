@@ -23,12 +23,12 @@ describe("Installation", () => {
   before(() => {
     vscode.window.showErrorMessage = showErrorMessageMock = sinon.stub(
       vscode.window,
-      "showErrorMessage"
+      "showErrorMessage",
     );
 
     showInformationMessage = sinon.stub(
       vscode.window,
-      "showInformationMessage"
+      "showInformationMessage",
     );
   });
   after(() => {
@@ -51,8 +51,8 @@ describe("Installation", () => {
     assert.strictEqual(showErrorMessageMock.getCalls().length, 1);
     assert(
       showInformationMessage.calledWith(
-        "zc.buildout extension: installed language server"
-      )
+        "zc.buildout extension: installed language server",
+      ),
     );
   });
 });

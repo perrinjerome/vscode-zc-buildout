@@ -35,7 +35,7 @@ function isExtensionInstalled(python: string): boolean {
       ["-m", "buildoutls", "--check-install"],
       {
         cwd: "/",
-      }
+      },
     );
     return true;
   } catch {
@@ -65,7 +65,7 @@ function makeLanguageServerClient(pythonExecutable: string) {
     args: ["-m", "buildoutls"].concat(
       vscode.workspace
         .getConfiguration()
-        .get("zc-buildout.language.server.arguments") || []
+        .get("zc-buildout.language.server.arguments") || [],
     ),
   };
 
@@ -80,7 +80,7 @@ function makeLanguageServerClient(pythonExecutable: string) {
     "zc-buildout",
     "zc.buildout Language Server",
     serverExecutable,
-    clientOptions
+    clientOptions,
   );
 }
 
@@ -110,7 +110,7 @@ export async function activate() {
       client = makeLanguageServerClient(newPythonExecutable);
       client.start();
       vscode.window.showInformationMessage(
-        `New python selected ${newPythonExecutable}`
+        `New python selected ${newPythonExecutable}`,
       );
     }
   });
@@ -119,7 +119,7 @@ export async function activate() {
 
   if (!isPythonVersionCompatible(settings.python.executable)) {
     vscode.window.showErrorMessage(
-      "zc.buildout extension: Invalid python version, needs python >= 3.9"
+      "zc.buildout extension: Invalid python version, needs python >= 3.9",
     );
     return false;
   }
@@ -134,16 +134,16 @@ export async function activate() {
       let answer = await vscode.window.showErrorMessage(
         `buildout-language-server is not installed on \`${settings.python.executable}\`.
         See [documentation](https://marketplace.visualstudio.com/items?itemName=perrinjerome.vscode-zc-buildout) or install automatically in a virtual environment.`,
-        "Install in a virtualenv"
+        "Install in a virtualenv",
       );
       if (answer === "Install in a virtualenv") {
         const terminal = vscode.window.createTerminal("zc-buildout");
         terminal.show(false);
         terminal.sendText(
-          "# Installing buildout-language-server in a virtual environment.\n"
+          "# Installing buildout-language-server in a virtual environment.\n",
         );
         terminal.sendText(
-          `${settings.python.executable} -m venv --clear "${__dirname}/venv/" && "${venvPythonExecutable}" -m pip install "${__dirname}/../../server/" -r "${__dirname}/../../server/requirements.txt"`
+          `${settings.python.executable} -m venv --clear "${__dirname}/venv/" && "${venvPythonExecutable}" -m pip install "${__dirname}/../../server/" -r "${__dirname}/../../server/requirements.txt"`,
         );
 
         for (let retries = 0; retries < 60; retries++) {
@@ -157,11 +157,11 @@ export async function activate() {
 
         if (installationOK) {
           vscode.window.showInformationMessage(
-            "zc.buildout extension: installed language server"
+            "zc.buildout extension: installed language server",
           );
         } else {
           vscode.window.showErrorMessage(
-            "zc.buildout extension: Could not install language server"
+            "zc.buildout extension: Could not install language server",
           );
           return false;
         }
