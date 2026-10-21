@@ -751,8 +751,7 @@ async def lsp_hover(
       if symbol.referenced_option:
         hover_text = f"```\n{symbol.referenced_option.value}\n```"
     elif (
-      symbol.kind == buildout.SymbolKind.SectionReference
-      and symbol.referenced_section
+      symbol.kind == buildout.SymbolKind.SectionReference and symbol.referenced_section
     ):
       hover_text = symbol.referenced_section.documentation
 

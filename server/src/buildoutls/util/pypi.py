@@ -114,9 +114,12 @@ class PyPIClient:
   ) -> AsyncIterable[KnownVulnerability]:
     try:
       # https://warehouse.pypa.io/api-reference/json.html#release
-      async with semaphore, aiohttp_session.get_session().get(
-        f"{self._package_index_url}/pypi/{project}/{version}/json",
-      ) as resp:
+      async with (
+        semaphore,
+        aiohttp_session.get_session().get(
+          f"{self._package_index_url}/pypi/{project}/{version}/json",
+        ) as resp,
+      ):
         project_data = await resp.json()
     except (aiohttp.ClientError, ValueError, asyncio.TimeoutError):
       logger.warning(
@@ -133,9 +136,7 @@ class PyPIClient:
         converter.structure(v, KnownVulnerability)
         for v in project_data.get("vulnerabilities", ())
       ):
-        for fixed_in in (
-          packaging.version.parse(f) for f in vulnerability.fixed_in
-        ):
+        for fixed_in in (packaging.version.parse(f) for f in vulnerability.fixed_in):
           if fixed_in > parsed_version:
             yield vulnerability
             break

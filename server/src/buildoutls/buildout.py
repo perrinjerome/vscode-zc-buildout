@@ -863,9 +863,7 @@ class BuildoutProfile(dict[str, BuildoutSection], BuildoutTemplate):
   @staticmethod
   def looksLikeBuildoutProfile(uri: URI) -> bool:
     """Check if this URI looks like a buildout profile URI."""
-    return (
-      uri.endswith((".cfg", ".cfg.in", ".cfg.j2", ".cfg.jinja2"))
-    )
+    return uri.endswith((".cfg", ".cfg.in", ".cfg.j2", ".cfg.jinja2"))
 
   def resolve_value(self, section_name: str, option_name: str) -> str:
     """Get the value of an option, after substituting references.
