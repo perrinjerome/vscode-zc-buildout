@@ -707,11 +707,10 @@ async def lsp_references(
           # find references in <= macros
           for options in profile.values():
             for option_key, option_value in options.items():
-              if option_key == "<":
-                if option_value.value == searched_section:
-                  loc = option_value.locations[-1]
-                  assert loc.uri == profile.uri
-                  references.append(loc)
+              if option_key == "<" and option_value.value == searched_section:
+                loc = option_value.locations[-1]
+                assert loc.uri == profile.uri
+                references.append(loc)
   if params.work_done_token:
     server.work_done_progress.end(params.work_done_token, WorkDoneProgressEnd())
   return references
@@ -729,15 +728,21 @@ async def lsp_hover(
   hover_text = ""
   if symbol:
     if symbol.kind == buildout.SymbolKind.SectionDefinition:
-      if symbol.current_section_name:
-        if current_section := symbol._buildout.get(symbol.current_section_name):
-          hover_text = current_section.documentation
+      if symbol.current_section_name and (
+        current_section := symbol._buildout.get(symbol.current_section_name)
+      ):
+        hover_text = current_section.documentation
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionKey:
-      if symbol.current_option_name and symbol.current_section_recipe:
-        if option := symbol.current_section_recipe.options.get(
-          symbol.current_option_name
-        ):
-          hover_text = option.documentation
+      if (
+        symbol.current_option_name
+        and symbol.current_section_recipe
+        and (
+          option := symbol.current_section_recipe.options.get(
+            symbol.current_option_name
+          )
+        )
+      ):
+        hover_text = option.documentation
     elif symbol.kind == buildout.SymbolKind.BuildoutOptionValue:
       if symbol.current_option_name == "recipe" and symbol.current_section_recipe:
         hover_text = symbol.current_section_recipe.documentation
@@ -745,9 +750,11 @@ async def lsp_hover(
       assert symbol.referenced_section_name
       if symbol.referenced_option:
         hover_text = f"```\n{symbol.referenced_option.value}\n```"
-    elif symbol.kind == buildout.SymbolKind.SectionReference:
-      if symbol.referenced_section:
-        hover_text = symbol.referenced_section.documentation
+    elif (
+      symbol.kind == buildout.SymbolKind.SectionReference
+      and symbol.referenced_section
+    ):
+      hover_text = symbol.referenced_section.documentation
 
   return Hover(contents=hover_text)
 

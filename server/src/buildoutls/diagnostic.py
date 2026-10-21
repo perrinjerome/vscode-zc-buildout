@@ -90,11 +90,13 @@ async def getDiagnostics(
   )
   if not has_dynamic_extends and not has_jinja:
     installed_parts: set[str] = set()
-    if isinstance(resolved_buildout, buildout.BuildoutProfile):
-      if "parts" in resolved_buildout["buildout"]:
-        installed_parts = {
-          v[0] for v in resolved_buildout.getOptionValues("buildout", "parts")
-        }
+    if (
+      isinstance(resolved_buildout, buildout.BuildoutProfile)
+      and "parts" in resolved_buildout["buildout"]
+    ):
+      installed_parts = {
+        v[0] for v in resolved_buildout.getOptionValues("buildout", "parts")
+      }
 
     async for symbol in resolved_buildout.getAllOptionReferenceSymbols():
       if symbol.referenced_section is None:
