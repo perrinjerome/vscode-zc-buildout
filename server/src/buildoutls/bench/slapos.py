@@ -79,7 +79,7 @@ def aio_benchmark(benchmark):
       awaitable = self.coro(*self.args, **self.kwargs)
       try:
         evloop = asyncio.get_running_loop()
-      except Exception:
+      except Exception:  # noqa
         pass
       if evloop is None:
         return asyncio.run(awaitable)
