@@ -38,31 +38,31 @@ describe("Completions", () => {
 async function testCompletion(
   docUri: vscode.Uri,
   position: vscode.Position,
-  expectedCompletionList: vscode.CompletionList
+  expectedCompletionList: vscode.CompletionList,
 ) {
   await activateExtension(docUri);
 
   // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
-  let actualCompletionList;
+  let actualCompletionList: vscode.CompletionList<vscode.CompletionItem>;
   for (var i = 0; i <= 10; i++) {
     actualCompletionList = (await vscode.commands.executeCommand(
       "vscode.executeCompletionItemProvider",
       docUri,
-      position
+      position,
     )) as vscode.CompletionList;
 
     if (actualCompletionList.items.length) {
       break;
     }
     console.log(
-      `${new Date()}: did not get completions, retrying in 2 seconds`
+      `${new Date()}: did not get completions, retrying in 2 seconds`,
     );
     await sleep(2000);
   }
 
   assert.equal(
     actualCompletionList.items.length,
-    expectedCompletionList.items.length
+    expectedCompletionList.items.length,
   );
   expectedCompletionList.items.forEach((expectedItem, i) => {
     const actualItem = actualCompletionList.items[i];
