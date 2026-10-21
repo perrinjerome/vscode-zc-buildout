@@ -101,7 +101,7 @@ async def getCodeActions(
       try:
         package_info = converter.structure(diagnostic.data, PyPIPackageInfo)
       except Exception:
-        logging.debug(
+        logger.debug(
           "Unable to convert diagnostic data %s",
           diagnostic.data,
           exc_info=True,
